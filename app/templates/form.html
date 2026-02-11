@@ -12,11 +12,13 @@
         input:focus, textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
         button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #0056b3; }
+        .error { color: red; margin-top: 10px; padding: 10px; background-color: #ffe6e6; border-radius: 4px; display: none; }
+        .success { color: green; margin-top: 10px; padding: 10px; background-color: #e6ffe6; border-radius: 4px; display: none; }
     </style>
 </head>
 <body>
     <h1>Project Feasibility Report Generator</h1>
-    <form method="post" action="/api/submit">
+    <form id="submissionForm">
         <div class="form-group">
             <label for="business_idea">Business Idea *</label>
             <textarea name="business_idea" id="business_idea" placeholder="Describe your business idea" rows="4" required></textarea>
@@ -63,6 +65,58 @@
         </div>
 
         <button type="submit">Generate Report</button>
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
     </form>
+
+    <script>
+        document.getElementById('submissionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            // Clear messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(form);
+            const data = {
+                business_idea: formData.get('business_idea'),
+                location_land: formData.get('location_land'),
+                promoter_background: formData.get('promoter_background'),
+                goals: formData.get('goals'),
+                start_date: formData.get('start_date'),
+                target_launch_date: formData.get('target_launch_date'),
+                budget: parseFloat(formData.get('budget')),
+                target_market: formData.get('target_market'),
+                notes: formData.get('notes') || null
+            };
+            
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Submission failed');
+                }
+                
+                const result = await response.json();
+                successDiv.textContent = `✓ Submission successful! ID: ${result.id}`;
+                successDiv.style.display = 'block';
+                form.reset();
+            } catch (error) {
+                errorDiv.textContent = `✗ Error: ${error.message}`;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
