@@ -12,8 +12,11 @@
         input:focus, textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
         button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #0056b3; }
+        button.download { background-color: #28a745; margin-top: 10px; }
+        button.download:hover { background-color: #218838; }
         .error { color: red; margin-top: 10px; padding: 10px; background-color: #ffe6e6; border-radius: 4px; display: none; }
         .success { color: green; margin-top: 10px; padding: 10px; background-color: #e6ffe6; border-radius: 4px; display: none; }
+        #downloadSection { display: none; margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 4px; border: 2px solid #28a745; }
     </style>
 </head>
 <body>
@@ -69,16 +72,26 @@
         <div class="success" id="successMessage"></div>
     </form>
 
+    <div id="downloadSection">
+        <h3>✓ Report Ready!</h3>
+        <p>Your feasibility report has been generated successfully.</p>
+        <button class="download" id="downloadButton">📥 Download Report (.docx)</button>
+    </div>
+
     <script>
+        let currentSubmissionId = null;
+
         document.getElementById('submissionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
+            const downloadSection = document.getElementById('downloadSection');
             
             // Clear messages
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
+            downloadSection.style.display = 'none';
             
             // Get form data
             const formData = new FormData(form);
@@ -109,12 +122,20 @@
                 }
                 
                 const result = await response.json();
+                currentSubmissionId = result.id;
                 successDiv.textContent = `✓ Submission successful! ID: ${result.id}`;
                 successDiv.style.display = 'block';
+                downloadSection.style.display = 'block';
                 form.reset();
             } catch (error) {
                 errorDiv.textContent = `✗ Error: ${error.message}`;
                 errorDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            if (currentSubmissionId) {
+                window.location.href = `/api/report/${currentSubmissionId}`;
             }
         });
     </script>
