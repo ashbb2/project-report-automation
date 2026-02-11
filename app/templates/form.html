@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project Report Automation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; color: #555; }
+        input, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
+        input:focus, textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
+        button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Project Feasibility Report Generator</h1>
+    <form method="post" action="/api/submit">
+        <div class="form-group">
+            <label for="business_idea">Business Idea *</label>
+            <textarea name="business_idea" id="business_idea" placeholder="Describe your business idea" rows="4" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="location_land">Location & Land Details *</label>
+            <textarea name="location_land" id="location_land" placeholder="Provide location and land details" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="promoter_background">Promoter Background *</label>
+            <textarea name="promoter_background" id="promoter_background" placeholder="Describe the promoter's background and experience" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="goals">Project Goals *</label>
+            <textarea name="goals" id="goals" placeholder="Outline the main goals of the project" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="start_date">Start Date *</label>
+            <input type="date" name="start_date" id="start_date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="target_launch_date">Target Launch Date *</label>
+            <input type="date" name="target_launch_date" id="target_launch_date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="budget">Budget (in currency units) *</label>
+            <input type="number" name="budget" id="budget" placeholder="Enter total budget" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="target_market">Target Market *</label>
+            <textarea name="target_market" id="target_market" placeholder="Describe your target market" rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Additional Notes</label>
+            <textarea name="notes" id="notes" placeholder="Any additional information (optional)" rows="3"></textarea>
+        </div>
+
+        <button type="submit">Generate Report</button>
+    </form>
+</body>
+</html>
