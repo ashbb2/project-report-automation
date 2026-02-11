@@ -137,22 +137,41 @@
         });
 
         document.getElementById('downloadButton').addEventListener('click', async () => {
-            if (currentSubmissionId) {
-                const button = document.getElementById('downloadButton');
-                const originalText = button.innerHTML;
-                
+            if (!currentSubmissionId) return;
+            
+            const button = document.getElementById('downloadButton');
+            const originalText = button.innerHTML;
+            
+            try {
                 // Show progress
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner"></span>Generating Report...';
                 
-                // Trigger download
-                window.location.href = `/api/report/${currentSubmissionId}`;
+                // Fetch the report
+                const response = await fetch(`/api/report/${currentSubmissionId}`);
                 
-                // Reset button after delay (download will have started)
-                setTimeout(() => {
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                }, 3000);
+                if (!response.ok) {
+                    throw new Error('Failed to generate report');
+                }
+                
+                // Get the blob and trigger download
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${currentSubmissionId}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = originalText;
+            } catch (error) {
+                button.disabled = false;
+                button.innerHTML = originalText;
+                alert('Error downloading report: ' + error.message);
             }
         });
     </script>
