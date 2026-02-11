@@ -1,4 +1,8 @@
-# Main application entry point
+from fastapi import FastAPI
 
-if __name__ == '__main__':
-    pass
+app = FastAPI()
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
