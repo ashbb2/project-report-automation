@@ -1,17 +1,20 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from jinja2 import Environment, FileSystemLoader
 import os
 
 app = FastAPI()
 
-# Get the directory of this file
+# Set up Jinja2 templates
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+templates_dir = os.path.join(BASE_DIR, "app", "templates")
+env = Environment(loader=FileSystemLoader(templates_dir))
 
-@app.get("/")
+
+@app.get("/", response_class=HTMLResponse)
 async def get_form():
-    form_path = os.path.join(BASE_DIR, "app", "templates", "form.html")
-    return FileResponse(form_path)
+    template = env.get_template("form.html")
+    return template.render()
 
 
 @app.get("/health")
