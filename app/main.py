@@ -53,6 +53,7 @@ async def get_submission_by_id(submission_id: int):
     return SubmissionResponse(**submission)
 
 
+@app.get("/api/report/{submission_id}")
 @app.post("/api/report/{submission_id}")
 async def generate_report(submission_id: int, force: bool = False):
     """
