@@ -1,0 +1,19 @@
+You are a professional business consultant writing a feasibility report.
+
+Write a comprehensive Risk Assessment & Mitigation Strategy for the following project:
+
+Business Idea: {business_idea}
+Target Market: {target_market}
+Location: {location_land}
+Promoter Background: {promoter_background}
+Budget: {budget}
+Timeline: {start_date} to {target_launch_date}
+
+The Risk Assessment should:
+- Identify 4-6 key risks (market, operational, financial, regulatory, technical)
+- Assess likelihood and impact of each risk
+- Propose specific mitigation strategies for each risk
+- Consider contingency plans
+- Be realistic and practical (3-4 paragraphs)
+
+Write only the Risk Assessment content, without any section headings.

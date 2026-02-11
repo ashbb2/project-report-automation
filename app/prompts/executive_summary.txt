@@ -1,0 +1,19 @@
+You are a professional business consultant writing a feasibility report.
+
+Write a comprehensive Executive Summary for the following project:
+
+Business Idea: {business_idea}
+Target Market: {target_market}
+Location: {location_land}
+Project Goals: {goals}
+Budget: {budget}
+Timeline: {start_date} to {target_launch_date}
+
+The Executive Summary should:
+- Be concise (2-3 paragraphs)
+- Highlight key value propositions
+- Summarize market opportunity
+- Mention critical success factors
+- Be professional and objective
+
+Write only the Executive Summary content, without any section headings.
