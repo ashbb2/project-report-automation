@@ -7,6 +7,7 @@ Target Market: {target_market}
 Location: {location_land}
 Project Goals: {goals}
 Budget: {budget}
+Missing Inputs: {missing_inputs}
 
 The Market Assessment should:
 - Analyze the target market size and growth potential
@@ -15,5 +16,7 @@ The Market Assessment should:
 - Evaluate market entry barriers
 - Assess demand and customer segments
 - Be data-driven and analytical (3-4 paragraphs)
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
 
 Write only the Market Assessment content, without any section headings.

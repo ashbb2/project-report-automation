@@ -8,6 +8,7 @@ Location: {location_land}
 Promoter Background: {promoter_background}
 Budget: {budget}
 Timeline: {start_date} to {target_launch_date}
+Missing Inputs: {missing_inputs}
 
 The Risk Assessment should:
 - Identify 4-6 key risks (market, operational, financial, regulatory, technical)
@@ -15,5 +16,7 @@ The Risk Assessment should:
 - Propose specific mitigation strategies for each risk
 - Consider contingency plans
 - Be realistic and practical (3-4 paragraphs)
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
 
 Write only the Risk Assessment content, without any section headings.

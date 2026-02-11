@@ -21,6 +21,18 @@ def init_db():
         )
     """)
     
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS report_sections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            submission_id INTEGER NOT NULL,
+            section_name TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (submission_id) REFERENCES submissions(id),
+            UNIQUE(submission_id, section_name)
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -93,3 +105,56 @@ def get_submission(submission_id: int) -> Optional[Dict[str, Any]]:
         "created_at": created_at,
         **payload
     }
+
+
+def get_cached_section(submission_id: int, section_name: str) -> Optional[str]:
+    """
+    Retrieve cached section content from database.
+    
+    Args:
+        submission_id: The submission ID
+        section_name: Name of the section (e.g., 'executive_summary', 'market_assessment')
+        
+    Returns:
+        Section content string or None if not found
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        "SELECT content FROM report_sections WHERE submission_id = ? AND section_name = ?",
+        (submission_id, section_name)
+    )
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    return row[0] if row else None
+
+
+def save_section(submission_id: int, section_name: str, content: str) -> None:
+    """
+    Save or update a report section in the database.
+    
+    Args:
+        submission_id: The submission ID
+        section_name: Name of the section
+        content: Generated content for the section
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    created_at = datetime.utcnow().isoformat()
+    
+    cursor.execute(
+        """
+        INSERT INTO report_sections (submission_id, section_name, content, created_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(submission_id, section_name) 
+        DO UPDATE SET content = excluded.content, created_at = excluded.created_at
+        """,
+        (submission_id, section_name, content, created_at)
+    )
+    
+    conn.commit()
+    conn.close()

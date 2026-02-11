@@ -8,6 +8,7 @@ Location: {location_land}
 Project Goals: {goals}
 Budget: {budget}
 Timeline: {start_date} to {target_launch_date}
+Missing Inputs: {missing_inputs}
 
 The Executive Summary should:
 - Be concise (2-3 paragraphs)
@@ -15,5 +16,7 @@ The Executive Summary should:
 - Summarize market opportunity
 - Mention critical success factors
 - Be professional and objective
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
 
 Write only the Executive Summary content, without any section headings.

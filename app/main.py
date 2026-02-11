@@ -54,9 +54,13 @@ async def get_submission_by_id(submission_id: int):
 
 
 @app.post("/api/report/{submission_id}")
-async def generate_report(submission_id: int):
+async def generate_report(submission_id: int, force: bool = False):
     """
     Generate a Word document report for a submission.
+    
+    Args:
+        submission_id: The ID of the submission
+        force: If True, regenerate all sections even if cached (default: False)
     """
     # Retrieve submission from database
     submission = get_submission(submission_id)
@@ -67,8 +71,8 @@ async def generate_report(submission_id: int):
     # Remove 'id' and 'created_at' from submission for report generation
     submission_data = {k: v for k, v in submission.items() if k not in ['id', 'created_at']}
     
-    # Generate Word document
-    doc_bytes = build_doc(submission_data)
+    # Generate Word document with AI content and caching
+    doc_bytes = build_doc(submission_data, submission_id, force)
     
     # Return as streaming response (downloadable file)
     return StreamingResponse(

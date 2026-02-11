@@ -1,20 +1,103 @@
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from typing import Dict, Any
+from typing import Dict, Any, List
 from io import BytesIO
+from app.llm_client import llm_client
+from app.prompt_renderer import get_section_prompt
+from app.db import get_cached_section, save_section
 
 
-def build_doc(submission: Dict[str, Any]) -> bytes:
+def identify_missing_inputs(submission: Dict[str, Any]) -> List[str]:
     """
-    Build a Word document from submission data.
+    Identify which fields are missing or blank in the submission.
     
     Args:
         submission: Dictionary containing submission data
         
     Returns:
+        List of missing field names
+    """
+    required_fields = [
+        'business_idea', 'location_land', 'promoter_background',
+        'goals', 'start_date', 'target_launch_date', 'budget', 'target_market'
+    ]
+    
+    missing = []
+    for field in required_fields:
+        value = submission.get(field)
+        if not value or (isinstance(value, str) and not value.strip()):
+            missing.append(field)
+    
+    return missing
+
+
+def get_or_generate_section(
+    submission_id: int, 
+    section_name: str, 
+    submission_data: Dict[str, Any],
+    force: bool = False
+) -> str:
+    """
+    Get cached section or generate new one using LLM.
+    
+    Args:
+        submission_id: The submission ID
+        section_name: Name of the section to generate
+        submission_data: Dictionary containing submission data
+        force: If True, regenerate even if cached
+        
+    Returns:
+        Generated or cached section content
+    """
+    # Check cache unless force is True
+    if not force:
+        cached = get_cached_section(submission_id, section_name)
+        if cached:
+            return cached
+    
+    # Generate new content
+    rendered_prompt = get_section_prompt(section_name, submission_data)
+    content = llm_client.generate(rendered_prompt)
+    
+    # Cache the result
+    save_section(submission_id, section_name, content)
+    
+    return content
+
+
+def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = False) -> bytes:
+    """
+    Build a Word document from submission data with AI-generated content.
+    
+    Args:
+        submission: Dictionary containing submission data
+        submission_id: The submission ID for caching
+        force: If True, regenerate sections even if cached
+        
+    Returns:
         Bytes of the generated .docx file
     """
+    # Identify missing inputs for assumptions
+    missing_inputs = identify_missing_inputs(submission)
+    
+    # Add missing_inputs info to submission data for prompt rendering
+    submission_with_context = {**submission}
+    if missing_inputs:
+        submission_with_context['missing_inputs'] = ', '.join(missing_inputs)
+    else:
+        submission_with_context['missing_inputs'] = 'None'
+    
+    # Generate or retrieve cached sections
+    exec_summary = get_or_generate_section(
+        submission_id, 'executive_summary', submission_with_context, force
+    )
+    market = get_or_generate_section(
+        submission_id, 'market_assessment', submission_with_context, force
+    )
+    risk = get_or_generate_section(
+        submission_id, 'risk_assessment', submission_with_context, force
+    )
     doc = Document()
     
     # Set default font
@@ -38,15 +121,7 @@ def build_doc(submission: Dict[str, Any]) -> bytes:
     
     # Executive Summary
     doc.add_heading('Executive Summary', level=1)
-    exec_summary = doc.add_paragraph()
-    exec_summary.add_run(f"Business Idea: ").bold = True
-    exec_summary.add_run(f"{submission.get('business_idea', 'N/A')}\n\n")
-    exec_summary.add_run(f"Target Market: ").bold = True
-    exec_summary.add_run(f"{submission.get('target_market', 'N/A')}\n\n")
-    exec_summary.add_run(
-        "This report evaluates the feasibility of the proposed project based on market conditions, "
-        "resource requirements, and strategic alignment."
-    )
+    doc.add_paragraph(exec_summary)
     
     # Introduction
     doc.add_heading('Introduction', level=1)
@@ -71,25 +146,11 @@ def build_doc(submission: Dict[str, Any]) -> bytes:
     
     # Market Assessment
     doc.add_heading('Market Assessment', level=1)
-    doc.add_paragraph(
-        f"Target Market: {submission.get('target_market', 'N/A')}\n\n"
-        f"Location & Resources: {submission.get('location_land', 'N/A')}\n\n"
-        "The market assessment evaluates demand, competition, and growth opportunities within the identified "
-        "market segment. Further detailed analysis is required to validate market assumptions."
-    )
+    doc.add_paragraph(market)
     
     # Risk Assessment & Mitigation
     doc.add_heading('Risk Assessment & Mitigation', level=1)
-    doc.add_paragraph(
-        "Key Risks Identified:\n"
-        "• Market adoption risk\n"
-        "• Operational execution risk\n"
-        "• Financial sustainability risk\n\n"
-        "Mitigation Strategies:\n"
-        "• Phased implementation approach\n"
-        "• Regular progress monitoring\n"
-        "• Contingency planning"
-    )
+    doc.add_paragraph(risk)
     
     # Caveats
     doc.add_heading('Caveats', level=1)
