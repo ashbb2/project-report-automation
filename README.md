@@ -95,69 +95,17 @@ README.md
 7. Background job processing with status polling
 8. User downloads completed report
 
-## Deployment
-
-### Railway Deployment (Production)
-
-This application is configured for Railway deployment:
-
-**Quick Deploy:**
-1. Fork/clone this repository
-2. Sign up at [railway.app](https://railway.app)
-3. Create new project → Deploy from GitHub repo
-4. Set environment variables:
-   - `LLM_PROVIDER=openai`
-   - `OPENAI_API_KEY=your-key-here`
-5. Railway auto-detects config and deploys
-
-**Detailed Guide:** See [Railway Deployment Guide](docs/RAILWAY_DEPLOYMENT.md)
-
-**Configuration Files:**
-- `railway.toml` / `railway.json` - Railway configuration
-- `Procfile` - Process definition
-- `runtime.txt` - Python version
-- `requirements.txt` - Dependencies with pinned versions
-
-### Local Development
-
-1. **Clone and Setup**
-   ```bash
-   git clone <repo-url>
-   cd project-automation
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure Environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your settings
-   ```
-
-4. **Run Development Server**
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
-
-5. **Access Application**
-   - Web Form: http://localhost:8000
-   - Health Check: http://localhost:8000/health
-   - API Docs: http://localhost:8000/docs
-
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Web form for submission |
-| POST | `/api/submit` | Submit project data, returns ID + validation summary |
-| GET | `/api/submission/{id}` | Retrieve stored submission |
-| GET/POST | `/api/report/{id}` | Generate and download .docx report |
-| GET | `/health` | Health check endpoint |
+POST /api/submit
+- Saves a new submission
+- Returns submission_id
+
+GET /api/submission/{id}
+- Fetches stored submission data
+
+POST /api/report/{id}
+- Generates and returns a .docx report
 
 ## Report Structure (MVP)
 
