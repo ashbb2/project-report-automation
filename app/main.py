@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from jinja2 import Environment, FileSystemLoader
 import os
 from io import BytesIO
-from app.models import SubmissionCreate, SubmissionResponse
+from app.models import SubmissionCreate, SubmissionResponse, SubmissionResponseWithValidation, ValidationSummary
 from app.db import init_db, save_submission, get_submission
 from app.report_builder import build_doc
 
@@ -24,18 +24,86 @@ async def get_form():
     return template.render()
 
 
-@app.post("/api/submit", response_model=SubmissionResponse)
+def validate_critical_inputs(submission: SubmissionCreate) -> ValidationSummary:
+    """
+    Validate critical vs optional inputs per Policy C.
+    Returns summary of missing critical and optional fields.
+    """
+    critical_missing = []
+    optional_missing = []
+    assumptions_used = []
+    
+    # Check sizing mode specific requirements
+    if submission.sizing_mode.value == "capacity_driven" and not submission.target_capacity:
+        critical_missing.append("target_capacity (required for capacity-driven mode)")
+    if submission.sizing_mode.value == "budget_driven" and not submission.total_investment:
+        critical_missing.append("total_investment (required for budget-driven mode)")
+    
+    # Check optional fields
+    if not submission.product_mix:
+        optional_missing.append("product_mix")
+        assumptions_used.append("Single product line assumed")
+    
+    if not submission.utilities_consumption:
+        optional_missing.append("utilities_consumption")
+        assumptions_used.append("Industry standard utility consumption rates will be applied")
+    
+    if not submission.moratorium_period:
+        optional_missing.append("moratorium_period")
+        assumptions_used.append("No moratorium period assumed")
+    
+    if not submission.preferred_manufacturer_geography:
+        optional_missing.append("preferred_manufacturer_geography")
+    
+    if not submission.brand_preferences:
+        optional_missing.append("brand_preferences")
+    
+    if not submission.technology_exclusions:
+        optional_missing.append("technology_exclusions")
+    
+    if not submission.promoter_background:
+        optional_missing.append("promoter_background")
+    
+    if not submission.start_date:
+        optional_missing.append("start_date")
+    
+    if not submission.target_launch_date:
+        optional_missing.append("target_launch_date")
+    
+    return ValidationSummary(
+        critical_missing=critical_missing,
+        optional_missing=optional_missing,
+        assumptions_used=assumptions_used
+    )
+
+
+@app.post("/api/submit", response_model=SubmissionResponseWithValidation)
 async def submit_form(submission: SubmissionCreate):
     """
     Accept form submission, validate with Pydantic, save to database, and return ID.
+    Implements Policy C: strict validation for critical fields, permissive for optional.
     """
+    # Validate inputs per Policy C
+    validation_summary = validate_critical_inputs(submission)
+    
+    # Policy C: Block submission if critical fields are missing
+    if validation_summary.critical_missing:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Critical fields missing",
+                "critical_missing": validation_summary.critical_missing
+            }
+        )
+    
     # Convert submission to dict and save to database
     payload = submission.model_dump()
     submission_id = save_submission(payload)
     
-    # Return the submission with ID
-    return SubmissionResponse(
+    # Return the submission with ID and validation summary
+    return SubmissionResponseWithValidation(
         id=str(submission_id),
+        validation_summary=validation_summary,
         **payload
     )
 

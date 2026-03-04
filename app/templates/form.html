@@ -3,13 +3,19 @@
 <head>
     <title>Project Report Automation</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; }
         h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
         form { display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; }
+        .form-section { margin-bottom: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 4px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         label { font-weight: bold; margin-bottom: 5px; color: #555; }
-        input, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
-        input:focus, textarea:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
+        label.critical::after { content: " *"; color: #dc3545; }
+        label.optional::after { content: " (optional)"; color: #6c757d; font-weight: normal; font-size: 0.9em; }
+        input, textarea, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
+        input.critical-field, textarea.critical-field, select.critical-field { border-left: 3px solid #dc3545; }
         button { padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #0056b3; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -17,62 +23,234 @@
         button.download:hover { background-color: #218838; }
         .error { color: red; margin-top: 10px; padding: 10px; background-color: #ffe6e6; border-radius: 4px; display: none; }
         .success { color: green; margin-top: 10px; padding: 10px; background-color: #e6ffe6; border-radius: 4px; display: none; }
+        .warning { color: #856404; margin-top: 10px; padding: 10px; background-color: #fff3cd; border-radius: 4px; display: none; }
         #downloadSection { display: none; margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 4px; border: 2px solid #28a745; }
+        #validationSummary { margin-top: 10px; padding: 15px; background-color: #fff; border-radius: 4px; border: 1px solid #ccc; display: none; }
+        .validation-item { padding: 5px 0; }
+        .validation-item.missing { color: #dc3545; }
+        .validation-item.present { color: #28a745; }
         .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .conditional-section { display: none; }
+        .conditional-section.active { display: block; }
     </style>
 </head>
 <body>
     <h1>Project Feasibility Report Generator</h1>
+    
     <form id="submissionForm">
-        <div class="form-group">
-            <label for="business_idea">Business Idea *</label>
-            <textarea name="business_idea" id="business_idea" placeholder="Describe your business idea" rows="4" required></textarea>
+        <!-- Project Identity Section -->
+        <div class="form-section">
+            <h2>Project Identity</h2>
+            <div class="form-group">
+                <label for="client_name" class="critical">Client Name</label>
+                <input type="text" name="client_name" id="client_name" class="critical-field" placeholder="Enter client/organization name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="project_title" class="critical">Project Title</label>
+                <input type="text" name="project_title" id="project_title" class="critical-field" placeholder="Enter project title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product_service" class="critical">Product/Service</label>
+                <textarea name="product_service" id="product_service" class="critical-field" placeholder="Describe the product or service" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="project_location" class="critical">Project Location</label>
+                <textarea name="project_location" id="project_location" class="critical-field" placeholder="Provide detailed location and land information" rows="2" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="business_model" class="critical">Business Model</label>
+                <select name="business_model" id="business_model" class="critical-field" required>
+                    <option value="">-- Select Business Model --</option>
+                    <option value="B2B">B2B (Business to Business)</option>
+                    <option value="B2C">B2C (Business to Consumer)</option>
+                    <option value="B2G">B2G (Business to Government)</option>
+                    <option value="Hybrid">Hybrid</option>
+                </select>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="location_land">Location & Land Details *</label>
-            <textarea name="location_land" id="location_land" placeholder="Provide location and land details" rows="3" required></textarea>
+        <!-- Project Sizing Mode Section -->
+        <div class="form-section">
+            <h2>Project Sizing Mode</h2>
+            <div class="form-group">
+                <label for="sizing_mode" class="critical">Sizing Mode</label>
+                <select name="sizing_mode" id="sizing_mode" class="critical-field" required>
+                    <option value="">-- Select Sizing Mode --</option>
+                    <option value="capacity_driven">Capacity-Driven (Based on production capacity)</option>
+                    <option value="budget_driven">Budget-Driven (Based on available investment)</option>
+                </select>
+            </div>
+            
+            <div class="form-group conditional-section" id="capacity_section">
+                <label for="target_capacity" class="critical">Target Production Capacity</label>
+                <input type="text" name="target_capacity" id="target_capacity" placeholder="e.g., 10,000 units/month, 5000 MT/year">
+            </div>
+            
+            <div class="form-group conditional-section" id="budget_section">
+                <label for="total_investment" class="critical">Total Investment Budget</label>
+                <input type="number" name="total_investment" id="total_investment" placeholder="Enter total budget" step="0.01">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="promoter_background">Promoter Background *</label>
-            <textarea name="promoter_background" id="promoter_background" placeholder="Describe the promoter's background and experience" rows="3" required></textarea>
+        <!-- Commercial Assumptions Section -->
+        <div class="form-section">
+            <h2>Commercial Assumptions</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="selling_price" class="critical">Selling Price per Unit</label>
+                    <input type="number" name="selling_price" id="selling_price" class="critical-field" placeholder="Unit selling price" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="currency" class="critical">Currency</label>
+                    <select name="currency" id="currency" class="critical-field" required>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="INR" selected>INR (₹)</option>
+                        <option value="AED">AED (د.إ)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="product_mix" class="optional">Product Mix</label>
+                <textarea name="product_mix" id="product_mix" placeholder="Describe product variants and revenue contribution (e.g., Product A: 60%, Product B: 40%)" rows="2"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="production_rampup" class="critical">Production Ramp-Up Plan</label>
+                <textarea name="production_rampup" id="production_rampup" class="critical-field" placeholder="Year 1: 50%, Year 2: 75%, Year 3: 100%" rows="2" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="market_geography" class="critical">Market Geography</label>
+                <textarea name="market_geography" id="market_geography" class="critical-field" placeholder="Target markets (domestic, regional, international)" rows="2" required></textarea>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="goals">Project Goals *</label>
-            <textarea name="goals" id="goals" placeholder="Outline the main goals of the project" rows="3" required></textarea>
+        <!-- Operating Assumptions Section -->
+        <div class="form-section">
+            <h2>Operating Assumptions</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="operating_days" class="critical">Operating Days per Year</label>
+                    <input type="number" name="operating_days" id="operating_days" class="critical-field" placeholder="e.g., 300" min="1" max="365" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shifts_per_day" class="critical">Shifts per Day</label>
+                    <input type="number" name="shifts_per_day" id="shifts_per_day" class="critical-field" placeholder="e.g., 2" min="1" max="3" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hours_per_shift" class="critical">Hours per Shift</label>
+                    <input type="number" name="hours_per_shift" id="hours_per_shift" class="critical-field" placeholder="e.g., 8" min="1" max="12" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="utilization_rate" class="critical">Plant Utilization Rate (%)</label>
+                    <input type="number" name="utilization_rate" id="utilization_rate" class="critical-field" placeholder="e.g., 85" min="1" max="100" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="utilities_consumption" class="optional">Utilities Consumption Estimates</label>
+                <textarea name="utilities_consumption" id="utilities_consumption" placeholder="Power: XX kWh/month, Water: XX m³/month, Gas: XX units/month" rows="2"></textarea>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="start_date">Start Date *</label>
-            <input type="date" name="start_date" id="start_date" required>
+        <!-- Financing Inputs Section -->
+        <div class="form-section">
+            <h2>Financing Inputs</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="debt_percentage" class="critical">Debt (%)</label>
+                    <input type="number" name="debt_percentage" id="debt_percentage" class="critical-field" placeholder="e.g., 70" min="0" max="100" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="equity_percentage" class="critical">Equity (%)</label>
+                    <input type="number" name="equity_percentage" id="equity_percentage" class="critical-field" placeholder="e.g., 30" min="0" max="100" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="loan_tenor" class="critical">Loan Tenor (years)</label>
+                    <input type="number" name="loan_tenor" id="loan_tenor" class="critical-field" placeholder="e.g., 10" min="1" max="30" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="interest_rate" class="critical">Interest Rate (% per annum)</label>
+                    <input type="number" name="interest_rate" id="interest_rate" class="critical-field" placeholder="e.g., 9.5" step="0.01" min="0" max="30" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="moratorium_period" class="optional">Moratorium Period (months)</label>
+                <input type="number" name="moratorium_period" id="moratorium_period" placeholder="e.g., 6" min="0" max="36">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="target_launch_date">Target Launch Date *</label>
-            <input type="date" name="target_launch_date" id="target_launch_date" required>
+        <!-- Equipment Preferences Section -->
+        <div class="form-section">
+            <h2>Equipment Preferences</h2>
+            <div class="form-group">
+                <label for="preferred_manufacturer_geography" class="optional">Preferred Manufacturer Geography</label>
+                <input type="text" name="preferred_manufacturer_geography" id="preferred_manufacturer_geography" placeholder="e.g., European, Asian, North American">
+            </div>
+            
+            <div class="form-group">
+                <label for="brand_preferences" class="optional">Brand Preferences</label>
+                <textarea name="brand_preferences" id="brand_preferences" placeholder="Preferred equipment brands or manufacturers (if any)" rows="2"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="technology_exclusions" class="optional">Technology Exclusions</label>
+                <textarea name="technology_exclusions" id="technology_exclusions" placeholder="Technologies or equipment types to exclude" rows="2"></textarea>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="budget">Budget (in currency units) *</label>
-            <input type="number" name="budget" id="budget" placeholder="Enter total budget" step="0.01" required>
+        <!-- Legacy Fields (for backward compatibility) -->
+        <div class="form-section">
+            <h2>Additional Information</h2>
+            <div class="form-group">
+                <label for="promoter_background" class="optional">Promoter Background</label>
+                <textarea name="promoter_background" id="promoter_background" placeholder="Describe the promoter's background and experience" rows="3"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date" class="optional">Expected Start Date</label>
+                    <input type="date" name="start_date" id="start_date">
+                </div>
+                
+                <div class="form-group">
+                    <label for="target_launch_date" class="optional">Target Launch Date</label>
+                    <input type="date" name="target_launch_date" id="target_launch_date">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="notes" class="optional">Additional Notes</label>
+                <textarea name="notes" id="notes" placeholder="Any other relevant information" rows="3"></textarea>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="target_market">Target Market *</label>
-            <textarea name="target_market" id="target_market" placeholder="Describe your target market" rows="3" required></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="notes">Additional Notes</label>
-            <textarea name="notes" id="notes" placeholder="Any additional information (optional)" rows="3"></textarea>
-        </div>
-
+        <div id="validationSummary"></div>
+        
         <button type="submit">Generate Report</button>
         <div class="error" id="errorMessage"></div>
         <div class="success" id="successMessage"></div>
+        <div class="warning" id="warningMessage"></div>
     </form>
 
     <div id="downloadSection">
@@ -84,33 +262,133 @@
     <script>
         let currentSubmissionId = null;
 
+        // Conditional field display logic
+        document.getElementById('sizing_mode').addEventListener('change', function() {
+            const capacitySection = document.getElementById('capacity_section');
+            const budgetSection = document.getElementById('budget_section');
+            const capacityField = document.getElementById('target_capacity');
+            const budgetField = document.getElementById('total_investment');
+            
+            if (this.value === 'capacity_driven') {
+                capacitySection.classList.add('active');
+                budgetSection.classList.remove('active');
+                capacityField.required = true;
+                budgetField.required = false;
+            } else if (this.value === 'budget_driven') {
+                budgetSection.classList.add('active');
+                capacitySection.classList.remove('active');
+                budgetField.required = true;
+                capacityField.required = false;
+            } else {
+                capacitySection.classList.remove('active');
+                budgetSection.classList.remove('active');
+                capacityField.required = false;
+                budgetField.required = false;
+            }
+        });
+
+        // Debt/Equity validation
+        function validateDebtEquity() {
+            const debt = parseFloat(document.getElementById('debt_percentage').value) || 0;
+            const equity = parseFloat(document.getElementById('equity_percentage').value) || 0;
+            const warningDiv = document.getElementById('warningMessage');
+            
+            if (debt + equity !== 100 && debt > 0 && equity > 0) {
+                warningDiv.textContent = `⚠ Warning: Debt (${debt}%) + Equity (${equity}%) should equal 100%`;
+                warningDiv.style.display = 'block';
+                return false;
+            } else {
+                warningDiv.style.display = 'none';
+                return true;
+            }
+        }
+
+        document.getElementById('debt_percentage').addEventListener('input', validateDebtEquity);
+        document.getElementById('equity_percentage').addEventListener('input', validateDebtEquity);
+
+        // Form submission
         document.getElementById('submissionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
+            const warningDiv = document.getElementById('warningMessage');
             const downloadSection = document.getElementById('downloadSection');
+            const validationDiv = document.getElementById('validationSummary');
             
             // Clear messages
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             downloadSection.style.display = 'none';
+            validationDiv.style.display = 'none';
+            
+            // Validate debt/equity
+            if (!validateDebtEquity()) {
+                errorDiv.textContent = '✗ Please ensure Debt % + Equity % = 100%';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
             // Get form data
             const formData = new FormData(form);
             const data = {
-                business_idea: formData.get('business_idea'),
-                location_land: formData.get('location_land'),
-                promoter_background: formData.get('promoter_background'),
-                goals: formData.get('goals'),
-                start_date: formData.get('start_date'),
-                target_launch_date: formData.get('target_launch_date'),
-                budget: parseFloat(formData.get('budget')),
-                target_market: formData.get('target_market'),
-                notes: formData.get('notes') || null
+                // Project Identity
+                client_name: formData.get('client_name'),
+                project_title: formData.get('project_title'),
+                product_service: formData.get('product_service'),
+                project_location: formData.get('project_location'),
+                business_model: formData.get('business_model'),
+                
+                // Project Sizing
+                sizing_mode: formData.get('sizing_mode'),
+                target_capacity: formData.get('target_capacity') || null,
+                total_investment: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
+                
+                // Commercial Assumptions
+                selling_price: parseFloat(formData.get('selling_price')),
+                currency: formData.get('currency'),
+                product_mix: formData.get('product_mix') || null,
+                production_rampup: formData.get('production_rampup'),
+                market_geography: formData.get('market_geography'),
+                
+                // Operating Assumptions
+                operating_days: parseInt(formData.get('operating_days')),
+                shifts_per_day: parseInt(formData.get('shifts_per_day')),
+                hours_per_shift: parseInt(formData.get('hours_per_shift')),
+                utilization_rate: parseFloat(formData.get('utilization_rate')),
+                utilities_consumption: formData.get('utilities_consumption') || null,
+                
+                // Financing Inputs
+                debt_percentage: parseFloat(formData.get('debt_percentage')),
+                equity_percentage: parseFloat(formData.get('equity_percentage')),
+                loan_tenor: parseInt(formData.get('loan_tenor')),
+                interest_rate: parseFloat(formData.get('interest_rate')),
+                moratorium_period: formData.get('moratorium_period') ? parseInt(formData.get('moratorium_period')) : null,
+                
+                // Equipment Preferences
+                preferred_manufacturer_geography: formData.get('preferred_manufacturer_geography') || null,
+                brand_preferences: formData.get('brand_preferences') || null,
+                technology_exclusions: formData.get('technology_exclusions') || null,
+                
+                // Legacy/Additional fields
+                promoter_background: formData.get('promoter_background') || null,
+                start_date: formData.get('start_date') || null,
+                target_launch_date: formData.get('target_launch_date') || null,
+                notes: formData.get('notes') || null,
+                
+                // Backward compatibility mapping
+                business_idea: formData.get('product_service'),
+                location_land: formData.get('project_location'),
+                goals: formData.get('market_geography'),
+                budget: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
+                target_market: formData.get('market_geography')
             };
             
             try {
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner"></span>Submitting...';
+                
                 const response = await fetch('/api/submit', {
                     method: 'POST',
                     headers: {
@@ -126,13 +404,41 @@
                 
                 const result = await response.json();
                 currentSubmissionId = result.id;
+                
+                // Show validation summary if provided
+                if (result.validation_summary) {
+                    let summaryHTML = '<strong>Input Validation Summary:</strong><br>';
+                    if (result.validation_summary.critical_missing && result.validation_summary.critical_missing.length > 0) {
+                        summaryHTML += '<div style="color: #dc3545; margin-top: 10px;">⚠ Critical fields missing:</div>';
+                        result.validation_summary.critical_missing.forEach(field => {
+                            summaryHTML += `<div class="validation-item missing">✗ ${field}</div>`;
+                        });
+                    }
+                    if (result.validation_summary.optional_missing && result.validation_summary.optional_missing.length > 0) {
+                        summaryHTML += '<div style="color: #856404; margin-top: 10px;">ℹ Optional fields not provided (will use defaults):</div>';
+                        result.validation_summary.optional_missing.forEach(field => {
+                            summaryHTML += `<div class="validation-item" style="color: #856404;">- ${field}</div>`;
+                        });
+                    }
+                    validationDiv.innerHTML = summaryHTML;
+                    validationDiv.style.display = 'block';
+                }
+                
                 successDiv.textContent = `✓ Submission successful! ID: ${result.id}`;
                 successDiv.style.display = 'block';
                 downloadSection.style.display = 'block';
-                form.reset();
+                
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Generate Report';
+                
+                // Scroll to success message
+                successDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (error) {
                 errorDiv.textContent = `✗ Error: ${error.message}`;
                 errorDiv.style.display = 'block';
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Generate Report';
             }
         });
 
