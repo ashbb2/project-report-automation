@@ -33,6 +33,308 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .conditional-section { display: none; }
         .conditional-section.active { display: block; }
+        .field-hint { margin-top: 6px; font-size: 0.9em; color: #6c757d; }
+        .loading-inline { display: inline-flex; align-items: center; gap: 8px; color: #6c757d; font-size: 0.9em; margin-top: 6px; }
+        .loading-inline.hidden { display: none; }
+        .spinner-inline {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #c9d7ee;
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .pac-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            font-family: Arial, sans-serif;
+            margin-top: 4px;
+        }
+        .pac-item {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .pac-item:hover,
+        .pac-item-selected {
+            background-color: #eef5ff;
+        }
+        .city-autocomplete-host {
+            margin-bottom: 8px;
+        }
+        .city-autocomplete-host gmp-place-autocomplete {
+            width: 100%;
+            display: block;
+            color-scheme: light;
+            --gmpx-color-surface: #ffffff;
+            --gmpx-color-on-surface: #333333;
+            --gmpx-color-primary: #007bff;
+        }
+        .hsn-selector {
+            border: 1px solid #d7dee7;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .hsn-step {
+            border: 1px solid #e5e9f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #fbfcfe;
+            transition: opacity 0.2s ease;
+        }
+        .hsn-step.inactive {
+            opacity: 1;
+            background: #fcfcfd;
+            border-color: #e4e4e7;
+        }
+        .hsn-step.inactive .hsn-step-title {
+            color: #64748b;
+        }
+        .hsn-step-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .hsn-step-title {
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #3a4757;
+        }
+        .hsn-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-mode-button {
+            border: 1px solid #d4d4d8;
+            border-radius: 10px;
+            padding: 12px;
+            background: #ffffff;
+            color: #1f2937;
+            text-align: left;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .hsn-mode-button:hover {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #a1a1aa;
+            box-shadow: 0 3px 10px rgba(24, 24, 27, 0.08);
+            transform: translateY(-1px);
+        }
+        .hsn-mode-button.selected {
+            border-color: #2563eb;
+            background: #f8fbff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .hsn-mode-button.selected:hover {
+            background: #f8fbff;
+            color: #1f2937;
+        }
+        .hsn-mode-label {
+            display: block;
+            font-size: 1em;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .hsn-mode-copy {
+            display: block;
+            font-size: 0.86em;
+            color: #475569;
+            line-height: 1.4;
+        }
+        .hsn-search-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+        .hsn-search-button {
+            min-width: 96px;
+        }
+        .hsn-family-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-card {
+            border: 1px solid #d4d4d8;
+            border-left: 6px solid #6c8fcf;
+            border-radius: 10px;
+            padding: 12px;
+            background: #ffffff;
+            color: #1f2937;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            text-align: left;
+            font-weight: 400;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease;
+        }
+        .hsn-card:hover {
+            border-color: #a1a1aa;
+            background: #ffffff;
+            color: #1f2937;
+            box-shadow: 0 3px 10px rgba(24, 24, 27, 0.08);
+            transform: translateY(-1px);
+        }
+        .hsn-card.selected {
+            border-color: #2563eb;
+            background: #f8fbff;
+            color: #1f2937;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .hsn-card.selected:hover {
+            background: #f8fbff;
+            color: #1f2937;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2), 0 3px 10px rgba(24, 24, 27, 0.08);
+        }
+        .hsn-card-code {
+            font-size: 1.15em;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .hsn-card-text {
+            font-size: 1.02em;
+            font-weight: 500;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        .hsn-card-meta {
+            margin-top: 6px;
+            font-size: 0.82em;
+            color: #5f6f82;
+            line-height: 1.35;
+        }
+        .hsn-count-pill {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.76em;
+            font-weight: 500;
+            color: #334155;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
+        }
+        .hsn-card-examples {
+            margin-top: 9px;
+            font-size: 0.84em;
+            color: #475569;
+            line-height: 1.35;
+            font-weight: 400;
+        }
+        .hsn-sub-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-sub-card {
+            min-height: 100%;
+        }
+        .hsn-sub-card .hsn-card-meta {
+            margin-top: 8px;
+        }
+        .hsn-back-link,
+        .hsn-change-link {
+            color: #0056b3;
+            background: none;
+            border: none;
+            padding: 0;
+            font-weight: normal;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .hsn-summary {
+            border: 1px solid #c9dfcb;
+            border-radius: 8px;
+            background: #f4fbf5;
+            color: #1f5a24;
+            padding: 10px 12px;
+            display: none;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .hsn-summary-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .hsn-selected-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .hsn-selected-chip {
+            border: 1px solid #b7d6bb;
+            background: #ffffff;
+            color: #1f5a24;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.8em;
+            line-height: 1.2;
+        }
+        .hsn-summary-actions {
+            display: inline-flex;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .hsn-action-button {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            padding: 6px 10px;
+            font-size: 0.82em;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .hsn-action-button:hover {
+            background: #f8fafc;
+        }
+        .hsn-action-button.save {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #ffffff;
+        }
+        .hsn-action-button.save:hover {
+            background: #1d4ed8;
+        }
+        .hsn-helper {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #5f6f82;
+        }
+        .hsn-grouping-note {
+            margin-top: 10px;
+            font-size: 0.82em;
+            color: #64748b;
+        }
+        .field-error {
+            color: #b42318;
+            margin-top: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+        @media (max-width: 680px) {
+            .hsn-search-row {
+                grid-template-columns: 1fr;
+            }
+            .hsn-search-button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -53,23 +355,98 @@
             </div>
             
             <div class="form-group">
-                <label for="product_service" class="critical">Product/Service</label>
-                <textarea name="product_service" id="product_service" class="critical-field" placeholder="Describe the product or service" rows="3" required></textarea>
+                <label for="hsnSearchInput" class="critical">Product/Service (GST Code Selector)</label>
+                <div class="hsn-selector">
+                    <div id="hsnStep0" class="hsn-step">
+                        <div class="hsn-step-head">
+                            <div class="hsn-step-title">Step 0: Choose what you are classifying</div>
+                        </div>
+                        <div class="hsn-mode-grid">
+                            <button type="button" id="hsnModeProduct" class="hsn-mode-button">
+                                <span class="hsn-mode-label">Product</span>
+                                <span class="hsn-mode-copy">Search HSN codes for goods and products.</span>
+                            </button>
+                            <button type="button" id="hsnModeService" class="hsn-mode-button">
+                                <span class="hsn-mode-label">Service</span>
+                                <span class="hsn-mode-copy">Search SAC codes for services and activities.</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="hsnStep1" class="hsn-step inactive" style="display: none;">
+                        <div class="hsn-step-head">
+                            <div id="hsnStep1Heading" class="hsn-step-title">Step 1: Product Family Search</div>
+                        </div>
+                        <div class="hsn-search-row">
+                            <input type="text" id="hsnSearchInput" placeholder="e.g. laptop, cotton shirt, solar panel" autocomplete="off">
+                            <button type="button" id="hsnSearchButton" class="hsn-search-button">Search</button>
+                        </div>
+                        <div id="hsnNoResults" class="field-hint" style="display: none; color: #8f4f00;">No matches found — try simpler keywords like the material or main use of the product</div>
+                        <div id="hsnFamilyCards" class="hsn-family-grid"></div>
+                        <div id="hsnGroupingNote" class="hsn-grouping-note" style="display: none;"></div>
+                    </div>
+
+                    <div id="hsnStep2" class="hsn-step inactive" style="display: none;">
+                        <div class="hsn-step-head">
+                            <div id="hsnStep2Heading" class="hsn-step-title">Step 2: Select the specific product</div>
+                            <button type="button" id="hsnBackButton" class="hsn-back-link">Back to Step 1</button>
+                        </div>
+                        <div id="hsnSubCodeCards" class="hsn-sub-list"></div>
+                    </div>
+
+                    <div id="hsnSummary" class="hsn-summary">
+                        <div class="hsn-summary-content">
+                            <span id="hsnSummaryText"></span>
+                            <div id="hsnSelectedList" class="hsn-selected-list" style="display: none;"></div>
+                        </div>
+                        <div class="hsn-summary-actions">
+                            <button type="button" id="hsnSaveButton" class="hsn-action-button save" style="display: none;">Save</button>
+                            <button type="button" id="hsnEditButton" class="hsn-action-button" style="display: none;">Edit</button>
+                        </div>
+                    </div>
+
+                    <div id="hsnFlowHint" class="hsn-helper">Choose Product for HSN or Service for SAC. Step 1 groups results dynamically using a 2-4 digit prefix. Step 2 lets you pick the final GST code.</div>
+                    <div id="hsnInlineError" class="field-error">Select a GST code before submitting.</div>
+                </div>
+
+                <input type="hidden" name="product_service" id="product_service" required>
+                <input type="hidden" name="hsn_family_code" id="hsn_family_code" required>
+                <input type="hidden" name="hsn_family_name" id="hsn_family_name">
+                <input type="hidden" name="hsn_code" id="hsn_code" required>
+                <input type="hidden" name="hsn_description" id="hsn_description" required>
             </div>
             
+            <input type="hidden" name="project_country" id="project_country" value="">
+
             <div class="form-group">
-                <label for="project_location" class="critical">Project Location</label>
-                <textarea name="project_location" id="project_location" class="critical-field" placeholder="Provide detailed location and land information" rows="2" required></textarea>
+                <label class="critical">City</label>
+                <div id="cityAutocompleteHost" class="city-autocomplete-host"></div>
+                <input type="hidden" name="project_city" id="project_city">
+                <input type="hidden" name="project_state" id="project_state">
+                <div id="placeLoadingIndicator" class="loading-inline hidden" aria-live="polite">
+                    <span class="spinner-inline"></span>
+                    <span>Fetching location details...</span>
+                </div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="project_pin_code" class="optional">Pin Code</label>
+                <input type="text" name="project_pin_code" id="project_pin_code" class="critical-field" placeholder="Enter 6-digit pin code" inputmode="numeric" maxlength="12" title="Enter a valid pin code">
+                <div class="field-hint">For India, pin code must be exactly 6 digits if provided.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="target_customer" class="critical">Target Customer</label>
+                <textarea name="target_customer" id="target_customer" class="critical-field" placeholder="Describe the target customer segment" rows="2" required></textarea>
+            </div>
+
             <div class="form-group">
                 <label for="business_model" class="critical">Business Model</label>
                 <select name="business_model" id="business_model" class="critical-field" required>
                     <option value="">-- Select Business Model --</option>
-                    <option value="B2B">B2B (Business to Business)</option>
-                    <option value="B2C">B2C (Business to Consumer)</option>
-                    <option value="B2G">B2G (Business to Government)</option>
-                    <option value="Hybrid">Hybrid</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Trading (Wholesale)">Trading (Wholesale)</option>
+                    <option value="Trading (Retail)">Trading (Retail)</option>
                 </select>
             </div>
         </div>
@@ -259,10 +636,1063 @@
         <button class="download" id="downloadButton">📥 Download Report (.docx)</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/umd/index.min.js"></script>
     <script>
         let currentSubmissionId = null;
+        let placeAutocompleteElement = null;
+        let googlePlacesAvailable = false;
+        const cityHiddenInput = document.getElementById('project_city');
+        const cityAutocompleteHost = document.getElementById('cityAutocompleteHost');
+        const stateHiddenInput = document.getElementById('project_state');
+        const pinCodeInput = document.getElementById('project_pin_code');
+        const countryInput = document.getElementById('project_country');
+        const placeLoadingIndicator = document.getElementById('placeLoadingIndicator');
+        const hsnSearchInput = document.getElementById('hsnSearchInput');
+        const hsnSearchButton = document.getElementById('hsnSearchButton');
+        const hsnStep0 = document.getElementById('hsnStep0');
+        const hsnStep1 = document.getElementById('hsnStep1');
+        const hsnStep2 = document.getElementById('hsnStep2');
+        const hsnStep1Heading = document.getElementById('hsnStep1Heading');
+        const hsnStep2Heading = document.getElementById('hsnStep2Heading');
+        const hsnFamilyCards = document.getElementById('hsnFamilyCards');
+        const hsnSubCodeCards = document.getElementById('hsnSubCodeCards');
+        const hsnNoResults = document.getElementById('hsnNoResults');
+        const hsnGroupingNote = document.getElementById('hsnGroupingNote');
+        const hsnSummary = document.getElementById('hsnSummary');
+        const hsnSummaryText = document.getElementById('hsnSummaryText');
+        const hsnSelectedList = document.getElementById('hsnSelectedList');
+        const hsnFlowHint = document.getElementById('hsnFlowHint');
+        const hsnBackButton = document.getElementById('hsnBackButton');
+        const hsnSaveButton = document.getElementById('hsnSaveButton');
+        const hsnEditButton = document.getElementById('hsnEditButton');
+        const hsnInlineError = document.getElementById('hsnInlineError');
+        const productServiceInput = document.getElementById('product_service');
+        const hsnFamilyCodeInput = document.getElementById('hsn_family_code');
+        const hsnFamilyNameInput = document.getElementById('hsn_family_name');
+        const hsnCodeInput = document.getElementById('hsn_code');
+        const hsnDescriptionInput = document.getElementById('hsn_description');
+        const hsnModeProductButton = document.getElementById('hsnModeProduct');
+        const hsnModeServiceButton = document.getElementById('hsnModeService');
 
-        // Conditional field display logic
+        const GOOGLE_MAPS_API_KEY = {{ google_maps_api_key | tojson }};
+        // Set this to [] for unrestricted global results.
+        const GOOGLE_AUTOCOMPLETE_REGION_CODES = [];
+        const HSN_CARD_BANDS = ['#5f88c5', '#448a84', '#a98344', '#7f77bb', '#3c7bbd'];
+        const HSN_CATALOG_URL = '/api/hsn/catalog';
+        let hsnMiniSearch = null;
+        let hsnCatalogReadyPromise = null;
+        const hsnState = {
+            results: [],
+            families: [],
+            selectedFamily: null,
+            selectedSubCode: null,
+            selectedSubCodes: [],
+            isLocked: false,
+            selectedMode: null,
+            step1PrefixLength: 4,
+            lockedFamilyCode: null
+        };
+
+        const HSN_MODE_CONFIG = {
+            product: {
+                selectionType: 'product',
+                taxCodeType: 'HSN',
+                familyLabel: 'Chapter',
+                groupingCandidates: [4, 3, 2],
+                step1Title: 'Step 1: Product Family Search',
+                step2Title: 'Step 2: Select the specific product',
+                placeholder: 'e.g. laptop, cotton shirt, solar panel',
+                noResults: 'No product matches found — try the material, component, or main use of the product.',
+                flowHint: 'Choose Product for HSN. Step 1 groups results dynamically using a 2-4 digit HSN prefix. Step 2 lets you pick the final GST HSN code.',
+            },
+            service: {
+                selectionType: 'service',
+                taxCodeType: 'SAC',
+                familyLabel: 'Group',
+                groupingCandidates: [2, 3, 4],
+                step1Title: 'Step 1: Service Category Search',
+                step2Title: 'Step 2: Select the specific service',
+                placeholder: 'e.g. consulting, laundry, repair, coaching',
+                noResults: 'No service matches found — try the activity, outcome, or type of service.',
+                flowHint: 'Choose Service for SAC. Step 1 groups results dynamically using a 2-4 digit SAC prefix. Step 2 lets you pick the final GST SAC code.',
+            }
+        };
+
+        function getSelectedModeConfig() {
+            return hsnState.selectedMode ? HSN_MODE_CONFIG[hsnState.selectedMode] : null;
+        }
+
+        function applyHsnModeUi() {
+            const modeConfig = getSelectedModeConfig();
+            hsnModeProductButton.classList.toggle('selected', hsnState.selectedMode === 'product');
+            hsnModeServiceButton.classList.toggle('selected', hsnState.selectedMode === 'service');
+
+            if (!modeConfig) {
+                hsnStep1Heading.textContent = 'Step 1: Product Family Search';
+                hsnStep2Heading.textContent = 'Step 2: Select the specific product';
+                hsnSearchInput.placeholder = 'e.g. laptop, cotton shirt, solar panel';
+                hsnNoResults.textContent = 'No matches found — try simpler keywords like the material or main use of the product';
+                hsnFlowHint.textContent = 'Choose Product for HSN or Service for SAC. Step 1 groups results dynamically using a 2-4 digit prefix. Step 2 lets you pick the final GST code.';
+                return;
+            }
+
+            hsnStep1Heading.textContent = modeConfig.step1Title;
+            hsnStep2Heading.textContent = modeConfig.step2Title;
+            hsnSearchInput.placeholder = modeConfig.placeholder;
+            hsnNoResults.textContent = modeConfig.noResults;
+            hsnFlowHint.textContent = modeConfig.flowHint;
+        }
+
+        function setHsnMode(mode) {
+            if (!HSN_MODE_CONFIG[mode]) {
+                return;
+            }
+
+            if (hsnState.selectedMode !== mode) {
+                clearHsnSelection(false);
+                hsnSearchInput.value = '';
+            }
+
+            hsnState.selectedMode = mode;
+            hsnStep1.style.display = 'block';
+            applyHsnModeUi();
+            setHsnStepState(1);
+            setHsnInlineError('');
+        }
+
+        function normalizeHsnDescription(text) {
+            return String(text || '')
+                .replace(/\s+/g, ' ')
+                .replace(/[^\w\s()/,&.-]/g, ' ')
+                .trim();
+        }
+
+        function buildHsnSearchText(item) {
+            const description = normalizeHsnDescription(item.description || '');
+            const terms = [
+                description,
+                String(item.familyName || ''),
+                String(item.hsnCode || ''),
+                String(item.familyCode || ''),
+            ];
+
+            return terms
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+        }
+
+        function tokenizeHsnQuery(query) {
+            const stopWords = new Set(['for', 'and', 'the', 'of', 'with', 'or', 'to', 'in', 'by']);
+            const tokens = String(query || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .split(/\s+/)
+                .filter(Boolean)
+                .filter((token) => token.length >= 2)
+                .filter((token) => !stopWords.has(token));
+
+            return [...new Set(tokens)];
+        }
+
+        function countMatchedTokens(docText, tokens) {
+            if (!tokens.length) {
+                return 0;
+            }
+
+            let matched = 0;
+            for (const token of tokens) {
+                if (token.length >= 4) {
+                    const roughStem = token.endsWith('s') ? token.slice(0, -1) : token;
+                    if (
+                        docText.includes(token)
+                        || docText.includes(`${roughStem} `)
+                        || docText.includes(` ${roughStem}`)
+                    ) {
+                        matched += 1;
+                    }
+                    continue;
+                }
+
+                const exactPattern = new RegExp(`\\b${token}\\b`, 'i');
+                if (exactPattern.test(docText)) {
+                    matched += 1;
+                }
+            }
+
+            return matched;
+        }
+
+        async function ensureHsnCatalogReady() {
+            if (hsnMiniSearch) {
+                return;
+            }
+            if (hsnCatalogReadyPromise) {
+                return hsnCatalogReadyPromise;
+            }
+
+            hsnCatalogReadyPromise = (async () => {
+                if (typeof MiniSearch !== 'function') {
+                    throw new Error('MiniSearch failed to load');
+                }
+
+                const response = await fetch(HSN_CATALOG_URL, { method: 'GET' });
+                if (!response.ok) {
+                    throw new Error('Could not load local HSN catalog');
+                }
+
+                const payload = await response.json();
+                const rows = Array.isArray(payload.results) ? payload.results : [];
+                const docs = rows
+                    .map((item) => {
+                        const hsnCode = sanitizeHsnCode(item.hsnCode);
+                        const description = normalizeHsnDescription(item.description || `HSN ${hsnCode}`);
+                        const familyCode = sanitizeHsnCode(item.familyCode).slice(0, 4) || hsnCode.slice(0, 4);
+                        const familyName = normalizeHsnDescription(item.familyName || description || `Chapter ${familyCode}`);
+
+                        if (hsnCode.length < 4 || !description) {
+                            return null;
+                        }
+
+                        return {
+                            id: `${hsnCode}::${description.toLowerCase()}`,
+                            hsnCode,
+                            description,
+                            familyCode,
+                            familyName,
+                            taxCodeType: item.taxCodeType || 'HSN',
+                            selectionType: item.selectionType || 'product',
+                            familyLabel: item.familyLabel || 'Chapter',
+                            searchText: buildHsnSearchText({
+                                hsnCode,
+                                description,
+                                familyCode,
+                                familyName,
+                            })
+                        };
+                    })
+                    .filter(Boolean);
+
+                hsnMiniSearch = new MiniSearch({
+                    fields: ['description', 'searchText', 'hsnCode', 'familyCode'],
+                    storeFields: ['hsnCode', 'description', 'familyCode', 'familyName', 'taxCodeType', 'selectionType', 'familyLabel'],
+                    searchOptions: {
+                        prefix: true,
+                        fuzzy: 0.2,
+                        boost: {
+                            description: 3,
+                            searchText: 2,
+                            hsnCode: 5,
+                            familyCode: 3
+                        }
+                    }
+                });
+                hsnMiniSearch.addAll(docs);
+            })();
+
+            try {
+                await hsnCatalogReadyPromise;
+            } catch (error) {
+                hsnCatalogReadyPromise = null;
+                throw error;
+            }
+        }
+
+        function queryHsnMiniSearch(query, topK, selectedMode) {
+            const queryTokens = tokenizeHsnQuery(query);
+            const primary = hsnMiniSearch.search(query, {
+                prefix: true,
+                fuzzy: 0.15,
+                combineWith: 'AND'
+            });
+            const fallback = hsnMiniSearch.search(query, {
+                prefix: true,
+                fuzzy: 0.2,
+                combineWith: 'OR'
+            });
+
+            const merged = [];
+            const seen = new Set();
+            for (const item of [...primary, ...fallback]) {
+                if (seen.has(item.id)) {
+                    continue;
+                }
+                seen.add(item.id);
+                merged.push(item);
+            }
+
+            const minCoverage = queryTokens.length <= 2 ? queryTokens.length : Math.max(2, Math.ceil(queryTokens.length * 0.65));
+            const filtered = merged
+                .map((item) => {
+                    const searchable = `${item.description || ''} ${item.familyName || ''}`.toLowerCase();
+                    const coverage = countMatchedTokens(searchable, queryTokens);
+                    const phraseBoost = searchable.includes(String(query || '').toLowerCase()) ? 1 : 0;
+                    return { item, coverage, phraseBoost };
+                })
+                .filter(({ item }) => !selectedMode || item.selectionType === selectedMode)
+                .filter(({ coverage }) => queryTokens.length === 0 || coverage >= minCoverage)
+                .sort((a, b) => {
+                    if (b.coverage !== a.coverage) {
+                        return b.coverage - a.coverage;
+                    }
+                    if (b.phraseBoost !== a.phraseBoost) {
+                        return b.phraseBoost - a.phraseBoost;
+                    }
+                    return (b.item.score || 0) - (a.item.score || 0);
+                })
+                .slice(0, topK)
+                .map(({ item }) => item);
+
+            return filtered.map((item) => ({
+                hsnCode: item.hsnCode,
+                description: item.description,
+                familyCode: item.familyCode,
+                familyName: item.familyName,
+                taxCodeType: item.taxCodeType,
+                selectionType: item.selectionType,
+                familyLabel: item.familyLabel,
+            }));
+        }
+
+        function sanitizeHsnCode(value) {
+            return String(value || '').replace(/\D/g, '');
+        }
+
+        function getFamilyCodeFromItem(item, prefixLength = 4) {
+            return sanitizeHsnCode(item.hsnCode).slice(0, prefixLength);
+        }
+
+        function getDynamicFamilyLabel(prefixLength) {
+            const modeConfig = getSelectedModeConfig();
+            if (!modeConfig) {
+                return `${prefixLength}-digit code group`;
+            }
+            return `${prefixLength}-digit ${modeConfig.taxCodeType} ${modeConfig.familyLabel.toLowerCase()}`;
+        }
+
+        function getStep2EligibleItemsForFamily(familyItems) {
+            const modeConfig = getSelectedModeConfig();
+            if (modeConfig?.selectionType === 'product') {
+                return familyItems.filter((item) => sanitizeHsnCode(item.hsnCode).length === 8);
+            }
+
+            const longestLength = familyItems.reduce((maxLength, item) => {
+                return Math.max(maxLength, sanitizeHsnCode(item.hsnCode).length);
+            }, 0);
+            return familyItems.filter((item) => sanitizeHsnCode(item.hsnCode).length === longestLength);
+        }
+
+        function countGroupsForPrefix(results, prefixLength) {
+            return new Set(
+                results
+                    .map((item) => getFamilyCodeFromItem(item, prefixLength))
+                    .filter(Boolean)
+            ).size;
+        }
+
+        function determineStep1PrefixLength(results) {
+            const modeConfig = getSelectedModeConfig();
+            const candidates = modeConfig?.groupingCandidates || [4, 3, 2];
+            const targetMin = 3;
+            const targetMax = 8;
+            const targetMid = 5;
+            let bestPrefix = candidates[0];
+            let bestDistance = Number.POSITIVE_INFINITY;
+
+            for (const prefixLength of candidates) {
+                const groupCount = countGroupsForPrefix(results, prefixLength);
+                if (groupCount >= targetMin && groupCount <= targetMax) {
+                    return prefixLength;
+                }
+                const distance = Math.abs(groupCount - targetMid);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestPrefix = prefixLength;
+                }
+            }
+
+            return bestPrefix;
+        }
+
+        function updateGroupingNote() {
+            if (!hsnState.results.length || !hsnState.families.length) {
+                hsnGroupingNote.style.display = 'none';
+                hsnGroupingNote.textContent = '';
+                return;
+            }
+
+            const label = getDynamicFamilyLabel(hsnState.step1PrefixLength);
+            hsnGroupingNote.textContent = `Step 1 is currently grouped by ${label}.`;
+            hsnGroupingNote.style.display = 'block';
+        }
+
+        function isValidHsnCode(value) {
+            return /^\d{4}$|^\d{6}$|^\d{8}$/.test(String(value || ''));
+        }
+
+        function setHsnInlineError(message) {
+            if (!message) {
+                hsnInlineError.style.display = 'none';
+                hsnInlineError.textContent = '';
+                return;
+            }
+            hsnInlineError.textContent = message;
+            hsnInlineError.style.display = 'block';
+        }
+
+        function setHsnStepState(activeStep) {
+            if (activeStep === 1) {
+                hsnStep1.classList.remove('inactive');
+                hsnStep2.classList.add('inactive');
+            } else {
+                hsnStep1.classList.add('inactive');
+                hsnStep2.classList.remove('inactive');
+            }
+        }
+
+        function clearHsnSelection(keepSearchResults = true) {
+            if (!keepSearchResults) {
+                hsnState.results = [];
+                hsnState.families = [];
+                hsnFamilyCards.innerHTML = '';
+                hsnSubCodeCards.innerHTML = '';
+                hsnNoResults.style.display = 'none';
+                hsnGroupingNote.style.display = 'none';
+                hsnGroupingNote.textContent = '';
+            }
+
+            hsnState.selectedFamily = null;
+            hsnState.selectedSubCode = null;
+            hsnState.selectedSubCodes = [];
+            hsnState.isLocked = false;
+            hsnState.lockedFamilyCode = null;
+            hsnSummary.style.display = 'none';
+            hsnSummaryText.textContent = '';
+            hsnSelectedList.innerHTML = '';
+            hsnSelectedList.style.display = 'none';
+            hsnSaveButton.style.display = 'none';
+            hsnEditButton.style.display = 'none';
+            hsnStep0.style.display = 'block';
+            hsnStep1.style.display = hsnState.selectedMode ? 'block' : 'none';
+            hsnStep2.style.display = 'none';
+            hsnFlowHint.style.display = 'block';
+            productServiceInput.value = '';
+            hsnFamilyCodeInput.value = '';
+            hsnFamilyNameInput.value = '';
+            hsnCodeInput.value = '';
+            hsnDescriptionInput.value = '';
+            applyHsnModeUi();
+            setHsnInlineError('');
+        }
+
+        function syncPrimarySelectionFields() {
+            const primary = hsnState.selectedSubCodes[0];
+            if (!primary) {
+                productServiceInput.value = '';
+                hsnFamilyCodeInput.value = '';
+                hsnFamilyNameInput.value = '';
+                hsnCodeInput.value = '';
+                hsnDescriptionInput.value = '';
+                return;
+            }
+
+            hsnFamilyCodeInput.value = primary.familyCode;
+            hsnFamilyNameInput.value = primary.familyName;
+            hsnCodeInput.value = primary.hsnCode;
+            hsnDescriptionInput.value = primary.description;
+            productServiceInput.value = hsnState.selectedSubCodes
+                .map((item) => item.displayDescription || normalizeUiText(item.description))
+                .join(' | ');
+        }
+
+        function updateSelectedProductsSummary() {
+            if (!hsnState.selectedSubCodes.length) {
+                hsnSummary.style.display = 'none';
+                hsnSummaryText.textContent = '';
+                hsnSelectedList.innerHTML = '';
+                hsnSelectedList.style.display = 'none';
+                return;
+            }
+
+            const primary = hsnState.selectedSubCodes[0];
+            const selectionCount = hsnState.selectedSubCodes.length;
+            hsnSummaryText.textContent = selectionCount === 1
+                ? `Selected ${primary.taxCodeType || 'HSN'}: ${primary.hsnCode} — ${primary.displayDescription || normalizeUiText(primary.description)} (under ${primary.familyLabel || 'Chapter'} ${primary.groupCode || primary.familyCode})`
+                : `${selectionCount} products selected under ${primary.familyLabel || 'Chapter'} ${primary.groupCode || primary.familyCode}`;
+
+            hsnSelectedList.innerHTML = '';
+            hsnState.selectedSubCodes.forEach((item) => {
+                const chip = document.createElement('span');
+                chip.className = 'hsn-selected-chip';
+                chip.textContent = `${item.hsnCode} • ${item.displayDescription || normalizeUiText(item.description)}`;
+                hsnSelectedList.appendChild(chip);
+            });
+            hsnSelectedList.style.display = 'flex';
+            hsnSummary.style.display = 'flex';
+        }
+
+        function updateStep2SelectionSummary() {
+            if (!hsnState.selectedSubCodes.length) {
+                hsnSummary.style.display = 'none';
+                hsnSummaryText.textContent = '';
+                hsnSelectedList.innerHTML = '';
+                hsnSelectedList.style.display = 'none';
+                hsnSaveButton.style.display = 'none';
+                return;
+            }
+
+            const count = hsnState.selectedSubCodes.length;
+            const familyLabel = hsnState.selectedFamily?.familyLabel || 'Chapter';
+            const familyCode = hsnState.selectedFamily?.code || hsnState.lockedFamilyCode || '';
+            hsnSummaryText.textContent = `${count} selected in ${familyLabel} ${familyCode}. Click Save to confirm.`;
+            hsnSelectedList.innerHTML = '';
+            hsnState.selectedSubCodes.forEach((item) => {
+                const chip = document.createElement('span');
+                chip.className = 'hsn-selected-chip';
+                chip.textContent = `${item.hsnCode} • ${item.displayDescription || normalizeUiText(item.description)}`;
+                hsnSelectedList.appendChild(chip);
+            });
+            hsnSelectedList.style.display = 'flex';
+            hsnSummary.style.display = 'flex';
+            hsnSaveButton.style.display = 'inline-block';
+        }
+
+        function toggleSubCodeSelection(subCode) {
+            const existsIndex = hsnState.selectedSubCodes.findIndex((item) => item.hsnCode === subCode.hsnCode);
+            if (existsIndex >= 0) {
+                hsnState.selectedSubCodes.splice(existsIndex, 1);
+            } else {
+                hsnState.selectedSubCodes.push({ ...subCode });
+            }
+
+            hsnState.selectedSubCode = hsnState.selectedSubCodes[0] || null;
+            document.querySelectorAll('.hsn-sub-card').forEach((card) => {
+                card.classList.toggle(
+                    'selected',
+                    hsnState.selectedSubCodes.some((item) => item.hsnCode === card.dataset.hsnCode)
+                );
+            });
+            updateStep2SelectionSummary();
+            setHsnInlineError('');
+        }
+
+        function lockHsnSelection() {
+            if (!hsnState.selectedSubCodes.length) {
+                setHsnInlineError('Select at least one sub-product before saving.');
+                return;
+            }
+            hsnState.selectedSubCode = hsnState.selectedSubCodes[0];
+            hsnState.lockedFamilyCode = hsnState.selectedFamily?.code || hsnState.lockedFamilyCode;
+            syncPrimarySelectionFields();
+            updateSelectedProductsSummary();
+
+            hsnState.isLocked = true;
+            hsnStep0.style.display = 'none';
+            hsnStep1.style.display = 'none';
+            hsnStep2.style.display = 'none';
+            hsnFlowHint.style.display = 'none';
+            hsnSaveButton.style.display = 'none';
+            hsnEditButton.style.display = 'inline-block';
+            hsnBackButton.style.display = 'none';
+            updateSelectedProductsSummary();
+            setHsnInlineError('');
+        }
+
+        function unlockHsnSelection() {
+            hsnState.isLocked = false;
+            hsnStep0.style.display = 'block';
+            hsnStep1.style.display = 'block';
+            hsnFlowHint.style.display = 'block';
+            hsnStep2.style.display = hsnState.selectedFamily ? 'block' : 'none';
+            setHsnStepState(hsnState.selectedFamily ? 2 : 1);
+            hsnSaveButton.style.display = hsnState.selectedSubCodes.length ? 'inline-block' : 'none';
+            hsnEditButton.style.display = 'none';
+            hsnSummary.style.display = hsnState.selectedSubCodes.length ? 'flex' : 'none';
+            hsnBackButton.style.display = 'inline-block';
+            updateStep2SelectionSummary();
+        }
+
+        function groupResultsByFamily(results, prefixLength) {
+            const grouped = new Map();
+            results.forEach((item) => {
+                const code = sanitizeHsnCode(item.hsnCode);
+                if (code.length < prefixLength) {
+                    return;
+                }
+                const familyCode = code.slice(0, prefixLength);
+                if (!grouped.has(familyCode)) {
+                    grouped.set(familyCode, {
+                        code: familyCode,
+                        name: item.familyName || '',
+                        hint: '',
+                        items: [],
+                        taxCodeType: item.taxCodeType || 'HSN',
+                        familyLabel: item.familyLabel || 'Chapter',
+                        prefixLength,
+                    });
+                }
+                grouped.get(familyCode).items.push({
+                    hsnCode: code,
+                    description: item.description || `HSN ${code}`,
+                    familyCode: item.familyCode || code.slice(0, 4),
+                    groupCode: familyCode,
+                    familyName: item.familyName || item.description || `Chapter ${familyCode}`,
+                    taxCodeType: item.taxCodeType || 'HSN',
+                    familyLabel: item.familyLabel || 'Chapter'
+                });
+            });
+
+            return Array.from(grouped.values()).map((family) => {
+                const eligibleItems = getStep2EligibleItemsForFamily(family.items);
+                const copySourceItems = eligibleItems.length ? eligibleItems : family.items;
+                const derived = deriveFamilyCardCopy(family.code, copySourceItems, family.name);
+                return {
+                    ...family,
+                    matchingCount: copySourceItems.length,
+                    name: derived.name,
+                    countText: derived.countText,
+                    hint: derived.hint
+                };
+            });
+        }
+
+        function deriveFamilyCardCopy(familyCode, items, existingLabel) {
+            const cleanDescriptions = [...new Set(
+                items
+                    .map((item) => String(item.description || '').replace(/\s+/g, ' ').trim())
+                    .filter((desc) => desc && !/^HSN\s+\d+$/i.test(desc))
+            )];
+
+            const explicitFamilyItem = items.find((item) => sanitizeHsnCode(item.hsnCode).length === 4 && item.description);
+            const labelFromItem = explicitFamilyItem ? explicitFamilyItem.description : '';
+            const isGenericGroupLabel = /^group\s+\d+$/i.test(String(existingLabel || ''));
+            let label = labelFromItem || existingLabel || cleanDescriptions[0] || `HSN family ${familyCode}`;
+            if (/^chapter\s+\d+$/i.test(label) || isGenericGroupLabel) {
+                label = cleanDescriptions[0] || `HSN family ${familyCode}`;
+            }
+
+            const secondaryExamples = cleanDescriptions
+                .filter((desc) => desc.toLowerCase() !== String(label).toLowerCase())
+                .slice(0, 2);
+
+            const countText = `${items.length} matching code${items.length === 1 ? '' : 's'}`;
+            const exampleText = secondaryExamples.length ? secondaryExamples.join(' | ') : '';
+
+            return {
+                name: normalizeUiText(label),
+                countText,
+                hint: normalizeUiText(exampleText)
+            };
+        }
+
+        function normalizeUiText(text) {
+            const value = String(text || '').replace(/\s+/g, ' ').trim();
+            if (!value) {
+                return '';
+            }
+
+            // API often returns all-caps labels; soften for readability.
+            const letters = value.replace(/[^A-Za-z]/g, '');
+            const upperLetters = value.replace(/[^A-Z]/g, '');
+            const upperRatio = letters.length ? upperLetters.length / letters.length : 0;
+            if (upperRatio < 0.7) {
+                return value;
+            }
+
+            const lowered = value.toLowerCase();
+            return lowered.charAt(0).toUpperCase() + lowered.slice(1);
+        }
+
+        function renderFamilyCards(families) {
+            hsnFamilyCards.innerHTML = '';
+            const titleCounts = new Map();
+            families.forEach((family) => {
+                const key = String(family.name || '').toLowerCase();
+                titleCounts.set(key, (titleCounts.get(key) || 0) + 1);
+            });
+
+            families.forEach((family, index) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'hsn-card';
+                card.dataset.familyCode = family.code;
+                card.style.borderLeftColor = HSN_CARD_BANDS[index % HSN_CARD_BANDS.length];
+                const normalizedTitle = String(family.name || '');
+                const isDuplicateTitle = (titleCounts.get(normalizedTitle.toLowerCase()) || 0) > 1;
+                const displayTitle = isDuplicateTitle ? `${normalizedTitle} (${family.code})` : normalizedTitle;
+                card.innerHTML = `
+                    <div class="hsn-card-code">${family.code}</div>
+                    <div class="hsn-card-text">${displayTitle}</div>
+                    <span class="hsn-count-pill">${family.countText || ''}</span>
+                    <div class="hsn-card-examples">${family.hint ? `Examples: ${family.hint}` : ''}</div>
+                `;
+                card.addEventListener('click', () => {
+                    selectFamily(family.code);
+                });
+                hsnFamilyCards.appendChild(card);
+            });
+        }
+
+        function renderSubCodeCards() {
+            hsnSubCodeCards.innerHTML = '';
+            if (!hsnState.selectedFamily) {
+                return;
+            }
+
+            const familyItems = hsnState.results.filter((item) => getFamilyCodeFromItem(item, hsnState.step1PrefixLength) === hsnState.selectedFamily.code);
+            const modeConfig = getSelectedModeConfig();
+            const isProductMode = modeConfig?.selectionType === 'product';
+            const filteredFamilyItems = getStep2EligibleItemsForFamily(familyItems);
+
+            if (!filteredFamilyItems.length) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'field-hint';
+                emptyState.textContent = isProductMode
+                    ? 'No 8-digit HSN codes found under this category. Try a different Step 1 category.'
+                    : 'No detailed SAC codes found under this category. Try a different Step 1 category.';
+                hsnSubCodeCards.appendChild(emptyState);
+                return;
+            }
+
+            filteredFamilyItems.forEach((item, index) => {
+                const code = sanitizeHsnCode(item.hsnCode);
+                const rawDescription = item.description || `HSN ${code}`;
+                const displayDescription = normalizeUiText(rawDescription);
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'hsn-card hsn-sub-card';
+                card.dataset.hsnCode = code;
+                card.style.borderLeftColor = HSN_CARD_BANDS[index % HSN_CARD_BANDS.length];
+                card.innerHTML = `
+                    <div class="hsn-card-code">${code}</div>
+                    <div class="hsn-card-text">${displayDescription}</div>
+                    <div class="hsn-card-meta">Under ${hsnState.selectedFamily.familyLabel || 'Chapter'} ${hsnState.selectedFamily.code} • ${item.taxCodeType || 'HSN'}</div>
+                `;
+                card.addEventListener('click', () => {
+                    toggleSubCodeSelection({
+                        hsnCode: code,
+                        description: rawDescription,
+                        displayDescription,
+                        familyCode: item.familyCode || code.slice(0, 4),
+                        familyName: hsnState.selectedFamily.name,
+                        familyLabel: hsnState.selectedFamily.familyLabel || 'Chapter',
+                        groupCode: hsnState.selectedFamily.code,
+                        groupPrefixLength: hsnState.step1PrefixLength,
+                        taxCodeType: item.taxCodeType || 'HSN'
+                    });
+                });
+                hsnSubCodeCards.appendChild(card);
+            });
+
+            document.querySelectorAll('.hsn-sub-card').forEach((card) => {
+                card.classList.toggle(
+                    'selected',
+                    hsnState.selectedSubCodes.some((item) => item.hsnCode === card.dataset.hsnCode)
+                );
+            });
+            updateStep2SelectionSummary();
+        }
+
+        function selectFamily(familyCode) {
+            const family = hsnState.families.find((item) => item.code === familyCode);
+            if (!family) {
+                return;
+            }
+
+            hsnState.selectedFamily = family;
+            hsnState.selectedSubCode = null;
+            hsnState.selectedSubCodes = [];
+            hsnState.lockedFamilyCode = family.code;
+            hsnStep2.style.display = 'block';
+            hsnStep2Heading.textContent = getSelectedModeConfig()?.step2Title || 'Step 2: Select the specific product';
+            setHsnStepState(2);
+
+            document.querySelectorAll('.hsn-card').forEach((card) => {
+                card.classList.toggle('selected', card.dataset.familyCode === familyCode);
+            });
+
+            renderSubCodeCards();
+            setHsnInlineError('');
+        }
+
+        async function searchHsnCodes() {
+            const query = hsnSearchInput.value.trim();
+            clearHsnSelection(false);
+
+            if (!hsnState.selectedMode) {
+                setHsnInlineError('Choose Product or Service before searching.');
+                return;
+            }
+
+            if (!query) {
+                setHsnInlineError('Enter a product or service keyword first.');
+                return;
+            }
+
+            const previousLabel = hsnSearchButton.textContent;
+            hsnSearchButton.disabled = true;
+            hsnSearchButton.textContent = 'Searching...';
+            setHsnStepState(1);
+
+            try {
+                await ensureHsnCatalogReady();
+                const results = queryHsnMiniSearch(query, 120, hsnState.selectedMode);
+                hsnState.results = results.map((item) => ({
+                    hsnCode: sanitizeHsnCode(item.hsnCode),
+                    description: item.description || '',
+                    familyName: item.familyName || '',
+                    familyCode: sanitizeHsnCode(item.familyCode).slice(0, 4),
+                    taxCodeType: item.taxCodeType || 'HSN',
+                    selectionType: item.selectionType || 'product',
+                    familyLabel: item.familyLabel || 'Chapter'
+                })).filter((item) => item.hsnCode.length >= 4);
+
+                hsnState.step1PrefixLength = determineStep1PrefixLength(hsnState.results);
+                hsnState.families = groupResultsByFamily(hsnState.results, hsnState.step1PrefixLength);
+                hsnNoResults.style.display = hsnState.families.length === 0 ? 'block' : 'none';
+                updateGroupingNote();
+
+                if (hsnState.families.length === 0) {
+                    hsnFamilyCards.innerHTML = '';
+                    hsnStep2.style.display = 'none';
+                    return;
+                }
+
+                renderFamilyCards(hsnState.families);
+
+                if (hsnState.families.length === 1) {
+                    selectFamily(hsnState.families[0].code);
+                } else {
+                    hsnStep2.style.display = 'none';
+                    setHsnStepState(1);
+                }
+            } catch (error) {
+                setHsnInlineError(error.message || 'Could not fetch GST codes right now.');
+            } finally {
+                hsnSearchButton.disabled = false;
+                hsnSearchButton.textContent = previousLabel;
+            }
+        }
+
+        function validateHsnSelection() {
+            if (!hsnState.selectedSubCodes.length || !isValidHsnCode(hsnCodeInput.value)) {
+                setHsnInlineError('Select a GST code (4, 6, or 8 digits) before submitting.');
+                return false;
+            }
+            setHsnInlineError('');
+            return true;
+        }
+
+        function buildProjectLocation(formData) {
+            return [
+                formData.get('project_country') || 'India',
+                formData.get('project_state'),
+                formData.get('project_city'),
+                formData.get('project_pin_code')
+            ].filter(Boolean).join(', ');
+        }
+
+        function setPlacesStatus(message) {
+            // Intentionally hidden in UI.
+        }
+
+        function setPlacesLoading(isLoading) {
+            placeLoadingIndicator.classList.toggle('hidden', !isLoading);
+        }
+
+        function handleGooglePlacesFailure(message) {
+            googlePlacesAvailable = false;
+            placeAutocompleteElement = null;
+            setPlacesLoading(false);
+            setPlacesStatus(message);
+            cityHiddenInput.value = '';
+            stateHiddenInput.value = '';
+            cityAutocompleteHost.innerHTML = '';
+            document.querySelectorAll('.pac-container').forEach((element) => element.remove());
+        }
+
+        function getAddressComponent(components, type) {
+            const match = components.find((component) => component.types.includes(type));
+            if (!match) {
+                return '';
+            }
+            return match.long_name || match.longText || match.short_name || match.shortText || '';
+        }
+
+        function updateLocationFieldsFromPlace(place) {
+            const components = place.address_components || [];
+            const locality = getAddressComponent(components, 'locality')
+                || getAddressComponent(components, 'postal_town')
+                || getAddressComponent(components, 'administrative_area_level_2');
+            const state = getAddressComponent(components, 'administrative_area_level_1');
+            const postalCode = getAddressComponent(components, 'postal_code');
+            const country = getAddressComponent(components, 'country');
+
+            if (locality) {
+                cityHiddenInput.value = locality;
+            }
+            if (state) {
+                stateHiddenInput.value = state;
+            }
+            if (country) {
+                countryInput.value = country;
+            }
+            pinCodeInput.value = postalCode || '';
+            validatePinCode();
+        }
+
+        function loadGoogleMapsPlacesScript() {
+            if (window.google && window.google.maps && window.google.maps.places) {
+                return Promise.resolve(window.google.maps);
+            }
+
+            if (window.__googleMapsPlacesLoader) {
+                return window.__googleMapsPlacesLoader;
+            }
+
+            window.__googleMapsPlacesLoader = new Promise((resolve, reject) => {
+                const existingScript = document.getElementById('google-maps-places-script');
+                if (existingScript) {
+                    existingScript.addEventListener('load', () => resolve(window.google.maps), { once: true });
+                    existingScript.addEventListener('error', () => reject(new Error('Failed to load Google Maps script')), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.id = 'google-maps-places-script';
+                script.async = true;
+                script.defer = true;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&v=weekly&loading=async`;
+                script.onload = () => resolve(window.google.maps);
+                script.onerror = () => reject(new Error('Failed to load Google Maps script'));
+                document.head.appendChild(script);
+            });
+
+            return window.__googleMapsPlacesLoader;
+        }
+
+        async function waitForPlaceAutocompleteElement(timeoutMs = 5000) {
+            const startedAt = Date.now();
+            while (Date.now() - startedAt < timeoutMs) {
+                if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.PlaceAutocompleteElement) {
+                    return window.google.maps;
+                }
+                await new Promise((resolve) => window.setTimeout(resolve, 120));
+            }
+            throw new Error('PlaceAutocompleteElement is unavailable');
+        }
+
+        async function initializeGooglePlacesAutocomplete() {
+            if (!GOOGLE_MAPS_API_KEY) {
+                setPlacesStatus('Google Places is not configured. Enter city, state, pin code, and country manually.');
+                return;
+            }
+
+            window.gm_authFailure = () => {
+                handleGooglePlacesFailure('Google Places authentication failed. Enter city, state, pin code, and country manually.');
+            };
+
+            try {
+                await loadGoogleMapsPlacesScript();
+                const maps = await waitForPlaceAutocompleteElement();
+                if (!maps.places || !maps.places.PlaceAutocompleteElement) {
+                    throw new Error('PlaceAutocompleteElement is unavailable');
+                }
+
+                placeAutocompleteElement = new maps.places.PlaceAutocompleteElement();
+
+                if ('includedPrimaryTypes' in placeAutocompleteElement) {
+                    placeAutocompleteElement.includedPrimaryTypes = ['(cities)'];
+                }
+
+                if (GOOGLE_AUTOCOMPLETE_REGION_CODES.length) {
+                    // India-specific region restriction lives here so global expansion is one-line.
+                    placeAutocompleteElement.includedRegionCodes = GOOGLE_AUTOCOMPLETE_REGION_CODES;
+                }
+
+                cityAutocompleteHost.innerHTML = '';
+                cityAutocompleteHost.appendChild(placeAutocompleteElement);
+                googlePlacesAvailable = true;
+
+                const handlePlaceSelect = async (event) => {
+                    const prediction = event.placePrediction || event.detail?.placePrediction || event.detail?.prediction;
+                    if (!prediction || typeof prediction.toPlace !== 'function') {
+                        return;
+                    }
+
+                    setPlacesLoading(true);
+                    try {
+                        const place = prediction.toPlace();
+                        await place.fetchFields({ fields: ['displayName', 'addressComponents'] });
+
+                        const details = {
+                            address_components: (place.addressComponents || []).map((component) => ({
+                                long_name: component.longText || component.shortText || '',
+                                short_name: component.shortText || component.longText || '',
+                                types: component.types || []
+                            }))
+                        };
+
+                        updateLocationFieldsFromPlace(details);
+                        if (place.displayName) {
+                            cityHiddenInput.value = place.displayName;
+                        }
+                        setPlacesStatus('Location details loaded from Google Places. You can still edit them manually.');
+                    } catch (error) {
+                        handleGooglePlacesFailure('Google Places could not fill the location details. Enter city, state, pin code, and country manually.');
+                    } finally {
+                        setPlacesLoading(false);
+                    }
+                };
+
+                placeAutocompleteElement.addEventListener('gmp-select', handlePlaceSelect);
+                placeAutocompleteElement.addEventListener('gmp-placeselect', handlePlaceSelect);
+
+                setPlacesStatus('Google Places autocomplete is active for Indian cities.');
+            } catch (error) {
+                const reason = error && error.message ? ` (${error.message})` : '';
+                handleGooglePlacesFailure(`Google Places is unavailable right now${reason}. Enter city, state, pin code, and country manually.`);
+            }
+        }
+
+        function validatePinCode() {
+            const country = countryInput.value.trim().toLowerCase();
+            const rawValue = pinCodeInput.value.trim();
+
+            if (!rawValue) {
+                pinCodeInput.setCustomValidity('');
+                return true;
+            }
+
+            // India-specific pin code validation lives here so future country rules are easy to find.
+            if (country === 'india') {
+                const sanitizedValue = rawValue.replace(/\D/g, '').slice(0, 6);
+                pinCodeInput.value = sanitizedValue;
+                if (!/^\d{6}$/.test(sanitizedValue)) {
+                    pinCodeInput.setCustomValidity('Enter a valid 6-digit Indian pin code');
+                    return false;
+                }
+            }
+
+            pinCodeInput.setCustomValidity('');
+            return true;
+        }
+
+        function validateDebtEquity() {
+            const debt = parseFloat(document.getElementById('debt_percentage').value) || 0;
+            const equity = parseFloat(document.getElementById('equity_percentage').value) || 0;
+            const warningDiv = document.getElementById('warningMessage');
+            
+            if (debt + equity !== 100 && debt > 0 && equity > 0) {
+                warningDiv.textContent = `⚠ Warning: Debt (${debt}%) + Equity (${equity}%) should equal 100%`;
+                warningDiv.style.display = 'block';
+                return false;
+            }
+
+            warningDiv.style.display = 'none';
+            return true;
+        }
+
         document.getElementById('sizing_mode').addEventListener('change', function() {
             const capacitySection = document.getElementById('capacity_section');
             const budgetSection = document.getElementById('budget_section');
@@ -287,101 +1717,136 @@
             }
         });
 
-        // Debt/Equity validation
-        function validateDebtEquity() {
-            const debt = parseFloat(document.getElementById('debt_percentage').value) || 0;
-            const equity = parseFloat(document.getElementById('equity_percentage').value) || 0;
-            const warningDiv = document.getElementById('warningMessage');
-            
-            if (debt + equity !== 100 && debt > 0 && equity > 0) {
-                warningDiv.textContent = `⚠ Warning: Debt (${debt}%) + Equity (${equity}%) should equal 100%`;
-                warningDiv.style.display = 'block';
-                return false;
-            } else {
-                warningDiv.style.display = 'none';
-                return true;
-            }
-        }
-
         document.getElementById('debt_percentage').addEventListener('input', validateDebtEquity);
         document.getElementById('equity_percentage').addEventListener('input', validateDebtEquity);
+        pinCodeInput.addEventListener('input', validatePinCode);
+        pinCodeInput.addEventListener('blur', validatePinCode);
+        countryInput.addEventListener('input', () => {
+            validatePinCode();
+        });
+        hsnModeProductButton.addEventListener('click', () => setHsnMode('product'));
+        hsnModeServiceButton.addEventListener('click', () => setHsnMode('service'));
+        hsnSearchButton.addEventListener('click', searchHsnCodes);
+        hsnSearchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchHsnCodes();
+            }
+        });
+        hsnBackButton.addEventListener('click', () => {
+            setHsnStepState(1);
+            hsnStep2.style.display = 'none';
+            hsnState.selectedFamily = null;
+            hsnState.selectedSubCode = null;
+            hsnState.isLocked = false;
+            hsnSummary.style.display = 'none';
+            hsnSaveButton.style.display = 'none';
+            hsnEditButton.style.display = 'none';
+            hsnFlowHint.style.display = 'block';
+            hsnCodeInput.value = '';
+            hsnDescriptionInput.value = '';
+            hsnFamilyCodeInput.value = '';
+            hsnFamilyNameInput.value = '';
+            productServiceInput.value = '';
+            hsnState.selectedSubCodes = [];
+            hsnSelectedList.innerHTML = '';
+            hsnSelectedList.style.display = 'none';
+            setHsnInlineError('');
+            document.querySelectorAll('.hsn-card').forEach((card) => card.classList.remove('selected'));
+            applyHsnModeUi();
+        });
+        hsnSaveButton.addEventListener('click', () => {
+            lockHsnSelection();
+        });
+        hsnEditButton.addEventListener('click', () => {
+            unlockHsnSelection();
+        });
 
-        // Form submission
         document.getElementById('submissionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
-            const warningDiv = document.getElementById('warningMessage');
             const downloadSection = document.getElementById('downloadSection');
             const validationDiv = document.getElementById('validationSummary');
             
-            // Clear messages
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             downloadSection.style.display = 'none';
             validationDiv.style.display = 'none';
             
-            // Validate debt/equity
             if (!validateDebtEquity()) {
                 errorDiv.textContent = '✗ Please ensure Debt % + Equity % = 100%';
                 errorDiv.style.display = 'block';
                 return;
             }
+
+            if (!validateHsnSelection()) {
+                errorDiv.textContent = '✗ Select a valid HSN code before submitting';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!validatePinCode()) {
+                errorDiv.textContent = '✗ Enter a valid pin code for the selected country';
+                errorDiv.style.display = 'block';
+                pinCodeInput.reportValidity();
+                return;
+            }
+
+            if (!cityHiddenInput.value || !stateHiddenInput.value) {
+                errorDiv.textContent = '✗ Select a city from Google autocomplete to fill City and State';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
-            // Get form data
             const formData = new FormData(form);
+            const projectLocation = buildProjectLocation(formData);
             const data = {
-                // Project Identity
                 client_name: formData.get('client_name'),
                 project_title: formData.get('project_title'),
                 product_service: formData.get('product_service'),
-                project_location: formData.get('project_location'),
+                hsn_family_code: formData.get('hsn_family_code'),
+                hsn_family_name: formData.get('hsn_family_name') || null,
+                hsn_code: formData.get('hsn_code'),
+                hsn_description: formData.get('hsn_description'),
+                project_city: formData.get('project_city'),
+                project_state: formData.get('project_state'),
+                project_country: formData.get('project_country') || 'India',
+                project_pin_code: formData.get('project_pin_code') || null,
+                project_location: projectLocation,
+                target_customer: formData.get('target_customer'),
                 business_model: formData.get('business_model'),
-                
-                // Project Sizing
                 sizing_mode: formData.get('sizing_mode'),
                 target_capacity: formData.get('target_capacity') || null,
                 total_investment: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
-                
-                // Commercial Assumptions
                 selling_price: parseFloat(formData.get('selling_price')),
                 currency: formData.get('currency'),
                 product_mix: formData.get('product_mix') || null,
                 production_rampup: formData.get('production_rampup'),
                 market_geography: formData.get('market_geography'),
-                
-                // Operating Assumptions
                 operating_days: parseInt(formData.get('operating_days')),
                 shifts_per_day: parseInt(formData.get('shifts_per_day')),
                 hours_per_shift: parseInt(formData.get('hours_per_shift')),
                 utilization_rate: parseFloat(formData.get('utilization_rate')),
                 utilities_consumption: formData.get('utilities_consumption') || null,
-                
-                // Financing Inputs
                 debt_percentage: parseFloat(formData.get('debt_percentage')),
                 equity_percentage: parseFloat(formData.get('equity_percentage')),
                 loan_tenor: parseInt(formData.get('loan_tenor')),
                 interest_rate: parseFloat(formData.get('interest_rate')),
                 moratorium_period: formData.get('moratorium_period') ? parseInt(formData.get('moratorium_period')) : null,
-                
-                // Equipment Preferences
                 preferred_manufacturer_geography: formData.get('preferred_manufacturer_geography') || null,
                 brand_preferences: formData.get('brand_preferences') || null,
                 technology_exclusions: formData.get('technology_exclusions') || null,
-                
-                // Legacy/Additional fields
                 promoter_background: formData.get('promoter_background') || null,
                 start_date: formData.get('start_date') || null,
                 target_launch_date: formData.get('target_launch_date') || null,
                 notes: formData.get('notes') || null,
-                
-                // Backward compatibility mapping
                 business_idea: formData.get('product_service'),
-                location_land: formData.get('project_location'),
+                location_land: projectLocation,
                 goals: formData.get('market_geography'),
                 budget: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
-                target_market: formData.get('market_geography')
+                target_market: formData.get('target_customer')
             };
             
             try {
@@ -399,13 +1864,13 @@
                 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.detail || 'Submission failed');
+                    const detail = typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail);
+                    throw new Error(detail || 'Submission failed');
                 }
                 
                 const result = await response.json();
                 currentSubmissionId = result.id;
                 
-                // Show validation summary if provided
                 if (result.validation_summary) {
                     let summaryHTML = '<strong>Input Validation Summary:</strong><br>';
                     if (result.validation_summary.critical_missing && result.validation_summary.critical_missing.length > 0) {
@@ -427,11 +1892,8 @@
                 successDiv.textContent = `✓ Submission successful! ID: ${result.id}`;
                 successDiv.style.display = 'block';
                 downloadSection.style.display = 'block';
-                
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Generate Report';
-                
-                // Scroll to success message
                 successDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (error) {
                 errorDiv.textContent = `✗ Error: ${error.message}`;
@@ -449,18 +1911,14 @@
             const originalText = button.innerHTML;
             
             try {
-                // Show progress
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner"></span>Generating Report...';
-                
-                // Fetch the report
                 const response = await fetch(`/api/report/${currentSubmissionId}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to generate report');
                 }
                 
-                // Get the blob and trigger download
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -470,8 +1928,6 @@
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                
-                // Reset button
                 button.disabled = false;
                 button.innerHTML = originalText;
             } catch (error) {
@@ -479,6 +1935,12 @@
                 button.innerHTML = originalText;
                 alert('Error downloading report: ' + error.message);
             }
+        });
+
+        initializeGooglePlacesAutocomplete();
+        applyHsnModeUi();
+        ensureHsnCatalogReady().catch(() => {
+            // Catalog load failures are surfaced on demand during search.
         });
     </script>
 </body>

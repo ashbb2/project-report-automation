@@ -2,9 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from jinja2 import Environment, FileSystemLoader
 import os
+import json
 from io import BytesIO
+from typing import Optional
 from app.models import SubmissionCreate, SubmissionResponse, SubmissionResponseWithValidation, ValidationSummary
 from app.db import init_db, save_submission, get_submission
+from app.location_service import get_states, search_cities
 from app.report_builder import build_doc
 
 app = FastAPI()
@@ -16,12 +19,166 @@ init_db()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 templates_dir = os.path.join(BASE_DIR, "app", "templates")
 env = Environment(loader=FileSystemLoader(templates_dir))
+HSN_SAC_FILE_PATH = os.path.join(BASE_DIR, "HSN_SAC.json")
+_HSN_CATALOG_CACHE: Optional[list[dict]] = None
 
 
 @app.get("/", response_class=HTMLResponse)
 async def get_form():
     template = env.get_template("form.html")
-    return template.render()
+    google_maps_api_key = (
+        os.getenv("VITE_GOOGLE_MAPS_API_KEY")
+        or os.getenv("GOOGLE_MAPS_API_KEY")
+        or os.getenv("GOOGLE_API_KEY")
+        or ""
+    )
+    return template.render(google_maps_api_key=google_maps_api_key)
+
+
+@app.get("/api/locations/states")
+async def get_location_states(country: str = "India"):
+    if country != "India":
+        raise HTTPException(status_code=400, detail="Only India is supported at the moment")
+    return {"country": country, "states": get_states(country)}
+
+
+@app.get("/api/locations/cities")
+async def get_location_cities(country: str = "India", state: str = "", query: str = ""):
+    if country != "India":
+        raise HTTPException(status_code=400, detail="Only India is supported at the moment")
+    if not state.strip():
+        raise HTTPException(status_code=400, detail="state is required")
+    return {
+        "country": country,
+        "state": state,
+        "results": search_cities(state=state.strip(), query=query, country=country)
+    }
+
+
+def _normalize_tax_code_item(
+    item: dict,
+    *,
+    code_keys: tuple[str, ...],
+    description_keys: tuple[str, ...],
+    tax_code_type: str,
+    selection_type: str,
+    family_label: str,
+) -> Optional[dict]:
+    raw_code = ""
+    for key in code_keys:
+        value = item.get(key)
+        if value:
+            raw_code = str(value).strip()
+            break
+
+    code = "".join(ch for ch in raw_code if ch.isdigit())
+    if len(code) < 4:
+        return None
+
+    raw_description = ""
+    for key in description_keys:
+        value = item.get(key)
+        if value:
+            raw_description = value
+            break
+
+    description = str(raw_description).strip() or f"HSN {code}"
+
+    family_code = code[:4]
+    family_name = description if len(code) == 4 else f"{family_label} {family_code}"
+
+    return {
+        "hsnCode": code,
+        "description": description,
+        "familyCode": family_code,
+        "familyName": family_name,
+        "taxCodeType": tax_code_type,
+        "selectionType": selection_type,
+        "familyLabel": family_label,
+    }
+
+
+def _load_hsn_catalog() -> list[dict]:
+    global _HSN_CATALOG_CACHE
+    if _HSN_CATALOG_CACHE is not None:
+        return _HSN_CATALOG_CACHE
+
+    try:
+        with open(HSN_SAC_FILE_PATH, "r", encoding="utf-8") as source:
+            payload = json.load(source)
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="HSN_SAC.json not found")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="HSN_SAC.json is not valid JSON")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to load HSN_SAC.json: {exc}")
+
+    normalized_results: list[dict] = []
+    seen_codes: set[str] = set()
+
+    catalog_configs = [
+        {
+            "rows": payload.get("HSN_MSTR") if isinstance(payload, dict) else [],
+            "code_keys": ("hsnCode", "hsn_code", "code", "HSN_CD"),
+            "description_keys": (
+                "description",
+                "itemDescription",
+                "title",
+                "productDescription",
+                "name",
+                "HSN_Description",
+            ),
+            "tax_code_type": "HSN",
+            "selection_type": "product",
+            "family_label": "Chapter",
+        },
+        {
+            "rows": payload.get("SAC_MSTR") if isinstance(payload, dict) else [],
+            "code_keys": ("sacCode", "sac_code", "code", "SAC_CD"),
+            "description_keys": (
+                "description",
+                "itemDescription",
+                "title",
+                "serviceDescription",
+                "name",
+                "SAC_Description",
+            ),
+            "tax_code_type": "SAC",
+            "selection_type": "service",
+            "family_label": "Group",
+        },
+    ]
+
+    for catalog_config in catalog_configs:
+        rows = catalog_config["rows"]
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            normalized = _normalize_tax_code_item(
+                row,
+                code_keys=catalog_config["code_keys"],
+                description_keys=catalog_config["description_keys"],
+                tax_code_type=catalog_config["tax_code_type"],
+                selection_type=catalog_config["selection_type"],
+                family_label=catalog_config["family_label"],
+            )
+            if not normalized:
+                continue
+            code_key = f"{normalized['taxCodeType']}::{normalized['hsnCode']}"
+            if code_key in seen_codes:
+                continue
+            seen_codes.add(code_key)
+            normalized_results.append(normalized)
+
+    _HSN_CATALOG_CACHE = normalized_results
+    return _HSN_CATALOG_CACHE
+
+
+@app.get("/api/hsn/catalog")
+async def get_hsn_catalog():
+    return {"results": _load_hsn_catalog()}
 
 
 def validate_critical_inputs(submission: SubmissionCreate) -> ValidationSummary:

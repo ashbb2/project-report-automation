@@ -2,5 +2,12 @@
     "python.defaultInterpreterPath": "/usr/bin/python3",
     "python.analysis.extraPaths": [
         "/Users/aishwaryabhattbhatt/Library/Python/3.9/lib/python/site-packages"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "chat.tools.terminal.autoApprove": {
+        "/usr/bin/python3": true,
+        "pkill": true,
+        "true": true,
+        "uvicorn": true
+    }
 }

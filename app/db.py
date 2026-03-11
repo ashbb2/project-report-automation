@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any
+from app.location_seed import INDIA_LOCATION_SEED
 
 # Database path
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.db")
@@ -32,6 +33,30 @@ def init_db():
             UNIQUE(submission_id, section_name)
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS locations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            country TEXT NOT NULL,
+            state TEXT NOT NULL,
+            city TEXT NOT NULL,
+            aliases_json TEXT NOT NULL,
+            UNIQUE(country, state, city)
+        )
+    """)
+
+    cursor.execute("SELECT COUNT(*) FROM locations")
+    location_count = cursor.fetchone()[0]
+    if location_count == 0:
+        for state, cities in INDIA_LOCATION_SEED.items():
+            for city, aliases in cities.items():
+                cursor.execute(
+                    """
+                    INSERT INTO locations (country, state, city, aliases_json)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    ("India", state, city, json.dumps(aliases))
+                )
     
     conn.commit()
     conn.close()
