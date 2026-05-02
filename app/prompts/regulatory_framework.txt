@@ -1,0 +1,30 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write Chapter 3: Regulatory Framework for the following project:
+
+Business Idea: {business_idea}
+Facility Type: {facility_type}
+Location: {location_land}
+Project State: {project_state}
+Project Country: {project_country}
+Has Hazardous Materials: {has_hazardous_materials}
+Has Effluent Generation: {has_effluent_generation}
+Certifications (Non-Negotiables): {certifications}
+Compliance Constraints: {compliance_constraints}
+ESG Constraints: {esg_constraints}
+Procurement Constraints: {procurement_constraints}
+Missing Inputs: {missing_inputs}
+
+The Regulatory Framework must:
+- Target Chapter 3 coverage: 10 pages in the final report
+- Include subsections 3.1, 3.2, and 3.3
+- Cover approvals, licenses, compliance obligations, and timelines
+- Highlight location-specific and sector-specific obligations
+- Clearly mark mandatory vs recommended actions
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+
+Write only the chapter content (with subsection headings), without adding a chapter title line.

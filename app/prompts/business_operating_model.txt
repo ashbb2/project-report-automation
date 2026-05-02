@@ -1,0 +1,29 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write Chapter 5: Business and Operating Model for the following project:
+
+Business Idea: {business_idea}
+Business Model: {business_model}
+Customer Interface: {customer_interface}
+Market Orientation: {market_orientation}
+Manufacturing Mode: {manufacturing_mode}
+Operating Days: {operating_days}
+Shifts per Day: {shifts_per_day}
+Hours per Shift: {hours_per_shift}
+Target Capacity: {target_capacity}
+Budget: {budget}
+Missing Inputs: {missing_inputs}
+
+The chapter must:
+- Target Chapter 5 coverage: 23 pages in the final report
+- Explain operating model, demand servicing model, and value-chain logic
+- Include staffing, operations rhythm, and production/service flow assumptions
+- Include a dedicated section that transitions into illustrated equipment profiles
+- Be specific enough for implementation planning
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+
+Write only the chapter content (with subsection headings), without adding a chapter title line.

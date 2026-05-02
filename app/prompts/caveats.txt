@@ -1,0 +1,19 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write Chapter 8: Caveats for the following project.
+
+Project: {business_idea}
+Location: {location_land}
+Target Market: {target_market}
+Missing Inputs: {missing_inputs}
+
+The chapter must:
+- Target Chapter 8 coverage: 3 pages in the final report
+- Clearly state data limitations and validation dependencies
+- Explain where external verification is required before decisions
+- Keep language professional and non-alarmist
+
+Write only the chapter content with concise caveat headings.

@@ -1,5 +1,8 @@
 You are a professional business consultant writing a feasibility report.
 
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
 Write a detailed Market Assessment for the following project:
 
 Business Idea: {business_idea}
@@ -7,15 +10,21 @@ Target Market: {target_market}
 Location: {location_land}
 Project Goals: {goals}
 Budget: {budget}
+Certifications (Non-Negotiables): {certifications}
+Compliance Constraints: {compliance_constraints}
+ESG Constraints: {esg_constraints}
+Procurement Constraints: {procurement_constraints}
 Missing Inputs: {missing_inputs}
 
 The Market Assessment should:
+- Target Chapter 4 coverage: 16 pages in the final report
 - Analyze the target market size and growth potential
 - Identify key competitors and competitive advantages
 - Discuss market trends and opportunities
 - Evaluate market entry barriers
 - Assess demand and customer segments
-- Be data-driven and analytical (3-4 paragraphs)
+- Highlight how non-negotiables may affect market access, channel acceptance, and speed-to-market
+- Be data-driven and analytical with sub-sections matching 4.1 to 4.7
 
 IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
 

@@ -1,0 +1,100 @@
+{
+  "client_name": "Apex Green Packaging Private Limited",
+  "project_title": "Compostable Industrial Packaging Expansion",
+  "product_service": "Manufacture and supply compostable courier mailers, food-grade pouches, and protective packaging films for B2B clients.",
+  "project_country": "India",
+  "project_state": "Gujarat",
+  "project_city": "Ahmedabad",
+  "project_pin_code": "380015",
+  "target_customer": "E-commerce brands, FMCG manufacturers, and export-oriented SMEs",
+  "business_model": "Manufacturing",
+  "sizing_mode": "capacity_driven",
+  "target_capacity": "12,000 units/day",
+  "total_investment": null,
+  "selling_price": null,
+  "currency": "INR",
+  "product_mix": "Mailers: 50%, Pouches: 30%, Protective film rolls: 20%",
+  "production_rampup": "Realistic (Y1: 50%, Y2: 75%, Y3: 100%)",
+  "market_geographies": [
+    {
+      "country": "India",
+      "state": "Gujarat"
+    },
+    {
+      "country": "India",
+      "state": "Maharashtra"
+    }
+  ],
+  "has_exports": "yes",
+  "export_share": 25,
+  "local_share": 75,
+  "operating_days": 300,
+  "shifts_per_day": 2,
+  "hours_per_shift": 8,
+  "debt_percentage": 65,
+  "equity_percentage": 35,
+  "loan_tenor": 9,
+  "interest_rate": null,
+  "moratorium_period": 12,
+  "preferred_manufacturer_geography": "India and Europe",
+  "brand_preferences": "W&H, Reifenhauser, Rajoo Engineers",
+  "technology_exclusions": "No solvent-based coating lines",
+  "certifications": [
+    {
+      "certification_name": "ISO 9001:2015",
+      "issuing_authority": "TUV Rheinland",
+      "status": "active",
+      "expiry_date": "2026-12-31",
+      "notes": "Quality management certification"
+    },
+    {
+      "certification_name": "ISO 14001:2015",
+      "issuing_authority": "Bureau Veritas",
+      "status": "in_progress",
+      "expiry_date": "",
+      "notes": "Environmental management implementation underway"
+    }
+  ],
+  "compliance_constraints": "Must comply with CPCB and state pollution board standards for packaging units.",
+  "esg_constraints": "No child labor, minimum 25% renewable energy usage in first year, zero untreated discharge.",
+  "procurement_constraints": "Prefer India/Europe suppliers, approved vendor policy mandatory, no solvent-based coating line vendors.",
+  "promoters": [
+    {
+      "full_names": "Rahul Mehta",
+      "title": "Mr",
+      "phone": "+91 9876543210",
+      "education": "B.E. Mechanical, MBA Operations",
+      "experience_years": 14,
+      "nature_experience": "Polymer processing, manufacturing scale-up, procurement",
+      "profile_source_type": "linkedin",
+      "linkedin_profiles": [
+        "https://www.linkedin.com/in/rahul-mehta-example"
+      ],
+      "cv_filename": "",
+      "loans_taken_earlier": "yes",
+      "loans_paid": "yes",
+      "loan_defaults": "no",
+      "cibil_score": 788,
+      "other_sources": "Company website leadership page, MCA filings"
+    },
+    {
+      "full_names": "Neha Shah",
+      "title": "Ms",
+      "phone": "+91 9988776655",
+      "education": "B.Com, Chartered Accountant",
+      "experience_years": 11,
+      "nature_experience": "Project finance, treasury, banking relationships",
+      "profile_source_type": "linkedin",
+      "linkedin_profiles": [
+        "https://www.linkedin.com/in/neha-shah-example"
+      ],
+      "cv_filename": "",
+      "loans_taken_earlier": "no",
+      "loans_paid": "",
+      "loan_defaults": "",
+      "cibil_score": 801,
+      "other_sources": "Industry conference speaker profile"
+    }
+  ],
+  "notes": "Pilot customer MoUs signed with three regional distributors."
+}

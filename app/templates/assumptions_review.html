@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assumptions Review</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+        h1 { margin-bottom: 8px; }
+        .hint { color: #4b5563; margin-bottom: 18px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 18px; }
+        th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+        th { background: #f3f4f6; }
+        .actions { display: flex; gap: 10px; }
+        button { padding: 10px 14px; border: none; cursor: pointer; border-radius: 6px; }
+        .primary { background: #2563eb; color: white; }
+        .secondary { background: #e5e7eb; color: #111827; }
+        .status { margin-top: 14px; }
+        input { width: 100%; box-sizing: border-box; padding: 8px; }
+        .locked { color: #166534; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Review AI Assumptions</h1>
+    <p class="hint">Review defaults, add overrides if needed, then approve to lock baseline before final report generation.</p>
+    <p id="lockStatus" class="status"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>AI Default</th>
+                <th>Source</th>
+                <th>Override</th>
+            </tr>
+        </thead>
+        <tbody id="assumptionRows"></tbody>
+    </table>
+
+    <div class="actions">
+        <button class="primary" id="approveBtn">Approve and Lock</button>
+        <button class="secondary" id="refreshBtn">Refresh</button>
+    </div>
+
+    <p id="message" class="status"></p>
+
+    <script>
+        const submissionId = {{ submission_id }};
+        let currentData = null;
+
+        function renderRows(data) {
+            const tbody = document.getElementById('assumptionRows');
+            tbody.innerHTML = '';
+            const defaults = data.ai_defaults || {};
+            const sources = data.sources || {};
+
+            Object.keys(defaults).forEach((field) => {
+                const tr = document.createElement('tr');
+                const src = sources[field] || {};
+                tr.innerHTML = `
+                    <td>${field}</td>
+                    <td>${defaults[field]}</td>
+                    <td>${src.provenance || 'n/a'}${src.source_url ? ` | <a href="${src.source_url}" target="_blank">link</a>` : ''}<br><small>${src.note || ''}</small></td>
+                    <td><input type="text" data-field="${field}" placeholder="Optional override"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadData() {
+            const response = await fetch(`/api/submission/${submissionId}/assumptions-review`);
+            const data = await response.json();
+            currentData = data;
+            renderRows(data);
+            const lockStatus = document.getElementById('lockStatus');
+            lockStatus.textContent = data.locked ? 'Baseline already locked.' : 'Baseline not locked yet.';
+            lockStatus.className = data.locked ? 'status locked' : 'status';
+        }
+
+        async function approveAndLock() {
+            const overrides = {};
+            document.querySelectorAll('input[data-field]').forEach((input) => {
+                const raw = input.value.trim();
+                if (!raw) {
+                    return;
+                }
+                const num = Number(raw);
+                overrides[input.dataset.field] = Number.isNaN(num) ? raw : num;
+            });
+
+            const response = await fetch(`/api/submission/${submissionId}/confirm-assumptions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    approved: true,
+                    overrides,
+                    notes: ''
+                })
+            });
+
+            if (!response.ok) {
+                document.getElementById('message').textContent = 'Failed to lock assumptions.';
+                return;
+            }
+
+            document.getElementById('message').textContent = 'Assumptions approved and baseline locked. You can now generate the report.';
+            await loadData();
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', loadData);
+        document.getElementById('approveBtn').addEventListener('click', approveAndLock);
+        loadData();
+    </script>
+</body>
+</html>

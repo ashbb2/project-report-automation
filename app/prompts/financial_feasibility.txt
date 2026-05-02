@@ -1,0 +1,34 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write Chapter 6: Financial Feasibility for the following project:
+
+Budget/Investment: {budget}
+Total Investment: {total_investment}
+Debt Percentage: {debt_percentage}
+Equity Percentage: {equity_percentage}
+Debt Amount: {debt_amount}
+Loan Tenor: {loan_tenor}
+Interest Rate: {interest_rate}
+Moratorium Period: {moratorium_period}
+Repayment Frequency: {repayment_frequency}
+Upfront Fees: {upfront_fees}
+DSRA Required: {dsra_required}
+DSRA Months: {dsra_months}
+Selling Price: {selling_price}
+Operating Days: {operating_days}
+Production Ramp-up: {production_rampup}
+Missing Inputs: {missing_inputs}
+
+The chapter must:
+- Target Chapter 6 coverage: 24 pages in the final report
+- Include a narrative interpretation of viability, funding structure, and repayment ability
+- Explicitly prepare context for 15 pages of financial tables included in this chapter
+- Discuss downside sensitivity and break-even considerations
+- Be conservative and lender-friendly in tone
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+
+Write only the chapter content (with subsection headings), without adding a chapter title line.

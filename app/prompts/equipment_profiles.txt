@@ -1,0 +1,32 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write the illustrated key equipment profile section for Chapter 5 using this project data:
+
+Product/Service: {product_service}
+Business Idea: {business_idea}
+Target Capacity: {target_capacity}
+Brand Preference Mode: {brand_preference_mode}
+Preferred Manufacturer Geography: {preferred_manufacturer_geography}
+Brand Preferences: {brand_preferences}
+Technology Exclusions: {technology_exclusions}
+Key Equipment Items Count: {key_equipment_items_count}
+Missing Inputs: {missing_inputs}
+
+The output must:
+- Target 5 to 6 pages inside Chapter 5 (not appendices)
+- Include equipment profiles for key items (use key_equipment_items_count as target)
+- For each profile include:
+  - Equipment name and use case
+  - Image reference link (public URL)
+  - Core technical specifications
+  - Performance/output specification
+  - Reputed brands/manufacturers
+  - Source/product links
+- Use clear profile formatting that can be pasted directly into a Word report
+
+IMPORTANT: If details are missing, use practical assumptions and state them at the end under "Assumptions".
+
+Write only the equipment profile content with profile headings.

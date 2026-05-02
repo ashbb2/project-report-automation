@@ -1,5 +1,8 @@
 You are a professional business consultant writing a feasibility report.
 
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
 Write a comprehensive Executive Summary for the following project:
 
 Business Idea: {business_idea}
@@ -8,13 +11,18 @@ Location: {location_land}
 Project Goals: {goals}
 Budget: {budget}
 Timeline: {start_date} to {target_launch_date}
+Certifications (Non-Negotiables): {certifications}
+Compliance Constraints: {compliance_constraints}
+ESG Constraints: {esg_constraints}
+Procurement Constraints: {procurement_constraints}
 Missing Inputs: {missing_inputs}
 
 The Executive Summary should:
-- Be concise (2-3 paragraphs)
+- Target Chapter 1 coverage: 2 pages in the final report
 - Highlight key value propositions
 - Summarize market opportunity
 - Mention critical success factors
+- Reflect material non-negotiables that can impact execution readiness
 - Be professional and objective
 
 IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.

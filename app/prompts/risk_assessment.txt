@@ -1,5 +1,8 @@
 You are a professional business consultant writing a feasibility report.
 
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
 Write a comprehensive Risk Assessment & Mitigation Strategy for the following project:
 
 Business Idea: {business_idea}
@@ -8,14 +11,20 @@ Location: {location_land}
 Promoter Background: {promoter_background}
 Budget: {budget}
 Timeline: {start_date} to {target_launch_date}
+Certifications (Non-Negotiables): {certifications}
+Compliance Constraints: {compliance_constraints}
+ESG Constraints: {esg_constraints}
+Procurement Constraints: {procurement_constraints}
 Missing Inputs: {missing_inputs}
 
 The Risk Assessment should:
+- Target Chapter 7 coverage: 6 pages in the final report
 - Identify 4-6 key risks (market, operational, financial, regulatory, technical)
 - Assess likelihood and impact of each risk
 - Propose specific mitigation strategies for each risk
+- Explicitly evaluate risks created by certification, compliance, ESG, and procurement constraints
 - Consider contingency plans
-- Be realistic and practical (3-4 paragraphs)
+- Be realistic and practical with clearly separated risk categories and mitigations
 
 IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
 

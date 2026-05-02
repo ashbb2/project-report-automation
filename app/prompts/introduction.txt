@@ -1,0 +1,28 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write Chapter 2: Introduction for the following project:
+
+Business Idea: {business_idea}
+Product/Service: {product_service}
+Client Name: {client_name}
+Target Market: {target_market}
+Location: {location_land}
+Project Goals: {goals}
+Budget: {budget}
+Promoter Background: {promoter_background}
+Timeline: {start_date} to {target_launch_date}
+Missing Inputs: {missing_inputs}
+
+The Introduction must:
+- Target Chapter 2 coverage: 6 pages in the final report
+- Include subsections 2.1, 2.2, and 2.3
+- Cover project context, rationale, and scope boundaries
+- Explain promoter strengths and execution readiness
+- Keep a formal lender/investor-ready tone
+
+IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+
+Write only the chapter content (with subsection headings), without adding a chapter title line.

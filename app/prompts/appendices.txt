@@ -1,0 +1,20 @@
+You are a professional business consultant writing a feasibility report.
+
+Follow this editable output specification exactly where relevant:
+{output_specification}
+
+Write appendices content for this project:
+
+Project: {business_idea}
+Notes: {notes}
+Certifications: {certifications}
+Compliance Constraints: {compliance_constraints}
+ESG Constraints: {esg_constraints}
+Procurement Constraints: {procurement_constraints}
+
+The appendices must:
+- Be useful supporting material generated outside the main 90-page Chapter 1-8 estimate
+- Include data dictionaries, assumptions, references, and supplemental checklists
+- Keep structure clear for stakeholder review
+
+Write only appendix content with appendix headings.
