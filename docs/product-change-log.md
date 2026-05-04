@@ -10,6 +10,39 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v10 - 2026-05-03
+**What We Improved**
+- Started a safer split-generation setup to reduce API rate-limit failures during report creation.
+
+**Product Design Updates**
+- Kept web-researched generation only for sections that need fresh public data.
+- Kept standard generation for narrative sections that do not need live web research.
+
+**Development Updates (Plain Language)**
+- Added section-level generation policy controls.
+- Added separate plain and web generation paths in the LLM client.
+- Applied default policy:
+	- Web: market assessment, regulatory framework, equipment profiles, financial feasibility
+	- Plain: executive summary, introduction, business & operating model, risk assessment, caveats, appendices
+- Added a safety cap for web-search tool loops to prevent runaway token usage.
+- Updated progress text to show section mode while generating.
+
+**Key Decisions and Why**
+- Decision: Use web search only where freshness matters most.
+- Why: This reduces token-per-minute pressure and lowers 429 failures while keeping critical sections grounded.
+
+**Files/Areas Updated**
+- app/config.py
+- app/llm_client.py
+- app/report_builder.py
+
+**Risks or Follow-ups**
+- Cached sections from earlier runs may still reflect old behavior unless force-regenerated.
+
+**Next Steps**
+- Add retry/backoff for temporary 429 errors.
+- Tune per-section token limits after observing real traffic.
+
 ### v9 - 2026-05-03
 **What We Improved**
 - Upgraded report output quality so generated content now appears with proper document structure and styling instead of raw formatting symbols.

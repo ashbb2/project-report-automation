@@ -7,6 +7,7 @@ from docx.oxml import OxmlElement
 from typing import Dict, Any, List
 from io import BytesIO
 from app.llm_client import llm_client
+from app.config import Config
 from app.prompt_renderer import get_section_prompt
 from app.db import get_cached_section, save_section, upsert_report_status
 
@@ -440,7 +441,8 @@ def get_or_generate_section(
     submission_id: int, 
     section_name: str, 
     submission_data: Dict[str, Any],
-    force: bool = False
+    force: bool = False,
+    generation_mode: str = "plain",
 ) -> str:
     """
     Get cached section or generate new one using LLM.
@@ -462,7 +464,7 @@ def get_or_generate_section(
     
     # Generate new content
     rendered_prompt = get_section_prompt(section_name, submission_data)
-    content = llm_client.generate(rendered_prompt)
+    content = llm_client.generate(rendered_prompt, mode=generation_mode)
     
     # Cache the result
     save_section(submission_id, section_name, content)
@@ -508,17 +510,19 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     total_steps = len(section_names) + 1  # +1 for financial tables step
     section_content: Dict[str, str] = {}
     for i, section_name in enumerate(section_names):
+        generation_mode = Config.resolve_section_mode(section_name)
         upsert_report_status(
             submission_id, "generating",
             sections_done=i,
             sections_total=total_steps,
-            current_section=SECTION_LABELS.get(section_name, section_name),
+            current_section=f"{SECTION_LABELS.get(section_name, section_name)} ({generation_mode})",
         )
         section_content[section_name] = get_or_generate_section(
             submission_id,
             section_name,
             submission_with_context,
             force,
+            generation_mode,
         )
     # Mark financial tables as the final generation step
     upsert_report_status(
