@@ -3,8 +3,10 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from jinja2 import Environment, FileSystemLoader
 import os
 import asyncio
+from datetime import datetime
+from app.config import Config
 from app.models import SubmissionCreate, SubmissionResponse, SubmissionResponseWithValidation, ValidationSummary
-from app.db import init_db, save_submission, get_submission, upsert_report_status, get_report_record, get_any_generating_submission_id
+from app.db import init_db, save_submission, get_submission, upsert_report_status, get_report_record, get_any_generating_report_lock
 from app.report_builder import build_doc
 
 app = FastAPI()
@@ -145,12 +147,36 @@ async def start_report(submission_id: int, background_tasks: BackgroundTasks, fo
     if record and record["status"] == "generating":
         return {"status": "generating"}
 
-    active_submission_id = get_any_generating_submission_id()
-    if active_submission_id and active_submission_id != submission_id:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Another report ({active_submission_id}) is currently generating. Please retry after it completes.",
+    active_lock = get_any_generating_report_lock()
+    if active_lock and active_lock["submission_id"] != submission_id:
+        # Auto-release stale locks from crashed/aborted jobs.
+        stale = False
+        no_progress_lock = (
+            (active_lock.get("sections_done") or 0) == 0
+            and (active_lock.get("sections_total") or 0) == 0
+            and not active_lock.get("current_section")
         )
+        updated_at = active_lock.get("updated_at")
+        if updated_at:
+            try:
+                age_seconds = (datetime.utcnow() - datetime.fromisoformat(updated_at)).total_seconds()
+                stale = age_seconds > Config.REPORT_LOCK_STALE_SECONDS
+            except Exception:
+                stale = no_progress_lock
+        else:
+            stale = no_progress_lock
+
+        if stale:
+            upsert_report_status(
+                active_lock["submission_id"],
+                "failed",
+                error_message="Generation lock auto-cleared due to stale inactivity.",
+            )
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Another report ({active_lock['submission_id']}) is currently generating. Please retry after it completes.",
+            )
 
     submission_data = {k: v for k, v in submission.items() if k not in ["id", "created_at"]}
     background_tasks.add_task(_run_report_background, submission_id, submission_data, force)
@@ -193,12 +219,35 @@ async def generate_report(submission_id: int, force: bool = False):
     if submission is None:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    active_submission_id = get_any_generating_submission_id()
-    if active_submission_id and active_submission_id != submission_id:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Another report ({active_submission_id}) is currently generating. Please retry after it completes.",
+    active_lock = get_any_generating_report_lock()
+    if active_lock and active_lock["submission_id"] != submission_id:
+        stale = False
+        no_progress_lock = (
+            (active_lock.get("sections_done") or 0) == 0
+            and (active_lock.get("sections_total") or 0) == 0
+            and not active_lock.get("current_section")
         )
+        updated_at = active_lock.get("updated_at")
+        if updated_at:
+            try:
+                age_seconds = (datetime.utcnow() - datetime.fromisoformat(updated_at)).total_seconds()
+                stale = age_seconds > Config.REPORT_LOCK_STALE_SECONDS
+            except Exception:
+                stale = no_progress_lock
+        else:
+            stale = no_progress_lock
+
+        if stale:
+            upsert_report_status(
+                active_lock["submission_id"],
+                "failed",
+                error_message="Generation lock auto-cleared due to stale inactivity.",
+            )
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Another report ({active_lock['submission_id']}) is currently generating. Please retry after it completes.",
+            )
 
     submission_data = {k: v for k, v in submission.items() if k not in ["id", "created_at"]}
     doc_bytes = await asyncio.to_thread(build_doc, submission_data, submission_id, force)

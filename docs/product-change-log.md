@@ -10,6 +10,47 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v15 - 2026-05-04
+**What We Improved**
+- Fixed a remaining edge case where report start could still be blocked by a stuck lock with no visible progress.
+
+**Development Updates (Plain Language)**
+- Updated lock recovery logic to treat no-progress generating locks as stale fallback when lock timestamps cannot be parsed.
+- This allows new report requests to proceed instead of returning repeated 409 conflicts.
+
+**Files/Areas Updated**
+- app/main.py
+
+**Next Steps**
+- Add explicit lock timestamp format normalization in database writes for stronger stale-lock detection.
+
+### v14 - 2026-05-04
+**What We Improved**
+- Fixed stuck "Failed to start report generation" cases caused by stale generation locks.
+
+**Product Design Updates**
+- Kept single-active-report protection but added automatic stale-lock recovery so users are not blocked indefinitely.
+
+**Development Updates (Plain Language)**
+- Added lock metadata lookup for currently generating reports, including last update timestamp.
+- Added stale lock timeout configuration (`REPORT_LOCK_STALE_SECONDS`).
+- Updated start/generate APIs to auto-mark old inactive locks as failed and allow new report generation to proceed.
+
+**Key Decisions and Why**
+- Decision: auto-clear only stale locks, not active ones.
+- Why: protects reliability while preventing deadlocks when jobs crash mid-run.
+
+**Files/Areas Updated**
+- app/config.py
+- app/db.py
+- app/main.py
+
+**Risks or Follow-ups**
+- Very long-running legitimate jobs could be marked stale if timeout is set too low.
+
+**Next Steps**
+- Surface a clear "queued / active lock" message in the front-end so users understand wait state.
+
 ### v13 - 2026-05-04
 **What We Improved**
 - Removed runaway multi-turn history buildup in Claude web-search generation.

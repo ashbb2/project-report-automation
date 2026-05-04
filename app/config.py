@@ -20,6 +20,7 @@ class Config:
     CLAUDE_RATE_LIMIT_RETRIES = int(os.getenv("CLAUDE_RATE_LIMIT_RETRIES", "4"))
     CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC = float(os.getenv("CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC", "2.0"))
     GENERATION_ROUND_COOLDOWN_SEC = float(os.getenv("GENERATION_ROUND_COOLDOWN_SEC", "90.0"))
+    REPORT_LOCK_STALE_SECONDS = int(os.getenv("REPORT_LOCK_STALE_SECONDS", "1200"))
 
     _DEFAULT_SECTION_POLICY = {
         "market_assessment": "web",

@@ -662,11 +662,31 @@ def get_report_record(submission_id: int) -> Optional[Dict[str, Any]]:
 
 def get_any_generating_submission_id() -> Optional[int]:
     """Return any submission_id currently in generating status (if present)."""
+    lock = get_any_generating_report_lock()
+    return lock["submission_id"] if lock else None
+
+
+def get_any_generating_report_lock() -> Optional[Dict[str, Any]]:
+    """Return metadata for the most recently updated generating report lock."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT submission_id FROM generated_reports WHERE status = 'generating' ORDER BY updated_at DESC LIMIT 1"
+        """
+        SELECT submission_id, sections_done, sections_total, current_section, updated_at
+        FROM generated_reports
+        WHERE status = 'generating'
+        ORDER BY updated_at DESC
+        LIMIT 1
+        """
     )
     row = cursor.fetchone()
     conn.close()
-    return row[0] if row else None
+    if not row:
+        return None
+    return {
+        "submission_id": row[0],
+        "sections_done": row[1] or 0,
+        "sections_total": row[2] or 0,
+        "current_section": row[3],
+        "updated_at": row[4],
+    }
