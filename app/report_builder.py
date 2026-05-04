@@ -443,6 +443,7 @@ def get_or_generate_section(
     submission_data: Dict[str, Any],
     force: bool = False,
     generation_mode: str = "plain",
+    max_tokens: int = 1600,
 ) -> str:
     """
     Get cached section or generate new one using LLM.
@@ -464,7 +465,7 @@ def get_or_generate_section(
     
     # Generate new content
     rendered_prompt = get_section_prompt(section_name, submission_data)
-    content = llm_client.generate(rendered_prompt, mode=generation_mode)
+    content = llm_client.generate(rendered_prompt, max_tokens=max_tokens, mode=generation_mode)
     
     # Cache the result
     save_section(submission_id, section_name, content)
@@ -511,6 +512,7 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     section_content: Dict[str, str] = {}
     for i, section_name in enumerate(section_names):
         generation_mode = Config.resolve_section_mode(section_name)
+        section_max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
         upsert_report_status(
             submission_id, "generating",
             sections_done=i,
@@ -523,6 +525,7 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
             submission_with_context,
             force,
             generation_mode,
+            section_max_tokens,
         )
     # Mark financial tables as the final generation step
     upsert_report_status(

@@ -10,6 +10,36 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v11 - 2026-05-03
+**What We Improved**
+- Reduced report generation failures caused by API token-per-minute limits.
+
+**Product Design Updates**
+- Kept live web research focused on the three freshest sections only: market assessment, regulatory framework, and equipment profiles.
+- Kept other sections on standard generation to lower rate-limit pressure and improve completion reliability.
+
+**Development Updates (Plain Language)**
+- Updated section policy defaults so financial feasibility now runs in plain mode by default.
+- Added automatic retry with exponential backoff for temporary rate-limit (429) errors from Claude.
+- Reduced default web tool loop depth and added tighter token budgets per section mode.
+- Added configurable runtime knobs for retries, token caps, and backoff timing.
+
+**Key Decisions and Why**
+- Decision: Prioritize reliable report completion over aggressive live web usage.
+- Why: Fewer web-heavy calls reduces burst token usage and prevents generation from failing midway.
+
+**Files/Areas Updated**
+- app/config.py
+- app/llm_client.py
+- app/report_builder.py
+
+**Risks or Follow-ups**
+- Some sections may include fewer live references due to reduced web usage.
+
+**Next Steps**
+- Add queue-level concurrency controls to reduce org-wide bursts during peak usage.
+- Tune retry and token settings based on production telemetry.
+
 ### v10 - 2026-05-03
 **What We Improved**
 - Started a safer split-generation setup to reduce API rate-limit failures during report creation.

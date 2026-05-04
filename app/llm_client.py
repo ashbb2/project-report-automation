@@ -1,4 +1,6 @@
 import os
+import time
+import random
 from dotenv import load_dotenv
 from app.config import Config
 
@@ -34,7 +36,8 @@ class LLMClient:
             import anthropic
 
             client = anthropic.Anthropic(api_key=self.api_key)
-            message = client.messages.create(
+            message = self._claude_messages_create_with_retry(
+                client,
                 model="claude-sonnet-4-6",
                 max_tokens=max_tokens,
                 system=(
@@ -72,8 +75,10 @@ class LLMClient:
             )
 
             # Agentic loop with safety cap to prevent runaway TPM/token usage.
+            text_parts = []
             for _ in range(max(1, Config.MAX_WEB_TOOL_TURNS)):
-                response = client.messages.create(
+                response = self._claude_messages_create_with_retry(
+                    client,
                     model="claude-sonnet-4-6",
                     max_tokens=max_tokens,
                     system=system,
@@ -113,6 +118,29 @@ class LLMClient:
             raise ImportError("Anthropic library not installed. Run: pip install anthropic")
         except Exception as e:
             raise Exception(f"Claude API error: {str(e)}")
+
+    def _claude_messages_create_with_retry(self, client, **kwargs):
+        """Retry Anthropic calls on rate-limit errors using exponential backoff + jitter."""
+        last_exc = None
+        max_attempts = max(1, Config.CLAUDE_RATE_LIMIT_RETRIES)
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return client.messages.create(**kwargs)
+            except Exception as exc:
+                msg = str(exc).lower()
+                is_rate_limited = (
+                    "rate_limit_error" in msg or
+                    "error code: 429" in msg or
+                    "would exceed your organization's rate limit" in msg
+                )
+                if not is_rate_limited or attempt == max_attempts:
+                    raise
+
+                last_exc = exc
+                sleep_s = (Config.CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC * (2 ** (attempt - 1))) + random.uniform(0, 0.7)
+                time.sleep(sleep_s)
+
+        raise last_exc
 
 
 # Global instance

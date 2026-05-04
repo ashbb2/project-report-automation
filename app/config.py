@@ -13,7 +13,11 @@ class Config:
 
     SECTION_GEN_POLICY_ENABLED = os.getenv("SECTION_GEN_POLICY_ENABLED", "true").lower() == "true"
     SECTION_GEN_DEFAULT_MODE = os.getenv("SECTION_GEN_DEFAULT_MODE", "plain").lower()
-    MAX_WEB_TOOL_TURNS = int(os.getenv("MAX_WEB_TOOL_TURNS", "3"))
+    MAX_WEB_TOOL_TURNS = int(os.getenv("MAX_WEB_TOOL_TURNS", "2"))
+    PLAIN_SECTION_MAX_TOKENS = int(os.getenv("PLAIN_SECTION_MAX_TOKENS", "1600"))
+    WEB_SECTION_MAX_TOKENS = int(os.getenv("WEB_SECTION_MAX_TOKENS", "2200"))
+    CLAUDE_RATE_LIMIT_RETRIES = int(os.getenv("CLAUDE_RATE_LIMIT_RETRIES", "4"))
+    CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC = float(os.getenv("CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC", "2.0"))
 
     _DEFAULT_SECTION_POLICY = {
         "market_assessment": "web",
@@ -24,7 +28,7 @@ class Config:
         "caveats": "plain",
         "appendices": "plain",
         "business_operating_model": "plain",
-        "financial_feasibility": "web",
+        "financial_feasibility": "plain",
         "risk_assessment": "plain",
     }
 
