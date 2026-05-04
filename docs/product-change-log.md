@@ -10,6 +10,28 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v18 - 2026-05-04
+**What We Changed**
+- Re-enabled live web research for sections marked as web.
+- The report now uses web-enabled generation again for market assessment and regulatory framework, instead of silently falling back to plain generation.
+
+**Why**
+- The earlier token spike problem came from runaway multi-turn history growth, which has already been fixed. With that issue removed, live web research can be turned back on for the sections that benefit most from fresh source checking.
+
+---
+
+### v17 - 2026-05-04
+**What We Fixed**
+- Report generation was getting permanently stuck after writing all 10 sections. The "Validating source links" step was silently making hundreds of slow network requests to verify every URL in the report — taking 5–10+ minutes and sometimes never finishing.
+- Removed the blocking network link-check entirely. Links are now kept as-is if they look syntactically valid (the AI-generated content already contains real URLs).
+- Reduced the cooldown pause between writing batches from 90 seconds to 20 seconds (web search is disabled so the original reason for a 90s wait no longer applies).
+- The cooldown now shows a live countdown ("Cooling down… 10s remaining") updating every 10 seconds so users can see it is making progress.
+
+**Why**
+- Report 17 was stuck because the link checker was blocking the entire generation thread, with no timeout guard, causing the report to appear permanently "generating" with no download ever arriving.
+
+---
+
 ### v16 - 2026-05-04
 **What We Improved**
 - Fixed cases where users saw "Download failed" even though the report was generated.
