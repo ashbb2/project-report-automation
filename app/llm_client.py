@@ -65,7 +65,6 @@ class LLMClient:
                 "name": "web_search",
             }
 
-            messages = [{"role": "user", "content": prompt}]
             system = (
                 "You are a professional business consultant writing detailed feasibility reports "
                 "for Indian businesses. Use web search to look up current market data, regulatory "
@@ -74,45 +73,50 @@ class LLMClient:
                 "searchable information."
             )
 
-            # Agentic loop with safety cap to prevent runaway TPM/token usage.
-            text_parts = []
-            for _ in range(max(1, Config.MAX_WEB_TOOL_TURNS)):
-                response = self._claude_messages_create_with_retry(
-                    client,
-                    model="claude-sonnet-4-6",
-                    max_tokens=max_tokens,
-                    system=system,
-                    tools=[web_search_tool],
-                    messages=messages,
-                )
+            # 1) Single initial call with tools enabled.
+            initial = self._claude_messages_create_with_retry(
+                client,
+                model="claude-sonnet-4-6",
+                max_tokens=max_tokens,
+                system=system,
+                tools=[web_search_tool],
+                messages=[{"role": "user", "content": prompt}],
+            )
 
-                # Collect any text produced so far
-                text_parts = [
-                    block.text for block in response.content
-                    if hasattr(block, "text")
-                ]
+            initial_text = [block.text for block in initial.content if hasattr(block, "text")]
+            if initial.stop_reason != "tool_use":
+                return "\n".join(initial_text)
 
-                # If Claude is done (no more tool calls), return accumulated text
-                if response.stop_reason != "tool_use":
-                    return "\n".join(text_parts)
-
-                # Append Claude's response turn to the conversation
-                messages.append({"role": "assistant", "content": response.content})
-
-                # Build tool_result blocks for every web_search call in this turn
-                tool_results = []
-                for block in response.content:
-                    if block.type == "tool_use":
-                        tool_results.append({
+            # 2) At most one follow-up call using minimal context.
+            #    No iterative conversation accumulation to avoid exploding input tokens.
+            tool_results = []
+            for block in initial.content:
+                if getattr(block, "type", None) == "tool_use":
+                    tool_results.append(
+                        {
                             "type": "tool_result",
                             "tool_use_id": block.id,
                             "content": block.input.get("query", ""),
-                        })
+                        }
+                    )
 
-                messages.append({"role": "user", "content": tool_results})
+            if not tool_results:
+                return "\n".join(initial_text)
 
-            # If tool loop cap is reached, return last visible content.
-            return "\n".join(text_parts)
+            followup = self._claude_messages_create_with_retry(
+                client,
+                model="claude-sonnet-4-6",
+                max_tokens=max_tokens,
+                system=system,
+                tools=[web_search_tool],
+                messages=[
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": initial.content},
+                    {"role": "user", "content": tool_results},
+                ],
+            )
+            followup_text = [block.text for block in followup.content if hasattr(block, "text")]
+            return "\n".join(followup_text) if followup_text else "\n".join(initial_text)
 
         except ImportError:
             raise ImportError("Anthropic library not installed. Run: pip install anthropic")

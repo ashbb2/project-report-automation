@@ -10,6 +10,32 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v13 - 2026-05-04
+**What We Improved**
+- Removed runaway multi-turn history buildup in Claude web-search generation.
+
+**Product Design Updates**
+- Changed web-search generation behavior to bounded execution so one section cannot balloon token usage through repeated conversation turns.
+
+**Development Updates (Plain Language)**
+- Replaced iterative tool loop in the Claude web path with a bounded two-call flow:
+	1) one initial call,
+	2) at most one follow-up call if tool use is requested.
+- Removed unbounded history accumulation across repeated turns.
+
+**Key Decisions and Why**
+- Decision: cap web-search conversation depth and stop iterative accumulation.
+- Why: repeated re-sending of expanded history was a major contributor to token-per-minute spikes and 429 failures.
+
+**Files/Areas Updated**
+- app/llm_client.py
+
+**Risks or Follow-ups**
+- Web-search depth is intentionally limited, so some long research responses may be shorter.
+
+**Next Steps**
+- If web-search is re-enabled broadly later, add explicit per-request token telemetry and hard request-size guards.
+
 ### v12 - 2026-05-04
 **What We Improved**
 - Added stricter reliability controls to reduce repeated 429 failures during report generation.
