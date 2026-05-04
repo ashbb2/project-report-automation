@@ -1,34 +1,82 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 6: Financial Feasibility for: {project_title}
 
-Write Chapter 6: Financial Feasibility for the following project:
+PROJECT DATA:
+- Budget / Total Investment: {budget}
+- Total Investment (entered): {total_investment}
+- Sizing Mode: {sizing_mode}
+- Target Capacity: {target_capacity}
+- Operating Days / Year: {operating_days}
+- Production Ramp-up: {production_rampup}
+- Debt %: {debt_percentage} | Equity %: {equity_percentage}
+- Debt Amount: {debt_amount}
+- Loan Tenor: {loan_tenor} years
+- Interest Rate: {interest_rate}
+- Moratorium Period: {moratorium_period} months
+- Repayment Frequency: {repayment_frequency}
+- Upfront Fees: {upfront_fees}
+- DSRA Required: {dsra_required} | DSRA Months: {dsra_months}
+- Selling Price: {selling_price}
+- Raw Material Cost Basis: {raw_material_consumption_basis}
+- Utility Tariff Basis: {utility_tariff_basis}
+- Repairs & Maintenance %: {repairs_maintenance_pct}
+- Selling Overhead %: {selling_overhead_pct}
+- Admin Overhead %: {admin_overhead_pct}
+- Receivables Days: {receivables_days} | Inventory Days: {inventory_days} | Payables Days: {payables_days}
+- Currency: {currency}
+- Missing Inputs: {missing_inputs}
 
-Budget/Investment: {budget}
-Total Investment: {total_investment}
-Debt Percentage: {debt_percentage}
-Equity Percentage: {equity_percentage}
-Debt Amount: {debt_amount}
-Loan Tenor: {loan_tenor}
-Interest Rate: {interest_rate}
-Moratorium Period: {moratorium_period}
-Repayment Frequency: {repayment_frequency}
-Upfront Fees: {upfront_fees}
-DSRA Required: {dsra_required}
-DSRA Months: {dsra_months}
-Selling Price: {selling_price}
-Operating Days: {operating_days}
-Production Ramp-up: {production_rampup}
-Missing Inputs: {missing_inputs}
+Write the following subsections (target: 24 pages narrative, plus 15 pages of tables which are inserted separately):
 
-The chapter must:
-- Target Chapter 6 coverage: 24 pages in the final report
-- Include a narrative interpretation of viability, funding structure, and repayment ability
-- Explicitly prepare context for 15 pages of financial tables included in this chapter
-- Discuss downside sensitivity and break-even considerations
-- Be conservative and lender-friendly in tone
+## 6.1 Key Project Assumptions
+Produce an Assumptions Summary table with columns: Assumption | Value | Unit | Basis (Client / Tool default / Sourced) | Notes.
+Then write a short paragraph highlighting the 5 most value-sensitive assumptions.
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+## 6.2 Cost of the Project
+Capex break-up narrative with subheads: Land, Site development, Civil & buildings, Plant & machinery, Utilities & ETP/STP, Pre-operative, Contingency, IDC (if applicable), Total.
+Interpret major cost drivers and what is included / excluded.
 
-Write only the chapter content (with subsection headings), without adding a chapter title line.
+## 6.3 Means of Finance
+Describe funding structure: equity contribution, term loan, working capital loan, and any subsidy/incentive timing.
+Comment on funding adequacy and conditions for drawdown.
+
+## 6.4 Revenue Estimates
+Narrative linking installed capacity at {target_capacity}, utilisation ramp-up per {production_rampup}, and selling price per {selling_price} (or default if not provided).
+Explain revenue drivers and risks.
+
+## 6.5 OPEX Estimates
+Describe operating cost structure: raw materials, utilities, manpower, repairs & maintenance, selling overhead, admin overhead.
+Comment on fixed vs variable split and key cost drivers.
+
+## 6.6 Loan Repayment Schedule
+Narrative on debt service: principal and interest over the loan tenor, moratorium period of {moratorium_period} months, DSCR expectation.
+State minimum DSCR year and what drives stress points.
+
+## 6.7 Taxation
+Explain tax assumptions: applicable rate, when taxes become payable, effect of depreciation shield.
+Do not provide legal advice.
+
+## 6.8 Depreciation
+Describe depreciation approach (Companies Act rates), asset classes, and impact on profitability and taxes.
+
+## 6.9 Proforma P&L
+Interpret the P&L trend: revenue growth, gross margin trajectory, EBITDA margin, finance cost, PAT progression across years 1–3 and beyond.
+
+## 6.10 Proforma Balance Sheet
+Explain asset build-up, working capital cycle using receivables {receivables_days} days / inventory {inventory_days} days / payables {payables_days} days, leverage trend, and key ratios.
+
+## 6.11 Cash Flow Statement
+Interpret operating, investing, and financing cash flows. Identify peak cash deficit timing and debt service comfort.
+
+## 6.12 Key Project Metrics
+Discuss: project IRR range, equity IRR, payback period, breakeven year, average and minimum DSCR.
+Identify the most critical sensitivity variable and the operational lever that mitigates it.
+
+Rules:
+- Keep tone conservative and lender-friendly.
+- All numbers used must derive from the provided PROJECT DATA or clearly stated industry defaults.
+- Do not contradict the financial tables that follow this narrative.
+- If any critical data is missing (see Missing Inputs), add a brief "Assumptions" subsection at the end.
+
+Write only the chapter content with subsection headings. Do not add a chapter title line.

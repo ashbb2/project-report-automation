@@ -1,31 +1,48 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 7: Risk Assessment and Mitigation for: {project_title}
 
-Write a comprehensive Risk Assessment & Mitigation Strategy for the following project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Target Customer: {target_customer}
+- Location: {project_city}, {project_state}, {project_country}
+- Promoter Background: {promoter_background}
+- Budget: {budget}
+- Timeline: {start_date} to {target_launch_date}
+- Certifications Non-Negotiables: {certifications}
+- Compliance Constraints: {compliance_constraints}
+- ESG Constraints: {esg_constraints}
+- Procurement Constraints: {procurement_constraints}
+- Has Hazardous Materials: {has_hazardous_materials}
+- Has Effluent Generation: {has_effluent_generation}
+- Missing Inputs: {missing_inputs}
 
-Business Idea: {business_idea}
-Target Market: {target_market}
-Location: {location_land}
-Promoter Background: {promoter_background}
-Budget: {budget}
-Timeline: {start_date} to {target_launch_date}
-Certifications (Non-Negotiables): {certifications}
-Compliance Constraints: {compliance_constraints}
-ESG Constraints: {esg_constraints}
-Procurement Constraints: {procurement_constraints}
-Missing Inputs: {missing_inputs}
+Create a comprehensive risk register covering ALL of the following categories (target: 6 pages):
 
-The Risk Assessment should:
-- Target Chapter 7 coverage: 6 pages in the final report
-- Identify 4-6 key risks (market, operational, financial, regulatory, technical)
-- Assess likelihood and impact of each risk
-- Propose specific mitigation strategies for each risk
-- Explicitly evaluate risks created by certification, compliance, ESG, and procurement constraints
-- Consider contingency plans
-- Be realistic and practical with clearly separated risk categories and mitigations
+For each risk provide:
+- **Risk Title** and Category (Regulatory / Market / Supply / Operational / Technology / Financial / Implementation / EHS / Governance)
+- **Description**: what could go wrong and why
+- **Likelihood**: High / Medium / Low with brief rationale
+- **Impact**: High / Medium / Low with brief rationale
+- **Mitigation Strategies**: specific and actionable steps (not generic)
+- **Early Warning Indicators**: what to monitor and how
+- **Residual Risk**: level after mitigation
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
+Risk categories to cover:
+1. Regulatory and compliance risk (linked to {compliance_constraints} and {certifications})
+2. Market demand risk
+3. Raw material supply and price risk
+4. Operational and execution risk
+5. Technology and quality risk
+6. Financial risk (cost overrun, DSCR pressure, interest rate)
+7. Implementation and commissioning delay risk
+8. EHS risk (especially if {has_hazardous_materials} = yes or {has_effluent_generation} = yes)
+9. Governance and promoter risk
+10. ESG and procurement constraint risk (from {esg_constraints} and {procurement_constraints})
 
-Write only the Risk Assessment content, without any section headings.
+End with a Risk Summary Table showing all risks on a 3x3 likelihood-impact matrix.
+
+IMPORTANT: Tailor risks specifically to {business_idea} and {project_state}. Do not use a generic risk list.
+If any critical data is missing (see Missing Inputs), add a brief "Assumptions" note at the end.
+Write only the chapter content with risk headings and the summary table. Do not add a chapter title line.

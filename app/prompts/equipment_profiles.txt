@@ -1,32 +1,43 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Section 5.4A: Key Equipment Images, Technical Specifications and Reputed Brands
+This is part of Chapter 5 for: {project_title}
 
-Write the illustrated key equipment profile section for Chapter 5 using this project data:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Target Capacity: {target_capacity}
+- Brand Preference Mode: {brand_preference_mode}
+- Preferred Manufacturer Geography: {preferred_manufacturer_geography}
+- Brand Preferences: {brand_preferences}
+- Technology Exclusions: {technology_exclusions}
+- Excluded Brands / Countries: {excluded_brands_countries}
+- Key Equipment Items Count: {key_equipment_items_count}
+- Missing Inputs: {missing_inputs}
 
-Product/Service: {product_service}
-Business Idea: {business_idea}
-Target Capacity: {target_capacity}
-Brand Preference Mode: {brand_preference_mode}
-Preferred Manufacturer Geography: {preferred_manufacturer_geography}
-Brand Preferences: {brand_preferences}
-Technology Exclusions: {technology_exclusions}
-Key Equipment Items Count: {key_equipment_items_count}
-Missing Inputs: {missing_inputs}
+Generate illustrated equipment profiles targeting 5–6 pages in the report body (not appendices).
 
-The output must:
-- Target 5 to 6 pages inside Chapter 5 (not appendices)
-- Include equipment profiles for key items (use key_equipment_items_count as target)
-- For each profile include:
-  - Equipment name and use case
-  - Image reference link (public URL)
-  - Core technical specifications
-  - Performance/output specification
-  - Reputed brands/manufacturers
-  - Source/product links
-- Use clear profile formatting that can be pasted directly into a Word report
+For EACH equipment item, provide:
+1. **Equipment Name and Role in Process** — what it does and where it sits in the manufacturing flow.
+2. **Manufacturer / Brand** — reputed manufacturers consistent with {brand_preference_mode} and {preferred_manufacturer_geography}. Do not use brands from {excluded_brands_countries} or violate {technology_exclusions}.
+3. **Technical Specifications** (bulleted):
+   - Capacity / throughput
+   - Key dimensions or footprint
+   - Drive power (kW) and utility requirements
+   - Material of construction
+   - Automation level
+4. **Performance / Output Specifications** (bulleted):
+   - Output rate or yield
+   - Key quality parameters
+   - Applicable standards (BIS, CE, ATEX etc. if relevant)
+5. **Why This Equipment Matters** — 2–3 lines on its role in quality, throughput, or compliance.
+6. **Source / Reference Links** — manufacturer product page URL or spec-sheet link. Write "Source link not available" if genuinely not found; do NOT invent URLs.
 
-IMPORTANT: If details are missing, use practical assumptions and state them at the end under "Assumptions".
+Rules:
+- Target {key_equipment_items_count} equipment profiles.
+- Brand preferences if provided: {brand_preferences}. Follow these unless they conflict with exclusions.
+- Keep all specs consistent with {target_capacity} and the process route for {product_service}.
+- Do not invent brands, models, or URLs. If a detail is unavailable, write "Not available".
+- End with an "Assumptions" block if any specifications had to be estimated.
 
-Write only the equipment profile content with profile headings.
+Write only the section content with a clear heading per equipment profile.

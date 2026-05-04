@@ -1,30 +1,42 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 3: Regulatory Framework for: {project_title}
 
-Write Chapter 3: Regulatory Framework for the following project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Facility Type: {facility_type}
+- Location: {project_city}, {project_state}, {project_country}
+- Has Hazardous Materials: {has_hazardous_materials}
+- Has Effluent Generation: {has_effluent_generation}
+- Certifications Non-Negotiables: {certifications}
+- Compliance Constraints: {compliance_constraints}
+- ESG Constraints: {esg_constraints}
+- Missing Inputs: {missing_inputs}
 
-Business Idea: {business_idea}
-Facility Type: {facility_type}
-Location: {location_land}
-Project State: {project_state}
-Project Country: {project_country}
-Has Hazardous Materials: {has_hazardous_materials}
-Has Effluent Generation: {has_effluent_generation}
-Certifications (Non-Negotiables): {certifications}
-Compliance Constraints: {compliance_constraints}
-ESG Constraints: {esg_constraints}
-Procurement Constraints: {procurement_constraints}
-Missing Inputs: {missing_inputs}
+Write the following subsections (target: 10 pages total):
 
-The Regulatory Framework must:
-- Target Chapter 3 coverage: 10 pages in the final report
-- Include subsections 3.1, 3.2, and 3.3
-- Cover approvals, licenses, compliance obligations, and timelines
-- Highlight location-specific and sector-specific obligations
-- Clearly mark mandatory vs recommended actions
+## 3. Regulatory Framework Overview
+Write 150–200 words defining the regulatory domains relevant to {business_idea} in {project_state}, {project_country}. Describe approval stages (establishment, construction, pre-operations, operations). Note compliance impacts on schedule, capex, and opex.
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+## 3.1 Licenses and Approvals
+List all approvals required for a {facility_type} facility producing {product_service} in {project_state}. For each approval include:
+- Purpose and applicability trigger
+- Key documents required
+- Issuing authority
+- Indicative timeline
+- Official portal or reference URL
+End with a sequencing narrative showing interdependencies. Do not invent fees or timelines — only include what is available from official sources; cite URLs.
 
-Write only the chapter content (with subsection headings), without adding a chapter title line.
+## 3.2 Regulatory Support and Restrictions
+- Identify 2–3 recent government announcements or policy positions relevant to {business_idea} in {project_state}. Include URLs where available.
+- Summarise key applicable laws and rules (only those material to this project) with official source references.
+- Conclude with a regulatory stance rating: Favourable / Neutral / Unfavourable and explain the implications for the project.
+
+## 3.3 Government Incentives and Subsidies
+- Identify applicable central and {project_state} government incentives for {business_idea}. Cite official policy/scheme URLs.
+- Explain eligibility criteria and disbursement timing in cash flow terms (capex subsidy, reimbursement, tax benefits, interest subvention).
+- Provide a reasoned preliminary eligibility conclusion. If eligibility depends on missing data, list exactly what information is needed.
+
+IMPORTANT: If any critical data is missing (see Missing Inputs), add a brief "Assumptions" note at the end.
+Write only the chapter content with subsection headings. Do not add a chapter title line.

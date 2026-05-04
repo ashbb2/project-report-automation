@@ -1,30 +1,37 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write the Executive Summary for: {project_title}
 
-Write a comprehensive Executive Summary for the following project:
+PROJECT CONTEXT:
+- Objective / Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Installed Capacity: {target_capacity}
+- Location: {project_city}, {project_state}, {project_country}
+- Commissioning Timeline: {start_date} to {target_launch_date}
+- Business Model: {business_model} | {customer_interface} | {market_orientation}
+- Client: {client_name}
 
-Business Idea: {business_idea}
-Target Market: {target_market}
-Location: {location_land}
-Project Goals: {goals}
-Budget: {budget}
-Timeline: {start_date} to {target_launch_date}
-Certifications (Non-Negotiables): {certifications}
-Compliance Constraints: {compliance_constraints}
-ESG Constraints: {esg_constraints}
-Procurement Constraints: {procurement_constraints}
+FINANCIAL HIGHLIGHTS (computed from project model — use these exact figures):
+{financial_highlights}
+
+KEY RISKS (from Risk Assessment chapter — summarise top 3):
+{risk_context}
+
+MARKET CONTEXT (from Market Assessment chapter):
+{market_context}
+
 Missing Inputs: {missing_inputs}
 
-The Executive Summary should:
-- Target Chapter 1 coverage: 2 pages in the final report
-- Highlight key value propositions
-- Summarize market opportunity
-- Mention critical success factors
-- Reflect material non-negotiables that can impact execution readiness
-- Be professional and objective
+Write an Executive Summary of 450–650 words covering ALL of the following:
+1. Project objective and scope of what was assessed in this report.
+2. Key financial model outputs — interpret FINANCIAL HIGHLIGHTS exactly as provided: state gross margin, PAT margin, breakeven year, payback period, DSCR range. Do not invent or change these numbers.
+3. Top 3 risks and their mitigations — drawn from KEY RISKS above. No invented numbers.
+4. Feasibility conclusion sentence.
+5. 3–5 conditions precedent for investment.
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
+Rules:
+- Do not add financial numbers that are not in the FINANCIAL HIGHLIGHTS block.
+- Keep tone professional and lender-ready.
+- If any critical data is missing, add a brief "Assumptions" subsection at the end.
 
-Write only the Executive Summary content, without any section headings.
+Write only the Executive Summary content. Do not add a chapter title heading.

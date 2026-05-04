@@ -1,20 +1,52 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write the Appendices section for: {project_title}
 
-Write appendices content for this project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Certifications: {certifications}
+- Compliance Constraints: {compliance_constraints}
+- ESG Constraints: {esg_constraints}
+- Procurement Constraints: {procurement_constraints}
+- Notes: {notes}
+- Missing Inputs: {missing_inputs}
 
-Project: {business_idea}
-Notes: {notes}
-Certifications: {certifications}
-Compliance Constraints: {compliance_constraints}
-ESG Constraints: {esg_constraints}
-Procurement Constraints: {procurement_constraints}
+Generate the following appendix content (outside the 90-page main chapter count):
 
-The appendices must:
-- Be useful supporting material generated outside the main 90-page Chapter 1-8 estimate
-- Include data dictionaries, assumptions, references, and supplemental checklists
-- Keep structure clear for stakeholder review
+## Appendix Index
+List all appendices that should accompany this report, with a one-line description of each and a cross-reference to the chapter it supports.
 
-Write only appendix content with appendix headings.
+## Appendix A: Key Assumptions Register
+A consolidated table of all assumptions used across the report:
+Columns: Assumption | Value | Unit | Basis | Chapter Reference
+Include: capacity, utilisation, selling price, raw material costs, utility tariffs, debt %, interest rate, moratorium, operating days, working capital days.
+
+## Appendix B: Data Sources and References
+List all public data sources, government portals, and industry references cited in the report. Format: Source Name | URL | Accessed Date | Used In Chapter
+
+## Appendix C: Regulatory Approvals Checklist
+A ready-to-use checklist for the project team:
+Columns: Approval | Authority | Stage (Pre-construction / Construction / Pre-operations / Operations) | Status (Pending) | Notes
+
+## Appendix D: Certifications and Non-Negotiables Tracker
+Based on {certifications} and {compliance_constraints}:
+Columns: Certification / Requirement | Authority | Current Status | Target Date | Notes
+
+## Appendix E: Sensitivity Analysis Summary
+A brief table showing how key outputs (revenue, PAT, DSCR) change under:
+- Base case
+- -15% revenue scenario
+- +10% raw material cost scenario
+- +2% interest rate scenario
+- 6-month commissioning delay
+
+## Appendix F: Client Documents to Attach
+List placeholder slots for documents the client should attach:
+- Land ownership / lease deed
+- Quotations from equipment suppliers
+- LOIs or MoUs with customers
+- Promoter credentials and CIBIL reports
+- Bank statements (if required by lender)
+- Any other documents referenced in Missing Inputs: {missing_inputs}
+
+Write only the appendix content with appendix headings. Keep structure clear for stakeholder review.

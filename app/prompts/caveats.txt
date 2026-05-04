@@ -1,19 +1,40 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 8: Caveats for: {project_title}
 
-Write Chapter 8: Caveats for the following project.
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Location: {project_city}, {project_state}, {project_country}
+- Target Customer: {target_customer}
+- Report Intended Use: {report_intended_use}
+- Missing Inputs: {missing_inputs}
 
-Project: {business_idea}
-Location: {location_land}
-Target Market: {target_market}
-Missing Inputs: {missing_inputs}
+Write the following caveats (target: 3 pages):
 
-The chapter must:
-- Target Chapter 8 coverage: 3 pages in the final report
-- Clearly state data limitations and validation dependencies
-- Explain where external verification is required before decisions
-- Keep language professional and non-alarmist
+## 8.1 Reliance and Purpose
+- This report has been prepared exclusively for {report_intended_use}.
+- Third parties may not rely on this report without the consultant's written consent.
+- State the report date and version.
 
-Write only the chapter content with concise caveat headings.
+## 8.2 Data Limitations
+- Reliance on client-provided inputs: accuracy is the client's responsibility.
+- Public data sources used: currency, completeness, and reliability are not guaranteed.
+- Data cut-off date for market and regulatory information.
+- List any fields that were missing and where assumptions were applied (reference Missing Inputs: {missing_inputs}).
+
+## 8.3 Financial Projections
+- Projections are estimates only; actual results will differ.
+- Sensitivity to key assumptions: selling price, utilisation, input costs, interest rates.
+- Results are not a guarantee of future performance.
+
+## 8.4 Regulatory and Approvals
+- Approvals listed are indicative based on publicly available information as of the report date.
+- Timelines and fees may change. Third-party approvals are not guaranteed.
+- Government incentives and subsidies are subject to eligibility verification and policy changes.
+
+## 8.5 Professional Responsibility
+- This report does not constitute legal, tax, or investment advice.
+- The consultant's responsibility is limited to the analysis as documented.
+- Readers should seek independent professional advice before making investment decisions.
+
+Keep language professional and non-alarmist. Write only the chapter content with caveat headings. Do not add a chapter title line.

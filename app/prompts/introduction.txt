@@ -1,28 +1,39 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 2: Introduction for: {project_title}
 
-Write Chapter 2: Introduction for the following project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Client: {client_name}
+- Target Customer: {target_customer}
+- Location: {project_city}, {project_state}, {project_country}
+- Report Intended Use: {report_intended_use}
+- Promoter Background: {promoter_background}
+- Timeline: {start_date} to {target_launch_date}
+- Budget: {budget}
+- Missing Inputs: {missing_inputs}
 
-Business Idea: {business_idea}
-Product/Service: {product_service}
-Client Name: {client_name}
-Target Market: {target_market}
-Location: {location_land}
-Project Goals: {goals}
-Budget: {budget}
-Promoter Background: {promoter_background}
-Timeline: {start_date} to {target_launch_date}
-Missing Inputs: {missing_inputs}
+Write the following subsections (target: 6 pages total):
 
-The Introduction must:
-- Target Chapter 2 coverage: 6 pages in the final report
-- Include subsections 2.1, 2.2, and 2.3
-- Cover project context, rationale, and scope boundaries
-- Explain promoter strengths and execution readiness
-- Keep a formal lender/investor-ready tone
+## 2.1 Background
+- Prepared-for statement for {client_name} including report title, exclusivity and reliance disclaimer, and consultant responsibility statement.
+- One paragraph on why {business_idea} is generally considered a promising sector. Do not use numbers unless from a citable public source; if citing, include the URL.
+- Promoter motivation: long-term rationale and immediate trigger (use {promoter_background}).
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+## 2.2 Project Idea and Value Proposition
+- What exactly will be produced/provided: {product_service}.
+- Location: {project_city}, {project_state}.
+- Primary customer type and use-case: {target_customer}.
+- Route-to-market based on {customer_interface} and {market_orientation}.
+- Value proposition (why customers will choose this project over alternatives).
+- B2B / B2C / B2G classification with reasoning.
+- Identify key substitutes and substitution risks; explain how the value proposition addresses them.
 
-Write only the chapter content (with subsection headings), without adding a chapter title line.
+## 2.3 Promoters' Background
+- Professional narrative using {promoter_background} only — do not invent names, credentials, or financial details.
+- If CIBIL / financial standing is not provided, write "to be provided by promoters".
+- Governance intent and proposed key roles in project execution.
+
+IMPORTANT: If any critical data is missing (see Missing Inputs), add a brief "Assumptions" note at the end.
+Write only the chapter content with subsection headings. Do not add a chapter title line.

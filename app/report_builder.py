@@ -445,6 +445,7 @@ def get_or_generate_section(
     force: bool = False,
     generation_mode: str = "plain",
     max_tokens: int = 1600,
+    extra_context: Dict[str, Any] = None,
 ) -> str:
     """
     Get cached section or generate new one using LLM.
@@ -465,7 +466,7 @@ def get_or_generate_section(
             return cached
     
     # Generate new content
-    rendered_prompt = get_section_prompt(section_name, submission_data)
+    rendered_prompt = get_section_prompt(section_name, submission_data, extra_context)
     content = llm_client.generate(rendered_prompt, max_tokens=max_tokens, mode=generation_mode)
     
     # Cache the result
@@ -497,7 +498,6 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
         submission_with_context['missing_inputs'] = 'None'
     
     section_names = [
-        'executive_summary',
         'introduction',
         'regulatory_framework',
         'market_assessment',
@@ -510,12 +510,13 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     ]
 
     # Split into two rounds to stay within Anthropic TPM limits.
-    # Round 1: sections 1–4 (executive_summary → market_assessment)
-    # Round 2: sections 5–10 (business_operating_model → appendices)
-    round_1 = section_names[:4]
-    round_2 = section_names[4:]
+    # Round 1: chapters 2-4 (introduction → market_assessment)
+    # Round 2: chapters 5-8 + appendices (business_operating_model → appendices)
+    # Executive Summary is generated LAST so it can reference all other sections.
+    round_1 = section_names[:3]
+    round_2 = section_names[3:]
 
-    total_steps = len(section_names) + 1  # +1 for financial tables step
+    total_steps = len(section_names) + 2  # +1 for exec summary, +1 for financial tables
     section_content: Dict[str, str] = {}
 
     def _generate_sections(batch, offset):
@@ -552,10 +553,55 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     # Round 2
     _generate_sections(round_2, offset=len(round_1))
 
-    # Mark financial tables as the final generation step
+    # Build financial highlights for executive summary context
+    budget_raw = submission.get('budget', submission.get('total_investment', '5000000'))
+    budget_inr = _parse_budget_inr(str(budget_raw))
+    fin = _compute_financials(budget_inr)
+    gm_pct = {y: (fin['rev'][y] - fin['rm'][y] - fin['util'][y]) / fin['rev'][y] * 100 for y in [1, 2, 3]}
+    nm_pct = {y: fin['pat'][y] / fin['rev'][y] * 100 for y in [1, 2, 3]}
+    principal = fin['term_loan'] * 0.15
+    dscr = {y: fin['ebitda'][y] / (fin['interest'][y] + principal) for y in [1, 2, 3]}
+    payback_yr = next((y for y in [1, 2, 3] if fin['pat'][y] > 0), 3)
+    financial_highlights = (
+        f"- Total Project Cost: {_fmt(budget_inr)}\n"
+        f"- Gross Margin: Y1 {gm_pct[1]:.1f}% / Y2 {gm_pct[2]:.1f}% / Y3 {gm_pct[3]:.1f}%\n"
+        f"- PAT Margin: Y1 {nm_pct[1]:.1f}% / Y2 {nm_pct[2]:.1f}% / Y3 {nm_pct[3]:.1f}%\n"
+        f"- EBITDA: Y1 {_fmt(fin['ebitda'][1])} / Y2 {_fmt(fin['ebitda'][2])} / Y3 {_fmt(fin['ebitda'][3])}\n"
+        f"- DSCR: Y1 {dscr[1]:.2f}x / Y2 {dscr[2]:.2f}x / Y3 {dscr[3]:.2f}x (min DSCR: {min(dscr.values()):.2f}x)\n"
+        f"- Indicative Payback: Year {payback_yr}\n"
+        f"- Debt: {_fmt(fin['term_loan'])} ({submission.get('debt_percentage', 50)}% of project cost)\n"
+        f"- Equity: {_fmt(fin['equity'])} ({submission.get('equity_percentage', 30)}% of project cost)"
+    )
+
+    # Extract brief context snippets from completed sections
+    risk_context = (section_content.get('risk_assessment', '') or '')[:600].strip()
+    market_context = (section_content.get('market_assessment', '') or '')[:400].strip()
+
+    # Generate Executive Summary LAST with full context
     upsert_report_status(
         submission_id, "generating",
         sections_done=len(section_names),
+        sections_total=total_steps,
+        current_section="Executive Summary (final step)",
+    )
+    section_content['executive_summary'] = get_or_generate_section(
+        submission_id,
+        'executive_summary',
+        submission_with_context,
+        force,
+        Config.resolve_section_mode('executive_summary'),
+        Config.PLAIN_SECTION_MAX_TOKENS,
+        extra_context={
+            'financial_highlights': financial_highlights,
+            'risk_context': risk_context or 'Risk assessment not yet available.',
+            'market_context': market_context or 'Market assessment not yet available.',
+        },
+    )
+
+    # Mark financial tables as the final step
+    upsert_report_status(
+        submission_id, "generating",
+        sections_done=len(section_names) + 1,
         sections_total=total_steps,
         current_section="Financial Tables",
     )

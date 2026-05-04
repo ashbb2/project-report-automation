@@ -1,31 +1,64 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 4: Market Assessment for: {project_title}
 
-Write a detailed Market Assessment for the following project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Target Customer: {target_customer}
+- Market Geographies: {market_geography}
+- Customer Interface: {customer_interface}
+- Market Orientation (Domestic / Export / Both): {market_orientation}
+- Has Exports: {has_exports} | Export Share: {export_share}%
+- Certifications Non-Negotiables: {certifications}
+- Compliance Constraints: {compliance_constraints}
+- ESG Constraints: {esg_constraints}
+- Procurement Constraints: {procurement_constraints}
+- Missing Inputs: {missing_inputs}
 
-Business Idea: {business_idea}
-Target Market: {target_market}
-Location: {location_land}
-Project Goals: {goals}
-Budget: {budget}
-Certifications (Non-Negotiables): {certifications}
-Compliance Constraints: {compliance_constraints}
-ESG Constraints: {esg_constraints}
-Procurement Constraints: {procurement_constraints}
-Missing Inputs: {missing_inputs}
+Write the following subsections (target: 16 pages total):
 
-The Market Assessment should:
-- Target Chapter 4 coverage: 16 pages in the final report
-- Analyze the target market size and growth potential
-- Identify key competitors and competitive advantages
-- Discuss market trends and opportunities
-- Evaluate market entry barriers
-- Assess demand and customer segments
-- Highlight how non-negotiables may affect market access, channel acceptance, and speed-to-market
-- Be data-driven and analytical with sub-sections matching 4.1 to 4.7
+## 4. Market Assessment Introduction
+80–120 words: define scope — product boundaries, geography ({market_geography}), target customer segments, what sections 4.1–4.7 will cover.
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting what assumptions were made to complete the analysis.
+## 4.1 Industry Analysis and Overview
+- Define the market for {product_service} in {market_geography}.
+- Describe the value chain and buyer behaviour.
+- Explain pricing formation drivers and volatility sources (qualitative unless sourced).
+- Summarise key trends: technology, policy, customer procurement shifts.
+- If market size or growth figures are available from reputable sources, include them with URLs. Otherwise, state the data limitation clearly.
 
-Write only the Market Assessment content, without any section headings.
+## 4.2 Market Segmentation
+- Segment the market into 4–8 segments relevant to {market_geography}.
+- For each segment: buyer type, buying criteria, compliance needs, price sensitivity, and attractiveness rating.
+- Recommend target segments aligned to {customer_interface} and {market_orientation} and justify the selection.
+
+## 4.3 Demand Assessment
+- Assess demand using a defensible methodology (state which: top-down / bottom-up / surrogate).
+- Separate total addressable market from realistically serviceable demand for a new entrant.
+- Discuss seasonality and procurement cycles.
+- Translate demand into a narrative supporting the project's utilisation ramp-up assumption. Use placeholders if volume figures are not provided by the client.
+
+## 4.4 Demand Drivers
+- Identify top demand drivers tied to {target_customer} sectors and macroeconomic indicators.
+- Provide leading indicators and how to track them (include URLs where definitions are official).
+- List downside triggers and early warning signals relevant to this project.
+
+## 4.5 Supply Assessment
+- Describe the supply landscape: supplier categories, regional clusters.
+- Discuss effective supply constraints, import role, and lead times. Cite tariff or trade references where relevant.
+- Identify supply risks and mitigation options.
+
+## 4.6 Competition Analysis
+- Identify competitor archetypes and notable competitors serving {market_geography}. Only name specific competitors if reputable public sources exist.
+- Analyse basis of competition and likely incumbent response to a new entrant.
+- Conclude with a "where we win / where we are vulnerable" assessment aligned to the project's differentiation strategy.
+
+## 4.7 Demand-Supply Gap and Market Forecast
+- Provide a market forecast narrative with base case and downside scenario logic for a 5–7 year horizon.
+- State assumptions transparently and cite sources where available.
+- Translate forecast into utilisation and pricing implications and list the top 3 sensitivities for financial model testing.
+
+IMPORTANT: Cite URLs wherever market data, statistics, or regulatory references are used. If data is unavailable, say so explicitly rather than inventing numbers.
+If any critical data is missing (see Missing Inputs), add a brief "Assumptions" note at the end.
+Write only the chapter content with subsection headings. Do not add a chapter title line.

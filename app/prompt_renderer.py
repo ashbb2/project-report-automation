@@ -76,7 +76,7 @@ def render_prompt(template: str, variables: Dict[str, Any]) -> str:
         raise ValueError(f"Failed to render template: {e}")
 
 
-def get_section_prompt(section_name: str, submission_data: Dict[str, Any]) -> str:
+def get_section_prompt(section_name: str, submission_data: Dict[str, Any], extra_context: Dict[str, Any] = None) -> str:
     """Load and render a prompt for a specific report section."""
     template = load_prompt(section_name)
     prompt_data = {
@@ -84,4 +84,6 @@ def get_section_prompt(section_name: str, submission_data: Dict[str, Any]) -> st
         "output_specification": load_output_specification(),
         "rag_context": "No reference documents available.",
     }
+    if extra_context:
+        prompt_data.update(extra_context)
     return render_prompt(template, prompt_data)

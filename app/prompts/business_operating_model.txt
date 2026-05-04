@@ -1,29 +1,83 @@
-You are a professional business consultant writing a feasibility report.
+You are a professional business consultant writing a lender-grade feasibility report.
 
-Follow this editable output specification exactly where relevant:
-{output_specification}
+Write Chapter 5: Business and Operating Model for: {project_title}
 
-Write Chapter 5: Business and Operating Model for the following project:
+PROJECT DATA:
+- Business Idea: {business_idea}
+- Product / Service: {product_service}
+- Business Model: {business_model}
+- Customer Interface: {customer_interface}
+- Market Orientation: {market_orientation}
+- Manufacturing Mode: {manufacturing_mode}
+- Operating Days / Year: {operating_days}
+- Shifts per Day: {shifts_per_day} | Hours per Shift: {hours_per_shift}
+- Target Capacity: {target_capacity}
+- Location: {project_city}, {project_state}
+- Land Status: {land_status}
+- Raw Material Consumption Basis: {raw_material_consumption_basis}
+- Raw Material Pricing Basis: {raw_material_pricing_basis}
+- Utility Tariff Basis: {utility_tariff_basis}
+- Manpower Approach: {manpower_approach}
+- Production Ramp-up: {production_rampup}
+- Has Effluent Generation: {has_effluent_generation}
+- Has Hazardous Materials: {has_hazardous_materials}
+- Missing Inputs: {missing_inputs}
 
-Business Idea: {business_idea}
-Business Model: {business_model}
-Customer Interface: {customer_interface}
-Market Orientation: {market_orientation}
-Manufacturing Mode: {manufacturing_mode}
-Operating Days: {operating_days}
-Shifts per Day: {shifts_per_day}
-Hours per Shift: {hours_per_shift}
-Target Capacity: {target_capacity}
-Budget: {budget}
-Missing Inputs: {missing_inputs}
+Write the following subsections (target: 23 pages total, excluding the equipment profiles subsection which is generated separately):
 
-The chapter must:
-- Target Chapter 5 coverage: 23 pages in the final report
-- Explain operating model, demand servicing model, and value-chain logic
-- Include staffing, operations rhythm, and production/service flow assumptions
-- Include a dedicated section that transitions into illustrated equipment profiles
-- Be specific enough for implementation planning
+## 5. Business and Operating Model Overview
+120–180 words: describe the proposed operating model and how it links to financial assumptions (capacity, ramp-up, cost structure).
 
-IMPORTANT: If any critical data is missing (check Missing Inputs), add a brief "Assumptions" subsection at the end noting assumptions used.
+## 5.1 Proposed Products
+- Product list and variants for {product_service}.
+- Target standards / certifications if applicable.
+- Packaging formats and unit sizes if known.
+- Pricing determinants (qualitative). Include numbers only if client has provided them.
+- By-products and monetisation route if any.
 
-Write only the chapter content (with subsection headings), without adding a chapter title line.
+## 5.2 Alternative Technologies
+- Identify viable technology options for producing {product_service} at {target_capacity} in the Indian context.
+- Compare on: capex drivers, opex drivers, quality consistency, utilities, compliance burden, skills required, scalability.
+- Recommend the most suitable option given client constraints and explain reasoning.
+
+## 5.3 Manufacturing Process
+- End-to-end process description for {product_service}.
+- Identify critical control points, quality checkpoints, and EHS considerations.
+- Provide a high-level input-output logic. Use placeholders for yield data not provided by client.
+
+## 5.4 Plant & Machinery and Plant Layout
+- Equipment grouping by process area with key specs, quantities, utilities, criticality (Bottleneck / High / Normal).
+- Identify bottleneck step and long-lead procurement items.
+- Plant layout narrative: flow logic, safety zoning, expansion provision.
+- Do not invent specific brand names unless client has listed preferred brands.
+
+## 5.5 Installed Capacity and Utilisation
+- Nameplate vs effective capacity at {target_capacity}.
+- Ramp-up plan aligned to {production_rampup} setting: Year 1 / Year 2 / Year 3 utilisation.
+- Constraints and mitigations; link to break-even analysis.
+
+## 5.6 Infrastructure, Land and Location
+- Land requirement and break-up (built-up, open, future).
+- Utilities availability in {project_city}, {project_state}: power, water, gas, effluent treatment.
+- Location rationale and proximity advantages.
+- Land status: {land_status} — note any risks and mitigations.
+
+## 5.7 Raw Materials, Consumables and Utilities
+- Key inputs, sourcing strategy, and supply risk.
+- Pricing volatility and inventory policy based on {raw_material_pricing_basis}.
+- Utility loads and continuity strategy based on {utility_tariff_basis}.
+
+## 5.8 Inbound, In-plant and Outbound Logistics
+- Inbound sourcing lanes and handling.
+- In-plant material flow and storage.
+- Outbound dispatch to {target_customer} segments.
+- Key logistics KPIs.
+
+## 5.9 Manpower Plan and Organisation Structure
+- Organisation structure by function.
+- Manpower by department and shift based on {manpower_approach}.
+- Hiring timeline aligned to commissioning.
+- Outsourcing / contract staffing approach if any.
+
+IMPORTANT: Keep all assumptions consistent with financial model inputs. If any data is missing (see Missing Inputs), add a brief "Assumptions" note at the end.
+Write only the chapter content with subsection headings. Do not add a chapter title line.
