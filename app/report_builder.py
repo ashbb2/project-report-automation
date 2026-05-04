@@ -1,8 +1,6 @@
 import re
 import time
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -85,38 +83,17 @@ def _is_valid_url_syntax(url: str) -> bool:
         return False
 
 
-def _check_url_reachable(url: str, timeout: int = 4) -> bool:
-    """Best-effort online validation for source links."""
-    if not _is_valid_url_syntax(url):
-        return False
-    try:
-        req = Request(url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req, timeout=timeout) as resp:
-            code = getattr(resp, 'status', 200)
-            return 200 <= int(code) < 400
-    except HTTPError as e:
-        # Some servers block HEAD but still allow GET.
-        if e.code in (403, 405):
-            try:
-                req = Request(url, method='GET', headers={'User-Agent': 'Mozilla/5.0', 'Range': 'bytes=0-0'})
-                with urlopen(req, timeout=timeout) as resp:
-                    code = getattr(resp, 'status', 200)
-                    return 200 <= int(code) < 400
-            except Exception:
-                return False
-        return False
-    except (URLError, TimeoutError, ValueError):
-        return False
-
-
 def _sanitize_invalid_links(text: str, validation_cache: Dict[str, bool]) -> str:
-    """Replace invalid links with plain fallback text so only verified links remain in output."""
+    """Remove links with invalid syntax; all syntactically-valid URLs are kept as-is.
+    Network reachability checks are intentionally skipped — they cause multi-minute
+    blocking delays when AI-generated sections contain many URLs.
+    """
     if not text:
         return text
 
     def is_ok(url: str) -> bool:
         if url not in validation_cache:
-            validation_cache[url] = _check_url_reachable(url)
+            validation_cache[url] = _is_valid_url_syntax(url)
         return validation_cache[url]
 
     def md_link_repl(match):
@@ -736,13 +713,17 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     _generate_sections(round_1, offset=0)
 
     # Cool-down between rounds so the TPM window can partially reset
-    upsert_report_status(
-        submission_id, "generating",
-        sections_done=len(round_1),
-        sections_total=total_calls,
-        current_section="Cooling down before Round 2…",
-    )
-    time.sleep(Config.GENERATION_ROUND_COOLDOWN_SEC)
+    cooldown_sec = int(Config.GENERATION_ROUND_COOLDOWN_SEC)
+    cooldown_step = 10
+    for elapsed in range(0, cooldown_sec, cooldown_step):
+        remaining = cooldown_sec - elapsed
+        upsert_report_status(
+            submission_id, "generating",
+            sections_done=len(round_1),
+            sections_total=total_calls,
+            current_section=f"Cooling down… {remaining}s remaining",
+        )
+        time.sleep(min(cooldown_step, remaining))
 
     # Round 2
     _generate_sections(round_2, offset=len(round_1))
