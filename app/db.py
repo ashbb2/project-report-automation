@@ -658,3 +658,15 @@ def get_report_record(submission_id: int) -> Optional[Dict[str, Any]]:
         "sections_total": row[4] or 0,
         "current_section": row[5],
     }
+
+
+def get_any_generating_submission_id() -> Optional[int]:
+    """Return any submission_id currently in generating status (if present)."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT submission_id FROM generated_reports WHERE status = 'generating' ORDER BY updated_at DESC LIMIT 1"
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None

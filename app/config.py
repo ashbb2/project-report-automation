@@ -13,17 +13,18 @@ class Config:
 
     SECTION_GEN_POLICY_ENABLED = os.getenv("SECTION_GEN_POLICY_ENABLED", "true").lower() == "true"
     SECTION_GEN_DEFAULT_MODE = os.getenv("SECTION_GEN_DEFAULT_MODE", "plain").lower()
+    ENABLE_CLAUDE_WEB_SEARCH = os.getenv("ENABLE_CLAUDE_WEB_SEARCH", "false").lower() == "true"
     MAX_WEB_TOOL_TURNS = int(os.getenv("MAX_WEB_TOOL_TURNS", "2"))
-    PLAIN_SECTION_MAX_TOKENS = int(os.getenv("PLAIN_SECTION_MAX_TOKENS", "1600"))
-    WEB_SECTION_MAX_TOKENS = int(os.getenv("WEB_SECTION_MAX_TOKENS", "2200"))
+    PLAIN_SECTION_MAX_TOKENS = int(os.getenv("PLAIN_SECTION_MAX_TOKENS", "1200"))
+    WEB_SECTION_MAX_TOKENS = int(os.getenv("WEB_SECTION_MAX_TOKENS", "1500"))
     CLAUDE_RATE_LIMIT_RETRIES = int(os.getenv("CLAUDE_RATE_LIMIT_RETRIES", "4"))
     CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC = float(os.getenv("CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC", "2.0"))
-    GENERATION_ROUND_COOLDOWN_SEC = float(os.getenv("GENERATION_ROUND_COOLDOWN_SEC", "65.0"))
+    GENERATION_ROUND_COOLDOWN_SEC = float(os.getenv("GENERATION_ROUND_COOLDOWN_SEC", "90.0"))
 
     _DEFAULT_SECTION_POLICY = {
         "market_assessment": "web",
         "regulatory_framework": "web",
-        "equipment_profiles": "web",
+        "equipment_profiles": "plain",
         "executive_summary": "plain",
         "introduction": "plain",
         "caveats": "plain",

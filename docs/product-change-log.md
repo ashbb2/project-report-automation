@@ -10,6 +10,40 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v12 - 2026-05-04
+**What We Improved**
+- Added stricter reliability controls to reduce repeated 429 failures during report generation.
+
+**Product Design Updates**
+- Temporarily turned off live web-search tool usage to prioritize completion reliability.
+- Kept section mode policy structure so web-enabled sections can be re-enabled later without redesign.
+
+**Development Updates (Plain Language)**
+- Increased round cooldown between generation batches from 65 seconds to 90 seconds.
+- Reduced default token budgets per section to lower token-per-minute pressure.
+- Reduced web-designated sections further so only market assessment and regulatory framework remain marked as web-mode.
+- Added a hard single-active-report guard so only one report can generate at a time across the app.
+- Added database helper and API checks to block overlapping report jobs with a clear 409 response.
+
+**Key Decisions and Why**
+- Decision: disable web tool calls now while keeping architecture ready.
+- Why: reliability is currently more important than incremental live-source richness.
+- Decision: enforce single active report run.
+- Why: overlapping runs were likely spiking org-level token-per-minute usage.
+
+**Files/Areas Updated**
+- app/config.py
+- app/llm_client.py
+- app/db.py
+- app/main.py
+
+**Risks or Follow-ups**
+- Market freshness may reduce temporarily while web-search tool usage is disabled.
+
+**Next Steps**
+- Re-enable web-search for selected sections after queue stability and TPM headroom are confirmed.
+- Add explicit queued status UX in the form for better user messaging when another report is already running.
+
 ### v11 - 2026-05-03
 **What We Improved**
 - Reduced report generation failures caused by API token-per-minute limits.

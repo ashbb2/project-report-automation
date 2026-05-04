@@ -18,7 +18,7 @@ class LLMClient:
             return self._generate_stub(prompt)
 
         if self.provider == "claude":
-            if mode == "web":
+            if mode == "web" and Config.ENABLE_CLAUDE_WEB_SEARCH:
                 return self._generate_claude_web(prompt, max_tokens)
             return self._generate_claude_plain(prompt, max_tokens)
 
