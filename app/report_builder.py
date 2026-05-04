@@ -5,6 +5,7 @@ from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from typing import Dict, Any, List
 from io import BytesIO
 from app.llm_client import llm_client
@@ -69,15 +70,102 @@ def apply_report_formatting(doc: Document) -> None:
 # Markdown → Word helpers
 # ---------------------------------------------------------------------------
 
+URL_PATTERN = re.compile(r"(https?://[^\s)]+)")
+MD_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)")
+
+
+def _add_hyperlink(paragraph, text: str, url: str) -> None:
+    """Insert a clickable external hyperlink into a paragraph."""
+    part = paragraph.part
+    r_id = part.relate_to(url, RT.HYPERLINK, is_external=True)
+
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+
+    new_run = OxmlElement('w:r')
+    rPr = OxmlElement('w:rPr')
+
+    color = OxmlElement('w:color')
+    color.set(qn('w:val'), '0563C1')
+    rPr.append(color)
+
+    underline = OxmlElement('w:u')
+    underline.set(qn('w:val'), 'single')
+    rPr.append(underline)
+
+    new_run.append(rPr)
+    text_el = OxmlElement('w:t')
+    text_el.text = text
+    new_run.append(text_el)
+    hyperlink.append(new_run)
+    paragraph._p.append(hyperlink)
+
+
+def _add_inline_runs(paragraph, text: str) -> None:
+    """Render inline markdown features: **bold**, [links](url), and bare URLs."""
+    # Split by bold first; odd indexes are bold segments.
+    bold_parts = re.split(r'\*\*(.+?)\*\*', text)
+    for i, part in enumerate(bold_parts):
+        if not part:
+            continue
+
+        is_bold = (i % 2 == 1)
+        cursor = 0
+
+        # First resolve markdown links [text](url)
+        for m in MD_LINK_PATTERN.finditer(part):
+            before = part[cursor:m.start()]
+            if before:
+                # Handle bare URLs in the non-link segment
+                start = 0
+                for u in URL_PATTERN.finditer(before):
+                    plain = before[start:u.start()]
+                    if plain:
+                        run = paragraph.add_run(plain)
+                        run.bold = is_bold
+                    _add_hyperlink(paragraph, u.group(1), u.group(1))
+                    start = u.end()
+                tail = before[start:]
+                if tail:
+                    run = paragraph.add_run(tail)
+                    run.bold = is_bold
+
+            _add_hyperlink(paragraph, m.group(1), m.group(2))
+            cursor = m.end()
+
+        remaining = part[cursor:]
+        if remaining:
+            start = 0
+            for u in URL_PATTERN.finditer(remaining):
+                plain = remaining[start:u.start()]
+                if plain:
+                    run = paragraph.add_run(plain)
+                    run.bold = is_bold
+                _add_hyperlink(paragraph, u.group(1), u.group(1))
+                start = u.end()
+            tail = remaining[start:]
+            if tail:
+                run = paragraph.add_run(tail)
+                run.bold = is_bold
+
+
+def _split_md_table_row(line: str) -> List[str]:
+    row = line.strip()
+    if row.startswith('|'):
+        row = row[1:]
+    if row.endswith('|'):
+        row = row[:-1]
+    return [c.strip() for c in row.split('|')]
+
+
+def _is_md_table_separator(line: str) -> bool:
+    s = line.strip()
+    return bool(re.match(r'^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$', s))
+
 def _add_para_with_inline_bold(doc: Document, text: str, style: str = None):
     """Add a paragraph, converting **bold** spans to Word bold runs."""
     para = doc.add_paragraph(style=style) if style else doc.add_paragraph()
-    parts = re.split(r'\*\*(.+?)\*\*', text)
-    for i, part in enumerate(parts):
-        if part:
-            run = para.add_run(part)
-            if i % 2 == 1:  # inside **...**
-                run.bold = True
+    _add_inline_runs(para, text)
     return para
 
 
@@ -88,10 +176,53 @@ def render_markdown_to_doc(doc: Document, text: str) -> None:
     """
     if not text:
         return
-    for line in text.split('\n'):
+
+    lines = text.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         stripped = line.strip()
         if not stripped:
+            i += 1
             continue
+
+        # Markdown table: header row + separator + data rows
+        if '|' in stripped and i + 1 < len(lines) and _is_md_table_separator(lines[i + 1]):
+            header_cells = _split_md_table_row(lines[i])
+            table_rows = []
+            j = i + 2
+            while j < len(lines):
+                row_line = lines[j].strip()
+                if not row_line or '|' not in row_line:
+                    break
+                # Skip accidental separator repeats
+                if _is_md_table_separator(row_line):
+                    j += 1
+                    continue
+                table_rows.append(_split_md_table_row(lines[j]))
+                j += 1
+
+            col_count = max(1, len(header_cells))
+            table = doc.add_table(rows=1 + len(table_rows), cols=col_count)
+            table.style = 'Table Grid'
+
+            for c, value in enumerate(header_cells[:col_count]):
+                cell_para = table.rows[0].cells[c].paragraphs[0]
+                cell_para.text = ''
+                _add_inline_runs(cell_para, value)
+                for run in cell_para.runs:
+                    run.bold = True
+
+            for r, row_vals in enumerate(table_rows, start=1):
+                for c in range(col_count):
+                    value = row_vals[c] if c < len(row_vals) else ''
+                    cell_para = table.rows[r].cells[c].paragraphs[0]
+                    cell_para.text = ''
+                    _add_inline_runs(cell_para, value)
+
+            i = j
+            continue
+
         if stripped.startswith('### '):
             doc.add_heading(stripped[4:], level=3)
         elif stripped.startswith('## '):
@@ -105,6 +236,7 @@ def render_markdown_to_doc(doc: Document, text: str) -> None:
             p.add_run(stripped[2:-2]).bold = True
         else:
             _add_para_with_inline_bold(doc, stripped)
+        i += 1
 
 
 # ---------------------------------------------------------------------------
