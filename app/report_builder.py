@@ -1,4 +1,5 @@
 import re
+import time
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -508,25 +509,49 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
         'appendices',
     ]
 
+    # Split into two rounds to stay within Anthropic TPM limits.
+    # Round 1: sections 1–4 (executive_summary → market_assessment)
+    # Round 2: sections 5–10 (business_operating_model → appendices)
+    round_1 = section_names[:4]
+    round_2 = section_names[4:]
+
     total_steps = len(section_names) + 1  # +1 for financial tables step
     section_content: Dict[str, str] = {}
-    for i, section_name in enumerate(section_names):
-        generation_mode = Config.resolve_section_mode(section_name)
-        section_max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
-        upsert_report_status(
-            submission_id, "generating",
-            sections_done=i,
-            sections_total=total_steps,
-            current_section=f"{SECTION_LABELS.get(section_name, section_name)} ({generation_mode})",
-        )
-        section_content[section_name] = get_or_generate_section(
-            submission_id,
-            section_name,
-            submission_with_context,
-            force,
-            generation_mode,
-            section_max_tokens,
-        )
+
+    def _generate_sections(batch, offset):
+        for i, section_name in enumerate(batch):
+            generation_mode = Config.resolve_section_mode(section_name)
+            section_max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
+            upsert_report_status(
+                submission_id, "generating",
+                sections_done=offset + i,
+                sections_total=total_steps,
+                current_section=f"{SECTION_LABELS.get(section_name, section_name)} ({generation_mode})",
+            )
+            section_content[section_name] = get_or_generate_section(
+                submission_id,
+                section_name,
+                submission_with_context,
+                force,
+                generation_mode,
+                section_max_tokens,
+            )
+
+    # Round 1
+    _generate_sections(round_1, offset=0)
+
+    # Cool-down between rounds so the TPM window can partially reset
+    upsert_report_status(
+        submission_id, "generating",
+        sections_done=len(round_1),
+        sections_total=total_steps,
+        current_section="Cooling down before Round 2…",
+    )
+    time.sleep(Config.GENERATION_ROUND_COOLDOWN_SEC)
+
+    # Round 2
+    _generate_sections(round_2, offset=len(round_1))
+
     # Mark financial tables as the final generation step
     upsert_report_status(
         submission_id, "generating",

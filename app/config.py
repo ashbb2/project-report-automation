@@ -18,6 +18,7 @@ class Config:
     WEB_SECTION_MAX_TOKENS = int(os.getenv("WEB_SECTION_MAX_TOKENS", "2200"))
     CLAUDE_RATE_LIMIT_RETRIES = int(os.getenv("CLAUDE_RATE_LIMIT_RETRIES", "4"))
     CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC = float(os.getenv("CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC", "2.0"))
+    GENERATION_ROUND_COOLDOWN_SEC = float(os.getenv("GENERATION_ROUND_COOLDOWN_SEC", "65.0"))
 
     _DEFAULT_SECTION_POLICY = {
         "market_assessment": "web",
