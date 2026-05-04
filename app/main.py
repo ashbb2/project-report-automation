@@ -202,13 +202,14 @@ async def report_status(submission_id: int):
     """Poll report generation status."""
     record = get_report_record(submission_id)
     if not record:
-        return {"status": "not_started", "sections_done": 0, "sections_total": 0, "current_section": None}
+        return {"status": "not_started", "sections_done": 0, "sections_total": 0, "current_section": None, "updated_at": None}
     return {
         "status": record["status"],
         "error": record.get("error_message"),
         "sections_done": record.get("sections_done", 0),
         "sections_total": record.get("sections_total", 0),
         "current_section": record.get("current_section"),
+        "updated_at": record.get("updated_at"),
     }
 
 

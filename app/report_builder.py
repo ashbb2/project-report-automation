@@ -712,20 +712,7 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     # Round 1
     _generate_sections(round_1, offset=0)
 
-    # Cool-down between rounds so the TPM window can partially reset
-    cooldown_sec = int(Config.GENERATION_ROUND_COOLDOWN_SEC)
-    cooldown_step = 10
-    for elapsed in range(0, cooldown_sec, cooldown_step):
-        remaining = cooldown_sec - elapsed
-        upsert_report_status(
-            submission_id, "generating",
-            sections_done=len(round_1),
-            sections_total=total_calls,
-            current_section=f"Cooling down… {remaining}s remaining",
-        )
-        time.sleep(min(cooldown_step, remaining))
-
-    # Round 2
+    # Round 2 (no cooldown — web search is disabled so TPM pressure is minimal)
     _generate_sections(round_2, offset=len(round_1))
 
     # Build financial highlights for executive summary context

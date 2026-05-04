@@ -2559,12 +2559,29 @@
                 if (!startResp.ok) throw new Error('Failed to start report generation');
                 progressLabel.textContent = 'Generating report — Claude is researching and writing each section…';
 
-                // Poll status every 6 seconds and drive bar from real section counts
+                // Poll status every 2 seconds; detect stale/crashed state via updated_at
                 await new Promise((resolve, reject) => {
+                    const STALE_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes without a status update = stale
+                    let lastUpdatedAt = null;
+                    let lastUpdatedAtSeen = Date.now();
+
                     const poll = setInterval(async () => {
                         try {
                             const statusResp = await fetch(`/api/report/${currentSubmissionId}/status`);
-                            const { status, error, sections_done, sections_total, current_section } = await statusResp.json();
+                            const { status, error, sections_done, sections_total, current_section, updated_at } = await statusResp.json();
+
+                            // Track heartbeat via updated_at
+                            if (updated_at && updated_at !== lastUpdatedAt) {
+                                lastUpdatedAt = updated_at;
+                                lastUpdatedAtSeen = Date.now();
+                            }
+
+                            // If still generating but no heartbeat for STALE_THRESHOLD_MS, surface a warning
+                            if (status === 'generating' && (Date.now() - lastUpdatedAtSeen) > STALE_THRESHOLD_MS) {
+                                clearInterval(poll);
+                                reject(new Error('Report generation appears to have stalled (no progress for 3 minutes). Please retry.'));
+                                return;
+                            }
 
                             // Drive bar from real section progress when available
                             if (sections_total > 0) {
