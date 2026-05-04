@@ -1,5 +1,8 @@
 import re
 import time
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 from docx import Document
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -72,6 +75,65 @@ def apply_report_formatting(doc: Document) -> None:
 
 URL_PATTERN = re.compile(r"(https?://[^\s)]+)")
 MD_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)")
+
+
+def _is_valid_url_syntax(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+    except Exception:
+        return False
+
+
+def _check_url_reachable(url: str, timeout: int = 4) -> bool:
+    """Best-effort online validation for source links."""
+    if not _is_valid_url_syntax(url):
+        return False
+    try:
+        req = Request(url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
+        with urlopen(req, timeout=timeout) as resp:
+            code = getattr(resp, 'status', 200)
+            return 200 <= int(code) < 400
+    except HTTPError as e:
+        # Some servers block HEAD but still allow GET.
+        if e.code in (403, 405):
+            try:
+                req = Request(url, method='GET', headers={'User-Agent': 'Mozilla/5.0', 'Range': 'bytes=0-0'})
+                with urlopen(req, timeout=timeout) as resp:
+                    code = getattr(resp, 'status', 200)
+                    return 200 <= int(code) < 400
+            except Exception:
+                return False
+        return False
+    except (URLError, TimeoutError, ValueError):
+        return False
+
+
+def _sanitize_invalid_links(text: str, validation_cache: Dict[str, bool]) -> str:
+    """Replace invalid links with plain fallback text so only verified links remain in output."""
+    if not text:
+        return text
+
+    def is_ok(url: str) -> bool:
+        if url not in validation_cache:
+            validation_cache[url] = _check_url_reachable(url)
+        return validation_cache[url]
+
+    def md_link_repl(match):
+        label, url = match.group(1), match.group(2)
+        if is_ok(url):
+            return match.group(0)
+        return f"{label} (Source link unavailable)"
+
+    updated = MD_LINK_PATTERN.sub(md_link_repl, text)
+
+    def bare_url_repl(match):
+        url = match.group(1)
+        if is_ok(url):
+            return url
+        return "Source link unavailable"
+
+    return URL_PATTERN.sub(bare_url_repl, updated)
 
 
 def _add_hyperlink(paragraph, text: str, url: str) -> None:
@@ -729,6 +791,17 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
             'market_context': market_context or 'Market assessment not yet available.',
         },
     )
+
+    # Validate and sanitize links in all generated sections before rendering output.
+    upsert_report_status(
+        submission_id, "generating",
+        sections_done=total_calls,
+        sections_total=total_calls,
+        current_section="Validating source links",
+    )
+    link_validation_cache: Dict[str, bool] = {}
+    for key in list(section_content.keys()):
+        section_content[key] = _sanitize_invalid_links(section_content[key], link_validation_cache)
 
     # Mark financial tables as the final step
     upsert_report_status(
