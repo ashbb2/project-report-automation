@@ -13,7 +13,7 @@ class Config:
 
     SECTION_GEN_POLICY_ENABLED = os.getenv("SECTION_GEN_POLICY_ENABLED", "true").lower() == "true"
     SECTION_GEN_DEFAULT_MODE = os.getenv("SECTION_GEN_DEFAULT_MODE", "plain").lower()
-    ENABLE_CLAUDE_WEB_SEARCH = os.getenv("ENABLE_CLAUDE_WEB_SEARCH", "true").lower() == "true"
+    ENABLE_CLAUDE_WEB_SEARCH = os.getenv("ENABLE_CLAUDE_WEB_SEARCH", "false").lower() == "true"
     MAX_WEB_TOOL_TURNS = int(os.getenv("MAX_WEB_TOOL_TURNS", "2"))
     PLAIN_SECTION_MAX_TOKENS = int(os.getenv("PLAIN_SECTION_MAX_TOKENS", "1200"))
     WEB_SECTION_MAX_TOKENS = int(os.getenv("WEB_SECTION_MAX_TOKENS", "1500"))

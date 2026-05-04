@@ -1070,8 +1070,9 @@
         const dsraMonthsGroup = document.getElementById('dsra_months_group');
         const shiftPreferenceField = document.getElementById('shift_preference');
 
-        const EXAMPLE_FORM_INPUT = {
-            client_name: 'Apex Green Packaging Private Limited',
+        const EXAMPLE_FORM_INPUTS = [
+            // Example 1: Compostable Packaging
+            {
             project_title: 'Compostable Industrial Packaging Expansion',
             product_service: 'Manufacture and supply compostable courier mailers, food-grade pouches, and protective packaging films for B2B clients.',
             project_country: 'India',
@@ -1190,7 +1191,92 @@
                 }
             ],
             notes: 'Pilot customer MoUs signed with three regional distributors.'
-        };
+        },
+            // Example 2: Dairy Processing
+            {
+            client_name: 'Fresh Milk Dairies Limited',
+            project_title: 'Automated Pasteurization and Packaging Facility',
+            project_country: 'India',
+            project_state: 'Punjab',
+            project_city: 'Ludhiana',
+            product_service: 'Pasteurized milk and dairy products',
+            target_capacity: '50,000 liters/day',
+            target_customer: 'Modern retail chains and institutional buyers',
+            project_pin_code: '141010',
+            project_district: 'Ludhiana',
+            industrial_area: 'Focal Point Industrial Area',
+            customer_interface: 'B2B',
+            market_orientation: 'both',
+            manufacturing_mode: 'own_brand',
+            report_intended_use: 'lender_submission',
+            business_model: 'Manufacturing',
+            sizing_mode: 'capacity_driven',
+            budget_cap_basis: '',
+            currency: 'INR',
+            product_mix: 'Pasteurized milk: 60%, Yogurt: 25%, Paneer: 15%',
+            debt_percentage: 60,
+            equity_percentage: 40,
+            loan_tenor: 7,
+            notes: 'Letters of support from 5 major institutional buyers.'
+        },
+            // Example 3: Solar Panel Manufacturing
+            {
+            client_name: 'SunTech India Manufacturing',
+            project_title: 'Mono-crystalline Solar Panel Assembly Plant',
+            project_country: 'India',
+            project_state: 'Rajasthan',
+            project_city: 'Jodhpur',
+            product_service: 'Solar panel assembly and testing',
+            target_capacity: '100MW/annum',
+            target_customer: 'Solar installers and EPC contractors',
+            project_pin_code: '342001',
+            project_district: 'Jodhpur',
+            industrial_area: 'Jodhpur Export Promotion Industrial Park',
+            customer_interface: 'B2B',
+            market_orientation: 'export',
+            manufacturing_mode: 'own_brand',
+            report_intended_use: 'lender_submission',
+            business_model: 'Manufacturing',
+            sizing_mode: 'capacity_driven',
+            budget_cap_basis: '',
+            currency: 'INR',
+            product_mix: '400W: 40%, 450W: 35%, 550W: 25%',
+            debt_percentage: 70,
+            equity_percentage: 30,
+            loan_tenor: 10,
+            notes: 'Pre-orders from 3 major EPC contractors for 20MW annually.'
+        },
+            // Example 4: Food Processing (Snacks)
+            {
+            client_name: 'Golden Harvest Foods Pvt Ltd',
+            project_title: 'Ready-to-Eat Snacks Manufacturing',
+            project_country: 'India',
+            project_state: 'Maharashtra',
+            project_city: 'Pune',
+            product_service: 'Packaged snacks manufacturing',
+            target_capacity: '25,000 units/day',
+            target_customer: 'Retail chains and e-commerce platforms',
+            project_pin_code: '411001',
+            project_district: 'Pune',
+            industrial_area: 'Pimpri Industrial Estate',
+            customer_interface: 'B2B',
+            market_orientation: 'both',
+            manufacturing_mode: 'contract_manufacturing',
+            report_intended_use: 'lender_submission',
+            business_model: 'Manufacturing',
+            sizing_mode: 'demand_driven',
+            budget_cap_basis: '',
+            currency: 'INR',
+            product_mix: 'Namkeen: 45%, Chakli: 30%, Savory mix: 25%',
+            debt_percentage: 55,
+            equity_percentage: 45,
+            loan_tenor: 6,
+            notes: 'Distribution tie-up with 2 major retail chains.'
+        }
+        ];
+
+        // Backward compatibility: keep single example reference
+        const EXAMPLE_FORM_INPUT = EXAMPLE_FORM_INPUTS[0];
 
         function parseFloatOrNull(value) {
             const parsed = parseFloat(value);
@@ -2005,7 +2091,10 @@
         }
 
         function autofillExampleData() {
-            const data = EXAMPLE_FORM_INPUT;
+            // If EXAMPLE_FORM_INPUTS is an array, pick random; otherwise use single example
+            const data = Array.isArray(EXAMPLE_FORM_INPUTS) 
+                ? EXAMPLE_FORM_INPUTS[Math.floor(Math.random() * EXAMPLE_FORM_INPUTS.length)]
+                : EXAMPLE_FORM_INPUT;
 
             document.getElementById('client_name').value = data.client_name;
             document.getElementById('project_title').value = data.project_title;
