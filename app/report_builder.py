@@ -516,7 +516,7 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     round_1 = section_names[:3]
     round_2 = section_names[3:]
 
-    total_steps = len(section_names) + 2  # +1 for exec summary, +1 for financial tables
+    total_calls = len(section_names) + 1  # +1 for executive_summary call
     section_content: Dict[str, str] = {}
 
     def _generate_sections(batch, offset):
@@ -525,8 +525,8 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
             section_max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
             upsert_report_status(
                 submission_id, "generating",
-                sections_done=offset + i,
-                sections_total=total_steps,
+                sections_done=offset + i + 1,
+                sections_total=total_calls,
                 current_section=f"{SECTION_LABELS.get(section_name, section_name)} ({generation_mode})",
             )
             section_content[section_name] = get_or_generate_section(
@@ -545,7 +545,7 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     upsert_report_status(
         submission_id, "generating",
         sections_done=len(round_1),
-        sections_total=total_steps,
+        sections_total=total_calls,
         current_section="Cooling down before Round 2…",
     )
     time.sleep(Config.GENERATION_ROUND_COOLDOWN_SEC)
@@ -580,8 +580,8 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     # Generate Executive Summary LAST with full context
     upsert_report_status(
         submission_id, "generating",
-        sections_done=len(section_names),
-        sections_total=total_steps,
+        sections_done=total_calls,
+        sections_total=total_calls,
         current_section="Executive Summary (final step)",
     )
     section_content['executive_summary'] = get_or_generate_section(
@@ -601,9 +601,9 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     # Mark financial tables as the final step
     upsert_report_status(
         submission_id, "generating",
-        sections_done=len(section_names) + 1,
-        sections_total=total_steps,
-        current_section="Financial Tables",
+        sections_done=total_calls,
+        sections_total=total_calls,
+        current_section="Finalizing financial tables",
     )
 
     doc = Document()

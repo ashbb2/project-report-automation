@@ -2568,12 +2568,12 @@
 
                             // Drive bar from real section progress when available
                             if (sections_total > 0) {
-                                const realPct = Math.round((sections_done / sections_total) * 95); // cap at 95 until done
+                                const realPct = Math.min(100, Math.round((sections_done / sections_total) * 100));
                                 progressBar.style.transition = 'width 2s ease';
                                 progressBar.style.width = realPct + '%';
                                 progressPct.textContent = realPct + '%';
                                 if (current_section) {
-                                    progressLabel.textContent = `Writing: ${current_section} (${sections_done} of ${sections_total} sections)…`;
+                                    progressLabel.textContent = `Writing: ${current_section} (Call ${sections_done} of ${sections_total})…`;
                                 }
                             }
 
