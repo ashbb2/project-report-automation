@@ -2580,7 +2580,7 @@
                             if (status === 'done') { clearInterval(poll); resolve(); }
                             else if (status === 'failed') { clearInterval(poll); reject(new Error(error || 'Report generation failed')); }
                         } catch (e) { clearInterval(poll); reject(e); }
-                    }, 6000);
+                    }, 2000);
                 });
 
                 // Download the finished file

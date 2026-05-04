@@ -4,12 +4,14 @@ from jinja2 import Environment, FileSystemLoader
 import os
 import asyncio
 from datetime import datetime
+from typing import Set
 from app.config import Config
 from app.models import SubmissionCreate, SubmissionResponse, SubmissionResponseWithValidation, ValidationSummary
 from app.db import init_db, save_submission, get_submission, upsert_report_status, get_report_record, get_any_generating_report_lock
 from app.report_builder import build_doc
 
 app = FastAPI()
+_active_report_tasks: Set[asyncio.Task] = set()
 
 # Initialize database on startup
 init_db()
@@ -179,7 +181,19 @@ async def start_report(submission_id: int, background_tasks: BackgroundTasks, fo
             )
 
     submission_data = {k: v for k, v in submission.items() if k not in ["id", "created_at"]}
-    background_tasks.add_task(_run_report_background, submission_id, submission_data, force)
+    # Mark as queued/generating immediately so status endpoint updates right away.
+    upsert_report_status(
+        submission_id,
+        "generating",
+        sections_done=0,
+        sections_total=0,
+        current_section="Queued",
+    )
+
+    # Detach generation from request lifecycle; return immediately.
+    task = asyncio.create_task(_run_report_background(submission_id, submission_data, force))
+    _active_report_tasks.add(task)
+    task.add_done_callback(lambda t: _active_report_tasks.discard(t))
     return {"status": "generating"}
 
 

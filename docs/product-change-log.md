@@ -10,6 +10,30 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v16 - 2026-05-04
+**What We Improved**
+- Fixed cases where users saw "Download failed" even though the report was generated.
+- Improved progress responsiveness in the UI.
+
+**Development Updates (Plain Language)**
+- Updated report start behavior to launch generation in a detached async task instead of tying execution to the start request lifecycle.
+- Added immediate queued/generating status write so status polling can see progress state right after start.
+- Reduced front-end status polling interval from 6 seconds to 2 seconds so the progress bar updates faster as section status changes.
+
+**Key Decisions and Why**
+- Decision: decouple report generation from the start API response path.
+- Why: avoids long-running start requests and reduces race conditions where download was attempted before backend completion state was visible.
+
+**Files/Areas Updated**
+- app/main.py
+- app/templates/form.html
+
+**Risks or Follow-ups**
+- More frequent polling increases status endpoint traffic slightly.
+
+**Next Steps**
+- Add explicit front-end handling for 404 download with auto-retry and user-friendly "finalizing" state.
+
 ### v15 - 2026-05-04
 **What We Improved**
 - Fixed a remaining edge case where report start could still be blocked by a stuck lock with no visible progress.
