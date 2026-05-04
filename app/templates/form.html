@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="google-maps-api-key" content="{{ google_maps_api_key }}">
     <title>Project Report Automation</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; }
@@ -12,7 +13,6 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         label { font-weight: bold; margin-bottom: 5px; color: #555; }
         label.critical::after { content: " *"; color: #dc3545; }
-        label.optional::after { content: " (optional)"; color: #6c757d; font-weight: normal; font-size: 0.9em; }
         input, textarea, select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: Arial, sans-serif; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #007bff; box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); }
         input.critical-field, textarea.critical-field, select.critical-field { border-left: 3px solid #dc3545; }
@@ -33,10 +33,443 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .conditional-section { display: none; }
         .conditional-section.active { display: block; }
+        .field-hint { margin-top: 6px; font-size: 0.9em; color: #6c757d; }
+        .loading-inline { display: inline-flex; align-items: center; gap: 8px; color: #6c757d; font-size: 0.9em; margin-top: 6px; }
+        .loading-inline.hidden { display: none; }
+        .spinner-inline {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #c9d7ee;
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .pac-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+            font-family: Arial, sans-serif;
+            margin-top: 4px;
+        }
+        .pac-item {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .pac-item:hover,
+        .pac-item-selected {
+            background-color: #eef5ff;
+        }
+        .city-autocomplete-host {
+            margin-bottom: 8px;
+        }
+        .city-autocomplete-host gmp-place-autocomplete {
+            width: 100%;
+            display: block;
+            color-scheme: light;
+            --gmpx-color-surface: #ffffff;
+            --gmpx-color-on-surface: #333333;
+            --gmpx-color-primary: #007bff;
+        }
+        .hsn-selector {
+            border: 1px solid #d7dee7;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .hsn-step {
+            border: 1px solid #e5e9f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #fbfcfe;
+            transition: opacity 0.2s ease;
+        }
+        .hsn-step.inactive {
+            opacity: 1;
+            background: #fcfcfd;
+            border-color: #e4e4e7;
+        }
+        .hsn-step.inactive .hsn-step-title {
+            color: #64748b;
+        }
+        .hsn-step-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .hsn-step-title {
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #3a4757;
+        }
+        .hsn-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-mode-button {
+            border: 1px solid #d4d4d8;
+            border-radius: 10px;
+            padding: 12px;
+            background: #ffffff;
+            color: #1f2937;
+            text-align: left;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .hsn-mode-button:hover {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #a1a1aa;
+            box-shadow: 0 3px 10px rgba(24, 24, 27, 0.08);
+            transform: translateY(-1px);
+        }
+        .hsn-mode-button.selected {
+            border-color: #2563eb;
+            background: #f8fbff;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .hsn-mode-button.selected:hover {
+            background: #f8fbff;
+            color: #1f2937;
+        }
+        .hsn-mode-label {
+            display: block;
+            font-size: 1em;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .hsn-mode-copy {
+            display: block;
+            font-size: 0.86em;
+            color: #475569;
+            line-height: 1.4;
+        }
+        .hsn-search-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+        .hsn-search-button {
+            min-width: 96px;
+        }
+        .hsn-family-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-card {
+            border: 1px solid #d4d4d8;
+            border-left: 6px solid #6c8fcf;
+            border-radius: 10px;
+            padding: 12px;
+            background: #ffffff;
+            color: #1f2937;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            text-align: left;
+            font-weight: 400;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease;
+        }
+        .hsn-card:hover {
+            border-color: #a1a1aa;
+            background: #ffffff;
+            color: #1f2937;
+            box-shadow: 0 3px 10px rgba(24, 24, 27, 0.08);
+            transform: translateY(-1px);
+        }
+        .hsn-card.selected {
+            border-color: #2563eb;
+            background: #f8fbff;
+            color: #1f2937;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .hsn-card.selected:hover {
+            background: #f8fbff;
+            color: #1f2937;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2), 0 3px 10px rgba(24, 24, 27, 0.08);
+        }
+        .hsn-card-code {
+            font-size: 1.15em;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .hsn-card-text {
+            font-size: 1.02em;
+            font-weight: 500;
+            color: #1f2937;
+            line-height: 1.4;
+        }
+        .hsn-card-meta {
+            margin-top: 6px;
+            font-size: 0.82em;
+            color: #5f6f82;
+            line-height: 1.35;
+        }
+        .hsn-count-pill {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.76em;
+            font-weight: 500;
+            color: #334155;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
+        }
+        .hsn-card-examples {
+            margin-top: 9px;
+            font-size: 0.84em;
+            color: #475569;
+            line-height: 1.35;
+            font-weight: 400;
+        }
+        .hsn-sub-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hsn-sub-card {
+            min-height: 100%;
+        }
+        .hsn-sub-card .hsn-card-meta {
+            margin-top: 8px;
+        }
+        .hsn-back-link,
+        .hsn-change-link {
+            color: #0056b3;
+            background: none;
+            border: none;
+            padding: 0;
+            font-weight: normal;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .hsn-summary {
+            border: 1px solid #c9dfcb;
+            border-radius: 8px;
+            background: #f4fbf5;
+            color: #1f5a24;
+            padding: 10px 12px;
+            display: none;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .hsn-summary-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .hsn-selected-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .hsn-selected-chip {
+            border: 1px solid #b7d6bb;
+            background: #ffffff;
+            color: #1f5a24;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.8em;
+            line-height: 1.2;
+        }
+        .hsn-summary-actions {
+            display: inline-flex;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .hsn-action-button {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            padding: 6px 10px;
+            font-size: 0.82em;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .hsn-action-button:hover {
+            background: #f8fafc;
+        }
+        .hsn-action-button.save {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: #ffffff;
+        }
+        .hsn-action-button.save:hover {
+            background: #1d4ed8;
+        }
+        .hsn-helper {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #5f6f82;
+        }
+        .hsn-grouping-note {
+            margin-top: 10px;
+            font-size: 0.82em;
+            color: #64748b;
+        }
+        .field-error {
+            color: #b42318;
+            margin-top: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+        .pricing-confirm {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            border: 2px solid #f0c36d;
+            border-radius: 8px;
+            background: #fff9eb;
+        }
+        .pricing-confirm p {
+            margin: 8px 0;
+        }
+        .pricing-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .pricing-actions .secondary {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        .market-geo-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+        .certification-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 0.8fr 0.8fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+        }
+        .certification-row-secondary {
+            margin-top: -4px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 860px) {
+            .certification-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .market-geo-remove {
+            padding: 10px;
+            min-width: 40px;
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+        .market-geo-remove:hover {
+            background: #e5e7eb;
+        }
+        .inline-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 18px;
+            font-weight: normal;
+        }
+        .inline-radio input {
+            margin: 0;
+        }
+        .export-split {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .promoter-subsection {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .promoter-subsection.hidden {
+            display: none;
+        }
+        .section-heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .section-heading-row h2 {
+            margin: 0;
+        }
+        .promoter-card {
+            border: 1px solid #d7dee7;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            background: #fff;
+        }
+        .promoter-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .promoter-remove {
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid #d1d5db;
+            padding: 8px 10px;
+        }
+        .promoter-remove:hover {
+            background: #e5e7eb;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+        .top-actions button {
+            background: #374151;
+        }
+        .top-actions button:hover {
+            background: #1f2937;
+        }
+        @media (max-width: 680px) {
+            .hsn-search-row {
+                grid-template-columns: 1fr;
+            }
+            .hsn-search-button {
+                width: 100%;
+            }
+            .market-geo-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Project Feasibility Report Generator</h1>
+    <div class="top-actions">
+        <button type="button" id="autofillExampleButton">Autofill Example Data</button>
+    </div>
     
     <form id="submissionForm">
         <!-- Project Identity Section -->
@@ -53,23 +486,101 @@
             </div>
             
             <div class="form-group">
-                <label for="product_service" class="critical">Product/Service</label>
-                <textarea name="product_service" id="product_service" class="critical-field" placeholder="Describe the product or service" rows="3" required></textarea>
+                <label for="product_service" class="critical">Product/Service Description</label>
+                <textarea name="product_service" id="product_service" class="critical-field" placeholder="Describe your product/service, key variants, target use case, and notable specifications" rows="3" required></textarea>
+                <div class="field-hint">Include what you are offering, who it is for, major variants/SKUs, and any important technical or quality details.</div>
+
+                <input type="hidden" name="hsn_family_code" id="hsn_family_code" value="0000" required>
+                <input type="hidden" name="hsn_family_name" id="hsn_family_name" value="Not classified in form">
+                <input type="hidden" name="hsn_code" id="hsn_code" value="0000" required>
+                <input type="hidden" name="hsn_description" id="hsn_description" value="HSN/SAC will be identified during report generation" required>
             </div>
             
+            <input type="hidden" name="project_country" id="project_country" value="">
+
             <div class="form-group">
-                <label for="project_location" class="critical">Project Location</label>
-                <textarea name="project_location" id="project_location" class="critical-field" placeholder="Provide detailed location and land information" rows="2" required></textarea>
+                <label class="critical">City</label>
+                <div id="cityAutocompleteHost" class="city-autocomplete-host"></div>
+                <input type="hidden" name="project_city" id="project_city">
+                <input type="hidden" name="project_state" id="project_state">
+                <div id="placeLoadingIndicator" class="loading-inline hidden" aria-live="polite">
+                    <span class="spinner-inline"></span>
+                    <span>Fetching location details...</span>
+                </div>
             </div>
-            
+
+            <div class="form-group">
+                <label for="project_pin_code" class="optional">Pin Code</label>
+                <input type="text" name="project_pin_code" id="project_pin_code" class="critical-field" placeholder="Enter 6-digit pin code" inputmode="numeric" maxlength="12" title="Enter a valid pin code">
+                <div class="field-hint">For India, pin code must be exactly 6 digits if provided.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="target_customer" class="critical">Target Customer</label>
+                <textarea name="target_customer" id="target_customer" class="critical-field" placeholder="Describe the target customer segment" rows="2" required></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="project_district" class="critical">District</label>
+                    <input type="text" name="project_district" id="project_district" class="critical-field" placeholder="Enter district" required>
+                </div>
+                <div class="form-group">
+                    <label for="industrial_area" class="optional">City/Industrial Area (if known)</label>
+                    <input type="text" name="industrial_area" id="industrial_area" placeholder="e.g., Sanand GIDC, Bhiwandi Industrial Area">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customer_interface" class="critical">Business Interface</label>
+                    <select name="customer_interface" id="customer_interface" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="B2B">B2B</option>
+                        <option value="B2C">B2C</option>
+                        <option value="B2G">B2G</option>
+                        <option value="Mixed">Mixed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="market_orientation" class="critical">Domestic/Export Orientation</label>
+                    <select name="market_orientation" id="market_orientation" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="domestic">Domestic</option>
+                        <option value="export">Export</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="manufacturing_mode" class="critical">Own Brand / Contract Manufacturing</label>
+                    <select name="manufacturing_mode" id="manufacturing_mode" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="own_brand">Own Brand</option>
+                        <option value="contract_manufacturing">Contract Manufacturing</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="report_intended_use" class="critical">Intended Use of Report</label>
+                    <select name="report_intended_use" id="report_intended_use" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="lender_submission">Lender Submission</option>
+                        <option value="investor">Investor</option>
+                        <option value="internal">Internal Planning</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="business_model" class="critical">Business Model</label>
                 <select name="business_model" id="business_model" class="critical-field" required>
                     <option value="">-- Select Business Model --</option>
-                    <option value="B2B">B2B (Business to Business)</option>
-                    <option value="B2C">B2C (Business to Consumer)</option>
-                    <option value="B2G">B2G (Business to Government)</option>
-                    <option value="Hybrid">Hybrid</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Trading (Wholesale)">Trading (Wholesale)</option>
+                    <option value="Trading (Retail)">Trading (Retail)</option>
                 </select>
             </div>
         </div>
@@ -78,12 +589,9 @@
         <div class="form-section">
             <h2>Project Sizing Mode</h2>
             <div class="form-group">
-                <label for="sizing_mode" class="critical">Sizing Mode</label>
-                <select name="sizing_mode" id="sizing_mode" class="critical-field" required>
-                    <option value="">-- Select Sizing Mode --</option>
-                    <option value="capacity_driven">Capacity-Driven (Based on production capacity)</option>
-                    <option value="budget_driven">Budget-Driven (Based on available investment)</option>
-                </select>
+                <label class="critical">Sizing Mode</label>
+                <label class="inline-radio"><input type="radio" name="sizing_mode" value="capacity_driven" required> Capacity-Driven (Based on production capacity)</label>
+                <label class="inline-radio"><input type="radio" name="sizing_mode" value="budget_driven"> Budget-Driven (Based on available investment)</label>
             </div>
             
             <div class="form-group conditional-section" id="capacity_section">
@@ -92,18 +600,43 @@
             </div>
             
             <div class="form-group conditional-section" id="budget_section">
+                <label class="critical">Budget Basis</label>
+                <label class="inline-radio"><input type="radio" name="budget_cap_basis" value="total_project_cost"> Total Project Cost Cap</label>
+                <label class="inline-radio"><input type="radio" name="budget_cap_basis" value="equity_debt_cap"> Equity + Debt Cap</label>
+            </div>
+
+            <div class="form-group conditional-section" id="budget_total_section">
                 <label for="total_investment" class="critical">Total Investment Budget</label>
                 <input type="number" name="total_investment" id="total_investment" placeholder="Enter total budget" step="0.01">
+            </div>
+
+            <div class="form-row conditional-section" id="budget_equity_debt_section">
+                <div class="form-group">
+                    <label for="equity_cap_amount" class="critical">Equity Cap Amount</label>
+                    <input type="number" name="equity_cap_amount" id="equity_cap_amount" step="0.01" min="0" placeholder="Enter equity cap amount">
+                </div>
+                <div class="form-group">
+                    <label for="debt_cap_amount" class="critical">Debt Cap Amount</label>
+                    <input type="number" name="debt_cap_amount" id="debt_cap_amount" step="0.01" min="0" placeholder="Enter debt cap amount">
+                </div>
             </div>
         </div>
 
         <!-- Commercial Assumptions Section -->
         <div class="form-section">
             <h2>Commercial Assumptions</h2>
+            <div class="form-group">
+                <label class="critical">Assumption Input Mode</label>
+                <label class="inline-radio"><input type="radio" name="commercial_input_mode" value="manual_entry" required> Client enters values directly</label>
+                <label class="inline-radio"><input type="radio" name="commercial_input_mode" value="ai_defaults_with_override" checked> Use AI defaults with override</label>
+                <div class="field-hint">Choose AI defaults to auto-fill missing assumptions from public sources with citations.</div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="selling_price" class="critical">Selling Price per Unit</label>
-                    <input type="number" name="selling_price" id="selling_price" class="critical-field" placeholder="Unit selling price" step="0.01" required>
+                    <label for="selling_price" class="optional">Selling Price per Unit</label>
+                    <input type="number" name="selling_price" id="selling_price" placeholder="Leave blank if unknown" step="0.01" min="0.01">
+                    <div class="field-hint">If unknown, we estimate this from HSN/SAC context after submission and ask you to confirm before finalizing revenue assumptions.</div>
                 </div>
                 
                 <div class="form-group">
@@ -122,15 +655,108 @@
                 <label for="product_mix" class="optional">Product Mix</label>
                 <textarea name="product_mix" id="product_mix" placeholder="Describe product variants and revenue contribution (e.g., Product A: 60%, Product B: 40%)" rows="2"></textarea>
             </div>
-            
+
             <div class="form-group">
-                <label for="production_rampup" class="critical">Production Ramp-Up Plan</label>
-                <textarea name="production_rampup" id="production_rampup" class="critical-field" placeholder="Year 1: 50%, Year 2: 75%, Year 3: 100%" rows="2" required></textarea>
+                <label for="raw_material_consumption_basis" class="critical">Raw Material Consumption Norms / Basis</label>
+                <textarea name="raw_material_consumption_basis" id="raw_material_consumption_basis" class="critical-field" rows="2" placeholder="Enter consumption norms or method to derive them" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="raw_material_pricing_basis" class="critical">Raw Material Pricing Basis</label>
+                <textarea name="raw_material_pricing_basis" id="raw_material_pricing_basis" class="critical-field" rows="2" placeholder="Enter pricing basis (recent quotations, index, benchmark source, etc.)" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="utility_tariff_basis" class="critical">Utility Tariff Basis (Power/Water/Fuel)</label>
+                <textarea name="utility_tariff_basis" id="utility_tariff_basis" class="critical-field" rows="2" placeholder="Provide state/region tariff assumptions and source basis" required></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="critical">Manpower Approach</label>
+                    <label class="inline-radio"><input type="radio" name="manpower_approach" value="lean" required> Lean</label>
+                    <label class="inline-radio"><input type="radio" name="manpower_approach" value="standard"> Standard</label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="repairs_maintenance_pct" class="critical">Repairs & Maintenance (%)</label>
+                    <input type="number" name="repairs_maintenance_pct" id="repairs_maintenance_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 2.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="selling_overhead_pct" class="critical">Selling Overheads (%)</label>
+                    <input type="number" name="selling_overhead_pct" id="selling_overhead_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 1.5" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="admin_overhead_pct" class="critical">Administrative Overheads (%)</label>
+                    <input type="number" name="admin_overhead_pct" id="admin_overhead_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 2.0" required>
+                </div>
+                <div class="form-group"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="receivables_days" class="critical">Receivables Days</label>
+                    <input type="number" name="receivables_days" id="receivables_days" class="critical-field" min="0" max="365" placeholder="e.g., 45" required>
+                </div>
+                <div class="form-group">
+                    <label for="inventory_days" class="critical">Inventory Days</label>
+                    <input type="number" name="inventory_days" id="inventory_days" class="critical-field" min="0" max="365" placeholder="e.g., 30" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="payables_days" class="critical">Payables Days</label>
+                    <input type="number" name="payables_days" id="payables_days" class="critical-field" min="0" max="365" placeholder="e.g., 30" required>
+                </div>
+                <div class="form-group"></div>
             </div>
             
             <div class="form-group">
-                <label for="market_geography" class="critical">Market Geography</label>
-                <textarea name="market_geography" id="market_geography" class="critical-field" placeholder="Target markets (domestic, regional, international)" rows="2" required></textarea>
+                <label for="production_rampup" class="critical">Production Ramp-Up Plan</label>
+                <select name="production_rampup" id="production_rampup" class="critical-field" required>
+                    <option value="">-- Select Ramp-Up Scenario --</option>
+                    <option value="conservative">Conservative (Y1: 35%, Y2: 55%, Y3: 75%)</option>
+                    <option value="normal">Normal (Y1: 50%, Y2: 75%, Y3: 100%)</option>
+                    <option value="aggressive">Aggressive (Y1: 65%, Y2: 90%, Y3: 110%)</option>
+                </select>
+                <div class="field-hint">Pick the scenario closest to your expected startup risk and demand confidence.</div>
+                <div class="field-hint"><strong>How to choose:</strong> Conservative if approvals/sales may be delayed; Normal for standard execution; Aggressive only if you already have strong order visibility or channel commitments.</div>
+                <div id="rampupScenarioHint" class="field-hint" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="critical">Market Geography</label>
+                <div id="marketGeographyRows"></div>
+                <button type="button" id="addMarketGeographyRow" class="secondary">+ Add Country/State</button>
+                <div class="field-hint">Add one or more target market geographies by country and state/region.</div>
+
+                <div style="margin-top: 10px;">
+                    <label class="critical" style="margin-bottom: 8px;">Exports Included?</label>
+                    <label class="inline-radio"><input type="radio" name="has_exports" value="no" checked> No</label>
+                    <label class="inline-radio"><input type="radio" name="has_exports" value="yes"> Yes</label>
+                </div>
+
+                <div id="exportSplitSection" class="export-split">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="export_share" class="critical">Exports %</label>
+                            <input type="number" id="export_share" name="export_share" min="0" max="100" step="0.01" placeholder="e.g., 30">
+                        </div>
+                        <div class="form-group">
+                            <label for="local_share" class="critical">Local %</label>
+                            <input type="number" id="local_share" name="local_share" min="0" max="100" step="0.01" placeholder="e.g., 70">
+                        </div>
+                    </div>
+                    <div class="field-hint">Exports % + Local % must equal 100.</div>
+                </div>
+
+                <input type="hidden" name="market_geography" id="market_geography" required>
             </div>
         </div>
 
@@ -144,32 +770,39 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="shifts_per_day" class="critical">Shifts per Day</label>
-                    <input type="number" name="shifts_per_day" id="shifts_per_day" class="critical-field" placeholder="e.g., 2" min="1" max="3" required>
+                    <label for="shift_preference" class="optional">Shift Preference (optional but recommended)</label>
+                    <select name="shift_preference" id="shift_preference">
+                        <option value="">-- Select --</option>
+                        <option value="single_shift">Single Shift</option>
+                        <option value="double_shift">Double Shift</option>
+                        <option value="triple_shift">Triple Shift</option>
+                    </select>
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="hours_per_shift" class="critical">Hours per Shift</label>
-                    <input type="number" name="hours_per_shift" id="hours_per_shift" class="critical-field" placeholder="e.g., 8" min="1" max="12" required>
+                    <label for="shifts_per_day" class="optional">Shifts per Day (override)</label>
+                    <input type="number" name="shifts_per_day" id="shifts_per_day" placeholder="Default 2" min="1" max="3">
                 </div>
-                
                 <div class="form-group">
-                    <label for="utilization_rate" class="critical">Plant Utilization Rate (%)</label>
-                    <input type="number" name="utilization_rate" id="utilization_rate" class="critical-field" placeholder="e.g., 85" min="1" max="100" required>
+                    <label for="hours_per_shift" class="optional">Hours per Shift (override)</label>
+                    <input type="number" name="hours_per_shift" id="hours_per_shift" placeholder="Default 8" min="1" max="12">
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="utilities_consumption" class="optional">Utilities Consumption Estimates</label>
-                <textarea name="utilities_consumption" id="utilities_consumption" placeholder="Power: XX kWh/month, Water: XX m³/month, Gas: XX units/month" rows="2"></textarea>
             </div>
         </div>
 
         <!-- Financing Inputs Section -->
         <div class="form-section">
             <h2>Financing Inputs</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="debt_amount" class="optional">Debt Amount</label>
+                    <input type="number" name="debt_amount" id="debt_amount" step="0.01" min="0" placeholder="Enter debt amount if known">
+                </div>
+                <div class="form-group"></div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="debt_percentage" class="critical">Debt (%)</label>
@@ -189,20 +822,100 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="interest_rate" class="critical">Interest Rate (% per annum)</label>
-                    <input type="number" name="interest_rate" id="interest_rate" class="critical-field" placeholder="e.g., 9.5" step="0.01" min="0" max="30" required>
+                    <label for="interest_rate" class="optional">Interest Rate (% per annum)</label>
+                    <input type="number" name="interest_rate" id="interest_rate" placeholder="Leave blank if unknown" step="0.01" min="0" max="30">
+                    <div id="interestRateMarketHint" class="field-hint">Fetching indicative market lending rate...</div>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="moratorium_period" class="optional">Moratorium Period (months)</label>
-                <input type="number" name="moratorium_period" id="moratorium_period" placeholder="e.g., 6" min="0" max="36">
+                <input type="number" name="moratorium_period" id="moratorium_period" placeholder="e.g., 12" min="0" max="36">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="critical">Repayment Frequency</label>
+                    <label class="inline-radio"><input type="radio" name="repayment_frequency" value="monthly" required> Monthly</label>
+                    <label class="inline-radio"><input type="radio" name="repayment_frequency" value="quarterly"> Quarterly</label>
+                </div>
+                <div class="form-group">
+                    <label for="upfront_fees" class="optional">Upfront Fees</label>
+                    <input type="number" name="upfront_fees" id="upfront_fees" step="0.01" min="0" placeholder="Processing/upfront fees if applicable">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="critical">DSRA Required?</label>
+                    <label class="inline-radio"><input type="radio" name="dsra_required" value="no" checked required> No</label>
+                    <label class="inline-radio"><input type="radio" name="dsra_required" value="yes"> Yes</label>
+                </div>
+                <div class="form-group" id="dsra_months_group" style="display:none;">
+                    <label for="dsra_months" class="critical">DSRA Months</label>
+                    <input type="number" name="dsra_months" id="dsra_months" min="1" max="24" placeholder="e.g., 3">
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance and Regulatory Flags Section -->
+        <div class="form-section">
+            <h2>Compliance and Regulatory Flags</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="facility_type" class="critical">Facility Type</label>
+                    <select name="facility_type" id="facility_type" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="service">Service</option>
+                        <option value="warehouse">Warehouse</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="land_status" class="critical">Land Status</label>
+                    <select name="land_status" id="land_status" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="owned">Owned</option>
+                        <option value="leased">Leased</option>
+                        <option value="identified">Identified</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="critical">Hazardous Chemicals/Storage/Boilers/Pressure Vessels</label>
+                    <label class="inline-radio"><input type="radio" name="has_hazardous_materials" value="yes" required> Yes</label>
+                    <label class="inline-radio"><input type="radio" name="has_hazardous_materials" value="no"> No</label>
+                </div>
+                <div class="form-group">
+                    <label class="critical">Effluent Generation</label>
+                    <label class="inline-radio"><input type="radio" name="has_effluent_generation" value="yes" required> Yes</label>
+                    <label class="inline-radio"><input type="radio" name="has_effluent_generation" value="no"> No</label>
+                </div>
             </div>
         </div>
 
         <!-- Equipment Preferences Section -->
         <div class="form-section">
             <h2>Equipment Preferences</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand_preference_mode" class="critical">Brand Preference Type</label>
+                    <select name="brand_preference_mode" id="brand_preference_mode" class="critical-field" required>
+                        <option value="">-- Select --</option>
+                        <option value="indian">Indian</option>
+                        <option value="global">Global</option>
+                        <option value="mix">Mix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="key_equipment_items_count" class="critical">Number of Key Equipment Items</label>
+                    <input type="number" name="key_equipment_items_count" id="key_equipment_items_count" class="critical-field" min="12" max="18" value="14" required>
+                    <div class="field-hint">Use 12-18 items for a 5-6 page equipment section.</div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="preferred_manufacturer_geography" class="optional">Preferred Manufacturer Geography</label>
                 <input type="text" name="preferred_manufacturer_geography" id="preferred_manufacturer_geography" placeholder="e.g., European, Asian, North American">
@@ -217,28 +930,49 @@
                 <label for="technology_exclusions" class="optional">Technology Exclusions</label>
                 <textarea name="technology_exclusions" id="technology_exclusions" placeholder="Technologies or equipment types to exclude" rows="2"></textarea>
             </div>
+
+            <div class="form-group">
+                <label for="excluded_brands_countries" class="optional">Excluded Brands/Countries</label>
+                <textarea name="excluded_brands_countries" id="excluded_brands_countries" placeholder="Mention excluded equipment brands or source countries, if any" rows="2"></textarea>
+            </div>
         </div>
 
-        <!-- Legacy Fields (for backward compatibility) -->
+        <!-- Non-Negotiables Section -->
         <div class="form-section">
-            <h2>Additional Information</h2>
+            <h2>Non-Negotiables</h2>
+
             <div class="form-group">
-                <label for="promoter_background" class="optional">Promoter Background</label>
-                <textarea name="promoter_background" id="promoter_background" placeholder="Describe the promoter's background and experience" rows="3"></textarea>
+                <label>Certifications</label>
+                <div id="certificationRows"></div>
+                <button type="button" id="addCertificationRow" class="secondary">+ Add Certification</button>
+                <div class="field-hint">Add required certifications your project must have (for example, ISO 9001, CE, BIS, FSSAI).</div>
+                <input type="hidden" name="certifications" id="certifications">
             </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="start_date" class="optional">Expected Start Date</label>
-                    <input type="date" name="start_date" id="start_date">
-                </div>
-                
-                <div class="form-group">
-                    <label for="target_launch_date" class="optional">Target Launch Date</label>
-                    <input type="date" name="target_launch_date" id="target_launch_date">
-                </div>
+
+            <div class="form-group">
+                <label for="compliance_constraints">Compliance Constraints</label>
+                <textarea name="compliance_constraints" id="compliance_constraints" rows="2" placeholder="e.g., Must comply with CPCB norms, factory license rules, and applicable sector regulations"></textarea>
             </div>
-            
+
+            <div class="form-group">
+                <label for="esg_constraints">ESG Constraints</label>
+                <textarea name="esg_constraints" id="esg_constraints" rows="2" placeholder="e.g., No child labor, wastewater treatment mandatory, target renewable energy share"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="procurement_constraints">Procurement Constraints</label>
+                <textarea name="procurement_constraints" id="procurement_constraints" rows="2" placeholder="e.g., Approved vendor list only, domestic sourcing minimum, lead time caps"></textarea>
+            </div>
+        </div>
+
+        <!-- Promoter Details -->
+        <div class="form-section">
+            <h2>Promoter Details</h2>
+            <div id="promotersContainer"></div>
+            <div style="margin-top: 10px;">
+                <button type="button" id="addPromoterButton" class="secondary">+ Add Promoter</button>
+            </div>
+
             <div class="form-group">
                 <label for="notes" class="optional">Additional Notes</label>
                 <textarea name="notes" id="notes" placeholder="Any other relevant information" rows="3"></textarea>
@@ -257,37 +991,485 @@
         <h3>✓ Report Ready!</h3>
         <p>Your feasibility report has been generated successfully.</p>
         <button class="download" id="downloadButton">📥 Download Report (.docx)</button>
+        <div id="reportProgressWrap" style="display:none; margin-top:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:#555; margin-bottom:6px;">
+                <span id="reportProgressLabel">Generating report…</span>
+                <span id="reportProgressPct">0%</span>
+            </div>
+            <div style="background:#e9ecef; border-radius:6px; height:10px; overflow:hidden;">
+                <div id="reportProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#28a745,#5cb85c); border-radius:6px; transition:width 1s linear;"></div>
+            </div>
+            <div id="reportProgressTime" style="font-size:12px; color:#777; margin-top:5px;"></div>
+        </div>
+    </div>
+
+    <div id="pricingConfirmSection" class="pricing-confirm">
+        <h3>Confirm Estimated Selling Price</h3>
+        <p id="pricingEstimateSummary"></p>
+        <p id="pricingEstimateReason" class="field-hint"></p>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="manualSellingPrice">Adjust Price</label>
+                <input type="number" id="manualSellingPrice" step="0.01" min="0.01" placeholder="Enter confirmed price">
+            </div>
+        </div>
+        <div class="pricing-actions">
+            <button type="button" id="confirmEstimatedPriceButton">Use Estimated Price</button>
+            <button type="button" id="confirmManualPriceButton" class="secondary">Use Manual Price</button>
+        </div>
     </div>
 
     <script>
         let currentSubmissionId = null;
+        let pricingConfirmationPending = false;
+        let currentEstimatedPrice = null;
+        let estimatedReportSeconds = 300;
+        let placeAutocompleteElement = null;
+        let googlePlacesAvailable = false;
+        const cityHiddenInput = document.getElementById('project_city');
+        const cityAutocompleteHost = document.getElementById('cityAutocompleteHost');
+        const stateHiddenInput = document.getElementById('project_state');
+        const pinCodeInput = document.getElementById('project_pin_code');
+        const countryInput = document.getElementById('project_country');
+        const placeLoadingIndicator = document.getElementById('placeLoadingIndicator');
+        const productServiceInput = document.getElementById('product_service');
+        const hsnFamilyCodeInput = document.getElementById('hsn_family_code');
+        const hsnFamilyNameInput = document.getElementById('hsn_family_name');
+        const hsnCodeInput = document.getElementById('hsn_code');
+        const hsnDescriptionInput = document.getElementById('hsn_description');
+        const sellingPriceInput = document.getElementById('selling_price');
+        const pricingConfirmSection = document.getElementById('pricingConfirmSection');
+        const pricingEstimateSummary = document.getElementById('pricingEstimateSummary');
+        const pricingEstimateReason = document.getElementById('pricingEstimateReason');
+        const manualSellingPriceInput = document.getElementById('manualSellingPrice');
+        const confirmEstimatedPriceButton = document.getElementById('confirmEstimatedPriceButton');
+        const confirmManualPriceButton = document.getElementById('confirmManualPriceButton');
+        const interestRateInput = document.getElementById('interest_rate');
+        const interestRateMarketHint = document.getElementById('interestRateMarketHint');
+        const marketGeographyRows = document.getElementById('marketGeographyRows');
+        const addMarketGeographyRowButton = document.getElementById('addMarketGeographyRow');
+        const marketGeographyInput = document.getElementById('market_geography');
+        const exportSplitSection = document.getElementById('exportSplitSection');
+        const exportShareInput = document.getElementById('export_share');
+        const localShareInput = document.getElementById('local_share');
+        const certificationRows = document.getElementById('certificationRows');
+        const addCertificationRowButton = document.getElementById('addCertificationRow');
+        const certificationsInput = document.getElementById('certifications');
+        const addPromoterButton = document.getElementById('addPromoterButton');
+        const promotersContainer = document.getElementById('promotersContainer');
+        const autofillExampleButton = document.getElementById('autofillExampleButton');
+        const sizingModeRadios = document.querySelectorAll('input[name="sizing_mode"]');
+        const budgetCapBasisRadios = document.querySelectorAll('input[name="budget_cap_basis"]');
+        const budgetTotalSection = document.getElementById('budget_total_section');
+        const budgetEquityDebtSection = document.getElementById('budget_equity_debt_section');
+        const totalInvestmentField = document.getElementById('total_investment');
+        const equityCapAmountField = document.getElementById('equity_cap_amount');
+        const debtCapAmountField = document.getElementById('debt_cap_amount');
+        const dsraRequiredRadios = document.querySelectorAll('input[name="dsra_required"]');
+        const dsraMonthsField = document.getElementById('dsra_months');
+        const dsraMonthsGroup = document.getElementById('dsra_months_group');
+        const shiftPreferenceField = document.getElementById('shift_preference');
 
-        // Conditional field display logic
-        document.getElementById('sizing_mode').addEventListener('change', function() {
-            const capacitySection = document.getElementById('capacity_section');
-            const budgetSection = document.getElementById('budget_section');
-            const capacityField = document.getElementById('target_capacity');
-            const budgetField = document.getElementById('total_investment');
-            
-            if (this.value === 'capacity_driven') {
-                capacitySection.classList.add('active');
-                budgetSection.classList.remove('active');
-                capacityField.required = true;
-                budgetField.required = false;
-            } else if (this.value === 'budget_driven') {
-                budgetSection.classList.add('active');
-                capacitySection.classList.remove('active');
-                budgetField.required = true;
-                capacityField.required = false;
-            } else {
-                capacitySection.classList.remove('active');
-                budgetSection.classList.remove('active');
-                capacityField.required = false;
-                budgetField.required = false;
+        const EXAMPLE_FORM_INPUT = {
+            client_name: 'Apex Green Packaging Private Limited',
+            project_title: 'Compostable Industrial Packaging Expansion',
+            product_service: 'Manufacture and supply compostable courier mailers, food-grade pouches, and protective packaging films for B2B clients.',
+            project_country: 'India',
+            project_state: 'Gujarat',
+            project_city: 'Ahmedabad',
+            project_pin_code: '380015',
+            target_customer: 'E-commerce brands, FMCG manufacturers, and export-oriented SMEs',
+            project_district: 'Ahmedabad',
+            industrial_area: 'Sanand GIDC',
+            customer_interface: 'B2B',
+            market_orientation: 'both',
+            manufacturing_mode: 'own_brand',
+            report_intended_use: 'lender_submission',
+            business_model: 'Manufacturing',
+            sizing_mode: 'capacity_driven',
+            target_capacity: '12,000 units/day',
+            budget_cap_basis: '',
+            equity_cap_amount: null,
+            debt_cap_amount: null,
+            total_investment: null,
+            commercial_input_mode: 'ai_defaults_with_override',
+            selling_price: null,
+            currency: 'INR',
+            product_mix: 'Mailers: 50%, Pouches: 30%, Protective film rolls: 20%',
+            raw_material_consumption_basis: 'Polymer and additive consumption based on pilot batch records and supplier datasheets.',
+            raw_material_pricing_basis: 'Average of last 3 supplier quotes adjusted for freight and GST.',
+            utility_tariff_basis: 'Gujarat HT power tariff schedule, local water board industrial slab, and PNG industrial tariff.',
+            manpower_approach: 'standard',
+            repairs_maintenance_pct: 2.5,
+            selling_overhead_pct: 1.8,
+            admin_overhead_pct: 2.2,
+            receivables_days: 45,
+            inventory_days: 30,
+            payables_days: 25,
+            production_rampup: 'normal',
+            market_geographies: [
+                { country: 'India', state: 'Gujarat' },
+                { country: 'India', state: 'Maharashtra' }
+            ],
+            has_exports: 'yes',
+            export_share: 25,
+            local_share: 75,
+            operating_days: 300,
+            shift_preference: 'double_shift',
+            shifts_per_day: 2,
+            hours_per_shift: 8,
+            debt_amount: null,
+            debt_percentage: 65,
+            equity_percentage: 35,
+            loan_tenor: 9,
+            interest_rate: null,
+            moratorium_period: 12,
+            repayment_frequency: 'monthly',
+            upfront_fees: 250000,
+            dsra_required: 'yes',
+            dsra_months: 3,
+            facility_type: 'manufacturing',
+            has_hazardous_materials: 'no',
+            has_effluent_generation: 'yes',
+            land_status: 'leased',
+            brand_preference_mode: 'mix',
+            key_equipment_items_count: 14,
+            preferred_manufacturer_geography: 'India and Europe',
+            brand_preferences: 'W&H, Reifenhauser, Rajoo Engineers',
+            technology_exclusions: 'No solvent-based coating lines',
+            excluded_brands_countries: 'No procurement from sanctioned jurisdictions',
+            certifications: [
+                {
+                    certification_name: 'ISO 9001:2015',
+                    issuing_authority: 'TUV Rheinland',
+                    status: 'active',
+                    expiry_date: '2026-12-31',
+                    notes: 'Quality management certification'
+                },
+                {
+                    certification_name: 'ISO 14001:2015',
+                    issuing_authority: 'Bureau Veritas',
+                    status: 'in_progress',
+                    expiry_date: '',
+                    notes: 'Environmental management implementation underway'
+                }
+            ],
+            compliance_constraints: 'Must comply with CPCB and state pollution board standards for packaging units.',
+            esg_constraints: 'No child labor, minimum 25% renewable energy usage in first year, zero untreated discharge.',
+            procurement_constraints: 'Prefer India/Europe suppliers, approved vendor policy mandatory, no solvent-based coating line vendors.',
+            promoters: [
+                {
+                    full_names: 'Rahul Mehta',
+                    title: 'Mr',
+                    phone: '+91 9876543210',
+                    education: 'B.E. Mechanical, MBA Operations',
+                    experience_years: 14,
+                    nature_experience: 'Polymer processing, manufacturing scale-up, procurement',
+                    profile_source_type: 'linkedin',
+                    linkedin_profiles: ['https://www.linkedin.com/in/rahul-mehta-example'],
+                    loans_taken_earlier: 'yes',
+                    loans_paid: 'yes',
+                    loan_defaults: 'no',
+                    cibil_score: 788,
+                    other_sources: 'Company website leadership page, MCA filings'
+                },
+                {
+                    full_names: 'Neha Shah',
+                    title: 'Ms',
+                    phone: '+91 9988776655',
+                    education: 'B.Com, Chartered Accountant',
+                    experience_years: 11,
+                    nature_experience: 'Project finance, treasury, banking relationships',
+                    profile_source_type: 'linkedin',
+                    linkedin_profiles: ['https://www.linkedin.com/in/neha-shah-example'],
+                    loans_taken_earlier: 'no',
+                    loans_paid: '',
+                    loan_defaults: '',
+                    cibil_score: 801,
+                    other_sources: 'Industry conference speaker profile'
+                }
+            ],
+            notes: 'Pilot customer MoUs signed with three regional distributors.'
+        };
+
+        function parseFloatOrNull(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function parseIntOrNull(value) {
+            const parsed = parseInt(value, 10);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function getRadioValue(name) {
+            const checked = document.querySelector(`input[name="${name}"]:checked`);
+            return checked ? checked.value : '';
+        }
+
+        function setRadioValue(name, value, triggerChange = false) {
+            const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+            if (!radio) {
+                return;
             }
-        });
+            radio.checked = true;
+            if (triggerChange) {
+                radio.dispatchEvent(new Event('change'));
+            }
+        }
 
-        // Debt/Equity validation
+        const GOOGLE_MAPS_API_KEY = document.querySelector('meta[name="google-maps-api-key"]')?.content || '';
+        // Set this to [] for unrestricted global results.
+        const GOOGLE_AUTOCOMPLETE_REGION_CODES = [];
+        function sanitizeHsnCode(value) {
+            return String(value || '').replace(/\D/g, '');
+        }
+
+        function buildProjectLocation(formData) {
+            return [
+                formData.get('project_country') || 'India',
+                formData.get('project_state'),
+                formData.get('project_city'),
+                formData.get('project_pin_code')
+            ].filter(Boolean).join(', ');
+        }
+
+        function resetPricingConfirmationUi() {
+            pricingConfirmationPending = false;
+            currentEstimatedPrice = null;
+            pricingConfirmSection.style.display = 'none';
+            pricingEstimateSummary.textContent = '';
+            pricingEstimateReason.textContent = '';
+            manualSellingPriceInput.value = '';
+        }
+
+        async function loadPricingEstimate(submissionId) {
+            const response = await fetch(`/api/pricing-estimate/${submissionId}`);
+            if (!response.ok) {
+                throw new Error('Could not fetch estimated selling price');
+            }
+            return response.json();
+        }
+
+        async function confirmPricing(submissionId, sellingPrice, pricingSource) {
+            const response = await fetch(`/api/submission/${submissionId}/confirm-pricing`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    selling_price: sellingPrice,
+                    pricing_source: pricingSource
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Pricing confirmation failed');
+            }
+
+            return response.json();
+        }
+
+        async function loadMarketInterestRateHint() {
+            try {
+                const response = await fetch('/api/market-interest-rate');
+                if (!response.ok) {
+                    throw new Error('Could not load market interest data');
+                }
+
+                const data = await response.json();
+                interestRateMarketHint.textContent = `Indicative market rate: ${data.min_rate}% - ${data.max_rate}% (typical ${data.typical_rate}%). Leave blank to use market-standard assumption after submit.`;
+            } catch (error) {
+                interestRateMarketHint.textContent = 'Indicative market rate is unavailable right now. You can still leave this field blank.';
+            }
+        }
+
+        function setPlacesStatus(message) {
+            // Intentionally hidden in UI.
+        }
+
+        function setPlacesLoading(isLoading) {
+            placeLoadingIndicator.classList.toggle('hidden', !isLoading);
+        }
+
+        function handleGooglePlacesFailure(message) {
+            googlePlacesAvailable = false;
+            placeAutocompleteElement = null;
+            setPlacesLoading(false);
+            setPlacesStatus(message);
+            cityHiddenInput.value = '';
+            stateHiddenInput.value = '';
+            cityAutocompleteHost.innerHTML = '';
+            document.querySelectorAll('.pac-container').forEach((element) => element.remove());
+        }
+
+        function getAddressComponent(components, type) {
+            const match = components.find((component) => component.types.includes(type));
+            if (!match) {
+                return '';
+            }
+            return match.long_name || match.longText || match.short_name || match.shortText || '';
+        }
+
+        function updateLocationFieldsFromPlace(place) {
+            const components = place.address_components || [];
+            const locality = getAddressComponent(components, 'locality')
+                || getAddressComponent(components, 'postal_town')
+                || getAddressComponent(components, 'administrative_area_level_2');
+            const state = getAddressComponent(components, 'administrative_area_level_1');
+            const postalCode = getAddressComponent(components, 'postal_code');
+            const country = getAddressComponent(components, 'country');
+
+            if (locality) {
+                cityHiddenInput.value = locality;
+            }
+            if (state) {
+                stateHiddenInput.value = state;
+            }
+            if (country) {
+                countryInput.value = country;
+            }
+            pinCodeInput.value = postalCode || '';
+            validatePinCode();
+        }
+
+        function loadGoogleMapsPlacesScript() {
+            if (window.google && window.google.maps && window.google.maps.places) {
+                return Promise.resolve(window.google.maps);
+            }
+
+            if (window.__googleMapsPlacesLoader) {
+                return window.__googleMapsPlacesLoader;
+            }
+
+            window.__googleMapsPlacesLoader = new Promise((resolve, reject) => {
+                const existingScript = document.getElementById('google-maps-places-script');
+                if (existingScript) {
+                    existingScript.addEventListener('load', () => resolve(window.google.maps), { once: true });
+                    existingScript.addEventListener('error', () => reject(new Error('Failed to load Google Maps script')), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.id = 'google-maps-places-script';
+                script.async = true;
+                script.defer = true;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&v=weekly&loading=async`;
+                script.onload = () => resolve(window.google.maps);
+                script.onerror = () => reject(new Error('Failed to load Google Maps script'));
+                document.head.appendChild(script);
+            });
+
+            return window.__googleMapsPlacesLoader;
+        }
+
+        async function waitForPlaceAutocompleteElement(timeoutMs = 5000) {
+            const startedAt = Date.now();
+            while (Date.now() - startedAt < timeoutMs) {
+                if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.PlaceAutocompleteElement) {
+                    return window.google.maps;
+                }
+                await new Promise((resolve) => window.setTimeout(resolve, 120));
+            }
+            throw new Error('PlaceAutocompleteElement is unavailable');
+        }
+
+        async function initializeGooglePlacesAutocomplete() {
+            if (!GOOGLE_MAPS_API_KEY) {
+                setPlacesStatus('Google Places is not configured. Enter city, state, pin code, and country manually.');
+                return;
+            }
+
+            window.gm_authFailure = () => {
+                handleGooglePlacesFailure('Google Places authentication failed. Enter city, state, pin code, and country manually.');
+            };
+
+            try {
+                await loadGoogleMapsPlacesScript();
+                const maps = await waitForPlaceAutocompleteElement();
+                if (!maps.places || !maps.places.PlaceAutocompleteElement) {
+                    throw new Error('PlaceAutocompleteElement is unavailable');
+                }
+
+                placeAutocompleteElement = new maps.places.PlaceAutocompleteElement();
+
+                if ('includedPrimaryTypes' in placeAutocompleteElement) {
+                    placeAutocompleteElement.includedPrimaryTypes = ['(cities)'];
+                }
+
+                if (GOOGLE_AUTOCOMPLETE_REGION_CODES.length) {
+                    // India-specific region restriction lives here so global expansion is one-line.
+                    placeAutocompleteElement.includedRegionCodes = GOOGLE_AUTOCOMPLETE_REGION_CODES;
+                }
+
+                cityAutocompleteHost.innerHTML = '';
+                cityAutocompleteHost.appendChild(placeAutocompleteElement);
+                googlePlacesAvailable = true;
+
+                const handlePlaceSelect = async (event) => {
+                    const prediction = event.placePrediction || event.detail?.placePrediction || event.detail?.prediction;
+                    if (!prediction || typeof prediction.toPlace !== 'function') {
+                        return;
+                    }
+
+                    setPlacesLoading(true);
+                    try {
+                        const place = prediction.toPlace();
+                        await place.fetchFields({ fields: ['displayName', 'addressComponents'] });
+
+                        const details = {
+                            address_components: (place.addressComponents || []).map((component) => ({
+                                long_name: component.longText || component.shortText || '',
+                                short_name: component.shortText || component.longText || '',
+                                types: component.types || []
+                            }))
+                        };
+
+                        updateLocationFieldsFromPlace(details);
+                        if (place.displayName) {
+                            cityHiddenInput.value = place.displayName;
+                        }
+                        setPlacesStatus('Location details loaded from Google Places. You can still edit them manually.');
+                    } catch (error) {
+                        handleGooglePlacesFailure('Google Places could not fill the location details. Enter city, state, pin code, and country manually.');
+                    } finally {
+                        setPlacesLoading(false);
+                    }
+                };
+
+                placeAutocompleteElement.addEventListener('gmp-select', handlePlaceSelect);
+                placeAutocompleteElement.addEventListener('gmp-placeselect', handlePlaceSelect);
+
+                setPlacesStatus('Google Places autocomplete is active for Indian cities.');
+            } catch (error) {
+                const reason = error && error.message ? ` (${error.message})` : '';
+                handleGooglePlacesFailure(`Google Places is unavailable right now${reason}. Enter city, state, pin code, and country manually.`);
+            }
+        }
+
+        function validatePinCode() {
+            const country = countryInput.value.trim().toLowerCase();
+            const rawValue = pinCodeInput.value.trim();
+
+            if (!rawValue) {
+                pinCodeInput.setCustomValidity('');
+                return true;
+            }
+
+            // India-specific pin code validation lives here so future country rules are easy to find.
+            if (country === 'india') {
+                const sanitizedValue = rawValue.replace(/\D/g, '').slice(0, 6);
+                pinCodeInput.value = sanitizedValue;
+                if (!/^\d{6}$/.test(sanitizedValue)) {
+                    pinCodeInput.setCustomValidity('Enter a valid 6-digit Indian pin code');
+                    return false;
+                }
+            }
+
+            pinCodeInput.setCustomValidity('');
+            return true;
+        }
+
         function validateDebtEquity() {
             const debt = parseFloat(document.getElementById('debt_percentage').value) || 0;
             const equity = parseFloat(document.getElementById('equity_percentage').value) || 0;
@@ -297,91 +1479,925 @@
                 warningDiv.textContent = `⚠ Warning: Debt (${debt}%) + Equity (${equity}%) should equal 100%`;
                 warningDiv.style.display = 'block';
                 return false;
-            } else {
-                warningDiv.style.display = 'none';
+            }
+
+            warningDiv.style.display = 'none';
+            return true;
+        }
+
+        function addMarketGeographyRow(country = '', state = '') {
+            const row = document.createElement('div');
+            row.className = 'market-geo-row';
+            row.innerHTML = `
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="critical">Country</label>
+                    <input type="text" class="market-country critical-field" placeholder="e.g., India" value="${country}" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="critical">State/Region</label>
+                    <input type="text" class="market-state critical-field" placeholder="e.g., Gujarat" value="${state}" required>
+                </div>
+                <button type="button" class="market-geo-remove" title="Remove row">-</button>
+            `;
+
+            row.querySelector('.market-geo-remove').addEventListener('click', () => {
+                if (marketGeographyRows.children.length <= 1) {
+                    return;
+                }
+                row.remove();
+            });
+
+            marketGeographyRows.appendChild(row);
+        }
+
+        function addCertificationRow(certification = {}) {
+            const rowWrapper = document.createElement('div');
+            rowWrapper.className = 'certification-row-wrapper';
+            rowWrapper.innerHTML = `
+                <div class="certification-row">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Certification Name</label>
+                        <input type="text" class="certification-name" placeholder="e.g., ISO 9001:2015" value="${certification.certification_name || ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Issuing Authority</label>
+                        <input type="text" class="certification-authority" placeholder="e.g., TUV Rheinland" value="${certification.issuing_authority || ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Status</label>
+                        <select class="certification-status">
+                            <option value="">-- Select --</option>
+                            <option value="active" ${certification.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="in_progress" ${certification.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="planned" ${certification.status === 'planned' ? 'selected' : ''}>Planned</option>
+                            <option value="not_required" ${certification.status === 'not_required' ? 'selected' : ''}>Not Required</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Expiry Date</label>
+                        <input type="date" class="certification-expiry" value="${certification.expiry_date || ''}">
+                    </div>
+                    <button type="button" class="market-geo-remove certification-remove" title="Remove certification">-</button>
+                </div>
+                <div class="form-group certification-row-secondary">
+                    <label>Notes</label>
+                    <input type="text" class="certification-notes" placeholder="e.g., Mandatory for customer onboarding" value="${certification.notes || ''}">
+                </div>
+            `;
+
+            const removeButton = rowWrapper.querySelector('.certification-remove');
+            removeButton.addEventListener('click', () => {
+                if (certificationRows.children.length <= 1) {
+                    return;
+                }
+                rowWrapper.remove();
+            });
+
+            certificationRows.appendChild(rowWrapper);
+        }
+
+        function serializeCertifications() {
+            const rows = Array.from(certificationRows.querySelectorAll('.certification-row-wrapper'));
+            const entries = [];
+
+            for (const rowWrapper of rows) {
+                const name = rowWrapper.querySelector('.certification-name').value.trim();
+                const authority = rowWrapper.querySelector('.certification-authority').value.trim();
+                const status = rowWrapper.querySelector('.certification-status').value;
+                const expiry = rowWrapper.querySelector('.certification-expiry').value;
+                const notes = rowWrapper.querySelector('.certification-notes').value.trim();
+
+                const hasAnyValue = Boolean(name || authority || status || expiry || notes);
+                if (!hasAnyValue) {
+                    continue;
+                }
+
+                if (!name || !authority || !status) {
+                    return { ok: false, message: 'For each certification, provide Name, Issuing Authority, and Status.' };
+                }
+
+                if (status === 'active' && !expiry) {
+                    return { ok: false, message: `Add expiry date for active certification: ${name}.` };
+                }
+
+                let summary = `${name} (Authority: ${authority}; Status: ${status.replace('_', ' ')}`;
+                if (expiry) {
+                    summary += `; Expiry: ${expiry}`;
+                }
+                if (notes) {
+                    summary += `; Notes: ${notes}`;
+                }
+                summary += ')';
+                entries.push(summary);
+            }
+
+            if (entries.length === 0) {
+                return { ok: true, value: null };
+            }
+
+            return { ok: true, value: entries.join(' | ') };
+        }
+
+        function toggleExportSplitSection() {
+            const hasExports = document.querySelector('input[name="has_exports"]:checked')?.value === 'yes';
+            exportSplitSection.style.display = hasExports ? 'block' : 'none';
+            exportShareInput.required = hasExports;
+            localShareInput.required = hasExports;
+
+            if (!hasExports) {
+                exportShareInput.value = '';
+                localShareInput.value = '';
+                exportShareInput.setCustomValidity('');
+                localShareInput.setCustomValidity('');
+            }
+        }
+
+        function validateExportSplit() {
+            const hasExports = document.querySelector('input[name="has_exports"]:checked')?.value === 'yes';
+            if (!hasExports) {
+                exportShareInput.setCustomValidity('');
+                localShareInput.setCustomValidity('');
                 return true;
             }
+
+            const exportShare = parseFloat(exportShareInput.value);
+            const localShare = parseFloat(localShareInput.value);
+            if (!Number.isFinite(exportShare) || !Number.isFinite(localShare)) {
+                const message = 'Enter both exports % and local %';
+                exportShareInput.setCustomValidity(message);
+                localShareInput.setCustomValidity(message);
+                return false;
+            }
+
+            if (Math.abs((exportShare + localShare) - 100) > 0.01) {
+                const message = 'Exports % + Local % must equal 100';
+                exportShareInput.setCustomValidity(message);
+                localShareInput.setCustomValidity(message);
+                return false;
+            }
+
+            exportShareInput.setCustomValidity('');
+            localShareInput.setCustomValidity('');
+            return true;
+        }
+
+        function serializeMarketGeography() {
+            const rows = Array.from(marketGeographyRows.querySelectorAll('.market-geo-row'));
+            const geographyEntries = [];
+
+            for (const row of rows) {
+                const country = row.querySelector('.market-country').value.trim();
+                const state = row.querySelector('.market-state').value.trim();
+                if (!country || !state) {
+                    return { ok: false, message: 'Fill Country and State/Region for each market geography row' };
+                }
+                geographyEntries.push(`${country} - ${state}`);
+            }
+
+            if (geographyEntries.length === 0) {
+                return { ok: false, message: 'Add at least one market geography entry' };
+            }
+
+            const hasExports = document.querySelector('input[name="has_exports"]:checked')?.value === 'yes';
+            if (hasExports) {
+                if (!validateExportSplit()) {
+                    return { ok: false, message: 'Exports % + Local % must equal 100' };
+                }
+                geographyEntries.push(`Market split: Exports ${parseFloat(exportShareInput.value)}%, Local ${parseFloat(localShareInput.value)}%`);
+            } else {
+                geographyEntries.push('Market split: Exports 0%, Local 100%');
+            }
+
+            return { ok: true, value: geographyEntries.join(' | ') };
+        }
+
+        function createPromoterEntry(index) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'promoter-card';
+            wrapper.dataset.promoterIndex = String(index);
+            wrapper.innerHTML = `
+                <div class="promoter-card-head">
+                    <strong>Promoter ${index + 1}</strong>
+                    <button type="button" class="promoter-remove" style="display: ${index === 0 ? 'none' : 'inline-block'};">Remove</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="critical">Full Name(s)</label>
+                    <textarea class="promoter-full-names critical-field" placeholder="Enter promoter full name(s)" rows="2" required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="optional">Mr/Ms</label>
+                        <select class="promoter-title">
+                            <option value="">-- Select --</option>
+                            <option value="Mr">Mr</option>
+                            <option value="Ms">Ms</option>
+                            <option value="Mrs">Mrs</option>
+                            <option value="Dr">Dr</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="optional">Phone Number</label>
+                        <input type="tel" class="promoter-phone" placeholder="e.g., +91 9876543210">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="critical">Educational Qualification</label>
+                    <input type="text" class="promoter-education critical-field" placeholder="e.g., B.Tech Mechanical" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="optional">No. of Experience (years)</label>
+                        <input type="number" class="promoter-experience-years" min="0" max="60" step="0.5" placeholder="e.g., 12">
+                    </div>
+                    <div class="form-group">
+                        <label class="optional">Nature of Experience</label>
+                        <input type="text" class="promoter-nature-experience" placeholder="e.g., Manufacturing operations, sales">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="critical">Profile Source Type</label>
+                    <label class="inline-radio"><input type="radio" class="promoter-source" name="promoter_profile_source_type_${index}" value="linkedin" checked> LinkedIn</label>
+                    <label class="inline-radio"><input type="radio" class="promoter-source" name="promoter_profile_source_type_${index}" value="upload_cv"> Upload CV</label>
+                </div>
+
+                <div class="promoter-subsection linkedin-section">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="optional">LinkedIn Profiles</label>
+                        <textarea class="promoter-linkedin-profiles" placeholder="Enter one URL per line, e.g., https://www.linkedin.com/in/username" rows="3"></textarea>
+                        <div class="field-hint">Providing this would help capture better results. URL format required for each entered profile.</div>
+                        <div class="field-error linkedin-validation-error"></div>
+                    </div>
+                </div>
+
+                <div class="promoter-subsection upload-cv-section hidden">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="critical">Upload CV</label>
+                        <input type="file" class="promoter-cv" accept=".pdf,.doc,.docx">
+                        <div class="field-hint">Upload PDF or DOC/DOCX. (Current flow stores CV file name for reference.)</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="optional">Loans Taken Earlier</label>
+                        <label class="inline-radio"><input type="radio" class="promoter-loans-taken" name="loans_taken_earlier_${index}" value="no" checked> No</label>
+                        <label class="inline-radio"><input type="radio" class="promoter-loans-taken" name="loans_taken_earlier_${index}" value="yes"> Yes</label>
+                    </div>
+                    <div class="form-group">
+                        <label class="critical">CIBIL Score</label>
+                        <input type="number" class="promoter-cibil-score critical-field" min="300" max="900" placeholder="300-900" required>
+                    </div>
+                </div>
+
+                <div class="promoter-subsection loan-repayment-section hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="optional">Have they been paid?</label>
+                            <label class="inline-radio"><input type="radio" class="promoter-loans-paid" name="loans_paid_${index}" value="yes"> Yes</label>
+                            <label class="inline-radio"><input type="radio" class="promoter-loans-paid" name="loans_paid_${index}" value="no"> No</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="optional">Any defaults?</label>
+                            <label class="inline-radio"><input type="radio" class="promoter-loan-defaults" name="loan_defaults_${index}" value="no"> No</label>
+                            <label class="inline-radio"><input type="radio" class="promoter-loan-defaults" name="loan_defaults_${index}" value="yes"> Yes</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="optional">Any Other Sources of Information</label>
+                    <textarea class="promoter-other-sources" placeholder="Website, media links, profile links, references, etc." rows="2"></textarea>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        function togglePromoterProfileSource(entry) {
+            const selected = entry.querySelector('.promoter-source:checked')?.value || 'linkedin';
+            const useLinkedIn = selected === 'linkedin';
+            const linkedinSection = entry.querySelector('.linkedin-section');
+            const uploadCvSection = entry.querySelector('.upload-cv-section');
+            const linkedinProfilesInput = entry.querySelector('.promoter-linkedin-profiles');
+            const linkedinValidationError = entry.querySelector('.linkedin-validation-error');
+            const promoterCvInput = entry.querySelector('.promoter-cv');
+
+            linkedinSection.classList.toggle('hidden', !useLinkedIn);
+            uploadCvSection.classList.toggle('hidden', useLinkedIn);
+
+            if (useLinkedIn) {
+                promoterCvInput.value = '';
+            } else {
+                linkedinProfilesInput.value = '';
+                linkedinValidationError.style.display = 'none';
+                linkedinValidationError.textContent = '';
+            }
+        }
+
+        function toggleLoanRepaymentSection(entry) {
+            const loansTaken = entry.querySelector('.promoter-loans-taken:checked')?.value === 'yes';
+            const loanRepaymentSection = entry.querySelector('.loan-repayment-section');
+            loanRepaymentSection.classList.toggle('hidden', !loansTaken);
+            const repaymentRadios = loanRepaymentSection.querySelectorAll('.promoter-loans-paid, .promoter-loan-defaults');
+            repaymentRadios.forEach((radio) => {
+                radio.required = loansTaken;
+                if (!loansTaken) {
+                    radio.checked = false;
+                }
+            });
+        }
+
+        function isValidLinkedInUrl(urlText) {
+            try {
+                const parsed = new URL(urlText);
+                const host = parsed.hostname.toLowerCase();
+                return ['https:', 'http:'].includes(parsed.protocol) && (host === 'linkedin.com' || host.endsWith('.linkedin.com'));
+            } catch {
+                return false;
+            }
+        }
+
+        function validateLinkedInProfiles(entry) {
+            const linkedinProfilesInput = entry.querySelector('.promoter-linkedin-profiles');
+            const linkedinValidationError = entry.querySelector('.linkedin-validation-error');
+            const raw = (linkedinProfilesInput.value || '').trim();
+            if (!raw) {
+                linkedinValidationError.style.display = 'none';
+                linkedinValidationError.textContent = '';
+                return true;
+            }
+
+            const urls = raw.split(/\r?\n/).map((v) => v.trim()).filter(Boolean);
+            const invalid = urls.filter((url) => !isValidLinkedInUrl(url));
+            if (invalid.length > 0) {
+                linkedinValidationError.textContent = `Invalid LinkedIn URL(s): ${invalid.join(', ')}`;
+                linkedinValidationError.style.display = 'block';
+                return false;
+            }
+
+            linkedinValidationError.style.display = 'none';
+            linkedinValidationError.textContent = '';
+            return true;
+        }
+
+        function validatePromoterEntry(entry, promoterNumber) {
+            const sourceType = entry.querySelector('.promoter-source:checked')?.value || 'linkedin';
+            if (sourceType === 'linkedin' && !validateLinkedInProfiles(entry)) {
+                return { ok: false, message: `Please correct LinkedIn profile URL(s) for promoter ${promoterNumber}.` };
+            }
+
+            const promoterCvInput = entry.querySelector('.promoter-cv');
+            if (sourceType === 'upload_cv' && !(promoterCvInput.files && promoterCvInput.files.length > 0)) {
+                return { ok: false, message: `Please upload a CV for promoter ${promoterNumber}.` };
+            }
+
+            const fullNames = (entry.querySelector('.promoter-full-names')?.value || '').trim();
+            const education = (entry.querySelector('.promoter-education')?.value || '').trim();
+            const cibilScore = (entry.querySelector('.promoter-cibil-score')?.value || '').trim();
+            if (!fullNames || !education || !cibilScore) {
+                return { ok: false, message: `Fill required promoter details for promoter ${promoterNumber} (Full Name, Educational Qualification, CIBIL Score).` };
+            }
+
+            const phoneRaw = (entry.querySelector('.promoter-phone')?.value || '').trim();
+            if (phoneRaw && !/^\+?[0-9\s()-]{7,20}$/.test(phoneRaw)) {
+                return { ok: false, message: `Please enter a valid phone number for promoter ${promoterNumber}.` };
+            }
+
+            const loansTaken = entry.querySelector('.promoter-loans-taken:checked')?.value === 'yes';
+            if (loansTaken) {
+                const loansPaid = entry.querySelector('.promoter-loans-paid:checked');
+                const loanDefaults = entry.querySelector('.promoter-loan-defaults:checked');
+                if (!loansPaid || !loanDefaults) {
+                    return { ok: false, message: `Please complete loan repayment/default details for promoter ${promoterNumber}.` };
+                }
+            }
+
+            return { ok: true };
+        }
+
+        function buildPromoterEntrySummary(entry, promoterNumber) {
+            const fullNames = (entry.querySelector('.promoter-full-names')?.value || '').trim();
+            const title = (entry.querySelector('.promoter-title')?.value || '').trim() || 'Not specified';
+            const education = (entry.querySelector('.promoter-education')?.value || '').trim();
+            const phone = (entry.querySelector('.promoter-phone')?.value || '').trim() || 'Not provided';
+            const experienceYears = (entry.querySelector('.promoter-experience-years')?.value || '').trim() || 'Not provided';
+            const natureExperience = (entry.querySelector('.promoter-nature-experience')?.value || '').trim() || 'Not provided';
+            const sourceType = entry.querySelector('.promoter-source:checked')?.value || 'linkedin';
+            const linkedinProfiles = (entry.querySelector('.promoter-linkedin-profiles')?.value || '').toString().trim().replace(/\r?\n/g, '; ') || 'Not provided';
+            const promoterCvInput = entry.querySelector('.promoter-cv');
+            const cvFileName = promoterCvInput.files && promoterCvInput.files.length ? promoterCvInput.files[0].name : 'Not uploaded';
+            const loansTaken = entry.querySelector('.promoter-loans-taken:checked')?.value || 'no';
+            const loansPaid = loansTaken === 'yes' ? (entry.querySelector('.promoter-loans-paid:checked')?.value || 'Not provided') : 'N/A';
+            const loanDefaults = loansTaken === 'yes' ? (entry.querySelector('.promoter-loan-defaults:checked')?.value || 'Not provided') : 'N/A';
+            const cibilScore = (entry.querySelector('.promoter-cibil-score')?.value || '').trim();
+            const otherSources = (entry.querySelector('.promoter-other-sources')?.value || '').trim() || 'Not provided';
+
+            return [
+                `Promoter ${promoterNumber} - Full Name(s): ${fullNames}`,
+                `Title: ${title}`,
+                `Educational Qualification: ${education}`,
+                `Phone Number: ${phone}`,
+                `Experience (Years): ${experienceYears}`,
+                `Nature of Experience: ${natureExperience}`,
+                `Profile Source Type: ${sourceType}`,
+                `LinkedIn Profiles: ${sourceType === 'linkedin' ? linkedinProfiles : 'N/A'}`,
+                `Uploaded CV: ${sourceType === 'upload_cv' ? cvFileName : 'N/A'}`,
+                `Loans Taken Earlier: ${loansTaken}`,
+                `Loans Paid: ${loansPaid}`,
+                `Any Defaults: ${loanDefaults}`,
+                `CIBIL Score: ${cibilScore}`,
+                `Other Information Sources: ${otherSources}`,
+            ].join(' | ');
+        }
+
+        function addPromoterEntry() {
+            const index = promotersContainer.querySelectorAll('.promoter-card').length;
+            const entry = createPromoterEntry(index);
+            promotersContainer.appendChild(entry);
+
+            entry.querySelectorAll('.promoter-source').forEach((el) => {
+                el.addEventListener('change', () => togglePromoterProfileSource(entry));
+            });
+            entry.querySelectorAll('.promoter-loans-taken').forEach((el) => {
+                el.addEventListener('change', () => toggleLoanRepaymentSection(entry));
+            });
+            entry.querySelector('.promoter-linkedin-profiles').addEventListener('blur', () => validateLinkedInProfiles(entry));
+            entry.querySelector('.promoter-remove').addEventListener('click', () => {
+                entry.remove();
+                reindexPromoterEntries();
+            });
+
+            togglePromoterProfileSource(entry);
+            toggleLoanRepaymentSection(entry);
+        }
+
+        function reindexPromoterEntries() {
+            const entries = Array.from(promotersContainer.querySelectorAll('.promoter-card'));
+            entries.forEach((entry, index) => {
+                entry.dataset.promoterIndex = String(index);
+                const title = entry.querySelector('.promoter-card-head strong');
+                if (title) {
+                    title.textContent = `Promoter ${index + 1}`;
+                }
+
+                const removeButton = entry.querySelector('.promoter-remove');
+                if (removeButton) {
+                    removeButton.style.display = index === 0 ? 'none' : 'inline-block';
+                }
+
+                entry.querySelectorAll('.promoter-source').forEach((radio) => {
+                    radio.name = `promoter_profile_source_type_${index}`;
+                });
+                entry.querySelectorAll('.promoter-loans-taken').forEach((radio) => {
+                    radio.name = `loans_taken_earlier_${index}`;
+                });
+                entry.querySelectorAll('.promoter-loans-paid').forEach((radio) => {
+                    radio.name = `loans_paid_${index}`;
+                });
+                entry.querySelectorAll('.promoter-loan-defaults').forEach((radio) => {
+                    radio.name = `loan_defaults_${index}`;
+                });
+            });
+        }
+
+        function fillPromoterEntry(entry, promoterData) {
+            entry.querySelector('.promoter-full-names').value = promoterData.full_names || '';
+            entry.querySelector('.promoter-title').value = promoterData.title || '';
+            entry.querySelector('.promoter-phone').value = promoterData.phone || '';
+            entry.querySelector('.promoter-education').value = promoterData.education || '';
+            entry.querySelector('.promoter-experience-years').value = promoterData.experience_years ?? '';
+            entry.querySelector('.promoter-nature-experience').value = promoterData.nature_experience || '';
+            entry.querySelector('.promoter-cibil-score').value = promoterData.cibil_score ?? '';
+            entry.querySelector('.promoter-other-sources').value = promoterData.other_sources || '';
+
+            const sourceType = promoterData.profile_source_type === 'upload_cv' ? 'upload_cv' : 'linkedin';
+            const sourceRadio = entry.querySelector(`.promoter-source[value="${sourceType}"]`);
+            if (sourceRadio) {
+                sourceRadio.checked = true;
+            }
+            togglePromoterProfileSource(entry);
+
+            if (sourceType === 'linkedin') {
+                entry.querySelector('.promoter-linkedin-profiles').value = (promoterData.linkedin_profiles || []).join('\n');
+            }
+
+            const loansTaken = promoterData.loans_taken_earlier === 'yes' ? 'yes' : 'no';
+            const loansTakenRadio = entry.querySelector(`.promoter-loans-taken[value="${loansTaken}"]`);
+            if (loansTakenRadio) {
+                loansTakenRadio.checked = true;
+            }
+            toggleLoanRepaymentSection(entry);
+
+            if (loansTaken === 'yes') {
+                const loansPaidRadio = entry.querySelector(`.promoter-loans-paid[value="${promoterData.loans_paid || 'yes'}"]`);
+                const loanDefaultsRadio = entry.querySelector(`.promoter-loan-defaults[value="${promoterData.loan_defaults || 'no'}"]`);
+                if (loansPaidRadio) {
+                    loansPaidRadio.checked = true;
+                }
+                if (loanDefaultsRadio) {
+                    loanDefaultsRadio.checked = true;
+                }
+            }
+        }
+
+        function autofillExampleData() {
+            const data = EXAMPLE_FORM_INPUT;
+
+            document.getElementById('client_name').value = data.client_name;
+            document.getElementById('project_title').value = data.project_title;
+            document.getElementById('product_service').value = data.product_service;
+            document.getElementById('project_country').value = data.project_country;
+            document.getElementById('project_state').value = data.project_state;
+            document.getElementById('project_city').value = data.project_city;
+            document.getElementById('project_pin_code').value = data.project_pin_code;
+            document.getElementById('target_customer').value = data.target_customer;
+            document.getElementById('project_district').value = data.project_district || '';
+            document.getElementById('industrial_area').value = data.industrial_area || '';
+            document.getElementById('customer_interface').value = data.customer_interface || '';
+            document.getElementById('market_orientation').value = data.market_orientation || '';
+            document.getElementById('manufacturing_mode').value = data.manufacturing_mode || '';
+            document.getElementById('report_intended_use').value = data.report_intended_use || '';
+            document.getElementById('business_model').value = data.business_model;
+
+            setRadioValue('sizing_mode', data.sizing_mode, true);
+            if (data.budget_cap_basis) {
+                setRadioValue('budget_cap_basis', data.budget_cap_basis, true);
+            }
+            document.getElementById('target_capacity').value = data.target_capacity || '';
+            document.getElementById('total_investment').value = data.total_investment ?? '';
+            document.getElementById('equity_cap_amount').value = data.equity_cap_amount ?? '';
+            document.getElementById('debt_cap_amount').value = data.debt_cap_amount ?? '';
+
+            setRadioValue('commercial_input_mode', data.commercial_input_mode || 'ai_defaults_with_override');
+            document.getElementById('selling_price').value = data.selling_price ?? '';
+            document.getElementById('currency').value = data.currency;
+            document.getElementById('product_mix').value = data.product_mix || '';
+            document.getElementById('raw_material_consumption_basis').value = data.raw_material_consumption_basis || '';
+            document.getElementById('raw_material_pricing_basis').value = data.raw_material_pricing_basis || '';
+            document.getElementById('utility_tariff_basis').value = data.utility_tariff_basis || '';
+            if (data.manpower_approach) {
+                setRadioValue('manpower_approach', data.manpower_approach);
+            }
+            document.getElementById('repairs_maintenance_pct').value = data.repairs_maintenance_pct ?? '';
+            document.getElementById('selling_overhead_pct').value = data.selling_overhead_pct ?? '';
+            document.getElementById('admin_overhead_pct').value = data.admin_overhead_pct ?? '';
+            document.getElementById('receivables_days').value = data.receivables_days ?? '';
+            document.getElementById('inventory_days').value = data.inventory_days ?? '';
+            document.getElementById('payables_days').value = data.payables_days ?? '';
+            document.getElementById('production_rampup').value = data.production_rampup;
+            document.getElementById('production_rampup').dispatchEvent(new Event('change'));
+
+            marketGeographyRows.innerHTML = '';
+            (data.market_geographies || []).forEach((geo) => addMarketGeographyRow(geo.country, geo.state));
+            const exportRadio = document.querySelector(`input[name="has_exports"][value="${data.has_exports === 'yes' ? 'yes' : 'no'}"]`);
+            if (exportRadio) {
+                exportRadio.checked = true;
+            }
+            toggleExportSplitSection();
+            exportShareInput.value = data.export_share ?? '';
+            localShareInput.value = data.local_share ?? '';
+
+            document.getElementById('operating_days').value = data.operating_days;
+            document.getElementById('shift_preference').value = data.shift_preference || '';
+            document.getElementById('shifts_per_day').value = data.shifts_per_day;
+            document.getElementById('hours_per_shift').value = data.hours_per_shift;
+
+            document.getElementById('debt_amount').value = data.debt_amount ?? '';
+            document.getElementById('debt_percentage').value = data.debt_percentage;
+            document.getElementById('equity_percentage').value = data.equity_percentage;
+            validateDebtEquity();
+            document.getElementById('loan_tenor').value = data.loan_tenor;
+            document.getElementById('interest_rate').value = data.interest_rate ?? '';
+            document.getElementById('moratorium_period').value = data.moratorium_period ?? '';
+            if (data.repayment_frequency) {
+                setRadioValue('repayment_frequency', data.repayment_frequency);
+            }
+            document.getElementById('upfront_fees').value = data.upfront_fees ?? '';
+            setRadioValue('dsra_required', data.dsra_required || 'no', true);
+            document.getElementById('dsra_months').value = data.dsra_months ?? '';
+
+            document.getElementById('facility_type').value = data.facility_type || '';
+            setRadioValue('has_hazardous_materials', data.has_hazardous_materials || 'no');
+            setRadioValue('has_effluent_generation', data.has_effluent_generation || 'no');
+            document.getElementById('land_status').value = data.land_status || '';
+
+            document.getElementById('brand_preference_mode').value = data.brand_preference_mode || '';
+            document.getElementById('key_equipment_items_count').value = data.key_equipment_items_count ?? 14;
+            document.getElementById('preferred_manufacturer_geography').value = data.preferred_manufacturer_geography || '';
+            document.getElementById('brand_preferences').value = data.brand_preferences || '';
+            document.getElementById('technology_exclusions').value = data.technology_exclusions || '';
+            document.getElementById('excluded_brands_countries').value = data.excluded_brands_countries || '';
+            certificationRows.innerHTML = '';
+            if (Array.isArray(data.certifications) && data.certifications.length > 0) {
+                data.certifications.forEach((certification) => addCertificationRow(certification));
+            } else {
+                addCertificationRow();
+            }
+            document.getElementById('compliance_constraints').value = data.compliance_constraints || '';
+            document.getElementById('esg_constraints').value = data.esg_constraints || '';
+            document.getElementById('procurement_constraints').value = data.procurement_constraints || '';
+            document.getElementById('notes').value = data.notes || '';
+
+            promotersContainer.innerHTML = '';
+            (data.promoters || []).forEach(() => addPromoterEntry());
+            const entries = Array.from(promotersContainer.querySelectorAll('.promoter-card'));
+            entries.forEach((entry, idx) => {
+                fillPromoterEntry(entry, data.promoters[idx] || {});
+            });
+            reindexPromoterEntries();
+        }
+
+        function updateRampupScenarioHint() {
+            const rampupField = document.getElementById('production_rampup');
+            const hint = document.getElementById('rampupScenarioHint');
+            if (!rampupField || !hint) {
+                return;
+            }
+
+            const scenario = rampupField.value;
+            if (!scenario) {
+                hint.style.display = 'none';
+                hint.textContent = '';
+                return;
+            }
+
+            if (scenario === 'conservative') {
+                hint.textContent = 'Selected: Conservative - Good when execution uncertainty is high and you want cautious revenue assumptions.';
+            } else if (scenario === 'normal') {
+                hint.textContent = 'Selected: Normal - Recommended default for most projects with moderate risk and typical ramp-up behavior.';
+            } else if (scenario === 'aggressive') {
+                hint.textContent = 'Selected: Aggressive - Use only when demand confidence is high and operations can stabilize quickly.';
+            } else {
+                hint.textContent = `Selected: ${scenario}`;
+            }
+
+            hint.style.display = 'block';
+        }
+
+        function toggleBudgetSections() {
+            const sizingMode = getRadioValue('sizing_mode');
+            const basis = getRadioValue('budget_cap_basis');
+
+            const isBudgetMode = sizingMode === 'budget_driven';
+            budgetCapBasisRadios.forEach((radio) => {
+                radio.required = isBudgetMode;
+            });
+
+            budgetTotalSection.classList.toggle('active', isBudgetMode && basis === 'total_project_cost');
+            budgetEquityDebtSection.classList.toggle('active', isBudgetMode && basis === 'equity_debt_cap');
+
+            totalInvestmentField.required = isBudgetMode && basis === 'total_project_cost';
+            equityCapAmountField.required = isBudgetMode && basis === 'equity_debt_cap';
+            debtCapAmountField.required = isBudgetMode && basis === 'equity_debt_cap';
+
+            if (!isBudgetMode || basis !== 'total_project_cost') {
+                totalInvestmentField.value = '';
+            }
+            if (!isBudgetMode || basis !== 'equity_debt_cap') {
+                equityCapAmountField.value = '';
+                debtCapAmountField.value = '';
+            }
+        }
+
+        function toggleDsraMonths() {
+            const dsraRequired = getRadioValue('dsra_required') === 'yes';
+            dsraMonthsGroup.style.display = dsraRequired ? 'block' : 'none';
+            dsraMonthsField.required = dsraRequired;
+            if (!dsraRequired) {
+                dsraMonthsField.value = '';
+            }
+        }
+
+        function handleSizingModeChange() {
+            const capacitySection = document.getElementById('capacity_section');
+            const budgetSection = document.getElementById('budget_section');
+            const capacityField = document.getElementById('target_capacity');
+            const currentSizingMode = getRadioValue('sizing_mode');
+            
+            if (currentSizingMode === 'capacity_driven') {
+                capacitySection.classList.add('active');
+                budgetSection.classList.remove('active');
+                capacityField.required = true;
+            } else if (currentSizingMode === 'budget_driven') {
+                budgetSection.classList.add('active');
+                capacitySection.classList.remove('active');
+                capacityField.required = false;
+            } else {
+                capacitySection.classList.remove('active');
+                budgetSection.classList.remove('active');
+                capacityField.required = false;
+            }
+
+            toggleBudgetSections();
         }
 
         document.getElementById('debt_percentage').addEventListener('input', validateDebtEquity);
         document.getElementById('equity_percentage').addEventListener('input', validateDebtEquity);
+        document.getElementById('production_rampup').addEventListener('change', updateRampupScenarioHint);
+        sizingModeRadios.forEach((radio) => radio.addEventListener('change', handleSizingModeChange));
+        budgetCapBasisRadios.forEach((radio) => radio.addEventListener('change', toggleBudgetSections));
+        dsraRequiredRadios.forEach((radio) => radio.addEventListener('change', toggleDsraMonths));
+        shiftPreferenceField.addEventListener('change', () => {
+            if (shiftPreferenceField.value === 'single_shift' && !document.getElementById('shifts_per_day').value) {
+                document.getElementById('shifts_per_day').value = '1';
+            }
+            if (shiftPreferenceField.value === 'double_shift' && !document.getElementById('shifts_per_day').value) {
+                document.getElementById('shifts_per_day').value = '2';
+            }
+            if (shiftPreferenceField.value === 'triple_shift' && !document.getElementById('shifts_per_day').value) {
+                document.getElementById('shifts_per_day').value = '3';
+            }
+        });
+        addMarketGeographyRowButton.addEventListener('click', () => addMarketGeographyRow());
+        document.querySelectorAll('input[name="has_exports"]').forEach((el) => {
+            el.addEventListener('change', toggleExportSplitSection);
+        });
+        exportShareInput.addEventListener('input', validateExportSplit);
+        localShareInput.addEventListener('input', validateExportSplit);
+        addCertificationRowButton.addEventListener('click', () => addCertificationRow());
+        addPromoterButton.addEventListener('click', addPromoterEntry);
+        autofillExampleButton.addEventListener('click', autofillExampleData);
+        pinCodeInput.addEventListener('input', validatePinCode);
+        pinCodeInput.addEventListener('blur', validatePinCode);
+        countryInput.addEventListener('input', () => {
+            validatePinCode();
+        });
+        handleSizingModeChange();
+        toggleBudgetSections();
+        toggleDsraMonths();
 
-        // Form submission
         document.getElementById('submissionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const errorDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
-            const warningDiv = document.getElementById('warningMessage');
             const downloadSection = document.getElementById('downloadSection');
             const validationDiv = document.getElementById('validationSummary');
             
-            // Clear messages
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             downloadSection.style.display = 'none';
             validationDiv.style.display = 'none';
+            resetPricingConfirmationUi();
+
+            if (!form.reportValidity()) {
+                return;
+            }
             
-            // Validate debt/equity
             if (!validateDebtEquity()) {
                 errorDiv.textContent = '✗ Please ensure Debt % + Equity % = 100%';
                 errorDiv.style.display = 'block';
                 return;
             }
+
+            hsnFamilyCodeInput.value = sanitizeHsnCode(hsnFamilyCodeInput.value) || '0000';
+            hsnCodeInput.value = sanitizeHsnCode(hsnCodeInput.value) || '0000';
+            hsnFamilyNameInput.value = hsnFamilyNameInput.value.trim() || 'Not classified in form';
+            hsnDescriptionInput.value = hsnDescriptionInput.value.trim() || 'HSN/SAC will be identified during report generation';
+
+            if (!validatePinCode()) {
+                errorDiv.textContent = '✗ Enter a valid pin code for the selected country';
+                errorDiv.style.display = 'block';
+                pinCodeInput.reportValidity();
+                return;
+            }
+
+            if (!cityHiddenInput.value || !stateHiddenInput.value) {
+                errorDiv.textContent = '✗ Select a city from Google autocomplete to fill City and State';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const marketGeographySerialized = serializeMarketGeography();
+            if (!marketGeographySerialized.ok) {
+                errorDiv.textContent = `✗ ${marketGeographySerialized.message}`;
+                errorDiv.style.display = 'block';
+                return;
+            }
+            marketGeographyInput.value = marketGeographySerialized.value;
+
+            const certificationsSerialized = serializeCertifications();
+            if (!certificationsSerialized.ok) {
+                errorDiv.textContent = `✗ ${certificationsSerialized.message}`;
+                errorDiv.style.display = 'block';
+                return;
+            }
+            certificationsInput.value = certificationsSerialized.value || '';
+
+            const promoterEntries = Array.from(promotersContainer.querySelectorAll('.promoter-card'));
+            for (let i = 0; i < promoterEntries.length; i += 1) {
+                const promoterValidation = validatePromoterEntry(promoterEntries[i], i + 1);
+                if (!promoterValidation.ok) {
+                    errorDiv.textContent = `✗ ${promoterValidation.message}`;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+            }
             
-            // Get form data
             const formData = new FormData(form);
+            const projectLocation = buildProjectLocation(formData);
+            const promoterBackgroundSummary = promoterEntries
+                .map((entry, idx) => buildPromoterEntrySummary(entry, idx + 1))
+                .join(' || ');
+            const sellingPriceValue = parseFloatOrNull((formData.get('selling_price') || '').toString().trim());
+            const interestRateValue = parseFloatOrNull((formData.get('interest_rate') || '').toString().trim());
+            const debtAmountValue = parseFloatOrNull((formData.get('debt_amount') || '').toString().trim());
+            const upfrontFeesValue = parseFloatOrNull((formData.get('upfront_fees') || '').toString().trim());
+            const equityCapAmountValue = parseFloatOrNull((formData.get('equity_cap_amount') || '').toString().trim());
+            const debtCapAmountValue = parseFloatOrNull((formData.get('debt_cap_amount') || '').toString().trim());
+            const totalInvestmentValue = parseFloatOrNull((formData.get('total_investment') || '').toString().trim());
+            const inferredTotalInvestment = totalInvestmentValue ?? (
+                (equityCapAmountValue !== null && debtCapAmountValue !== null)
+                    ? equityCapAmountValue + debtCapAmountValue
+                    : null
+            );
+            const shiftsPerDayValue = parseIntOrNull((formData.get('shifts_per_day') || '').toString().trim()) || 2;
+            const hoursPerShiftValue = parseIntOrNull((formData.get('hours_per_shift') || '').toString().trim()) || 8;
             const data = {
-                // Project Identity
                 client_name: formData.get('client_name'),
                 project_title: formData.get('project_title'),
                 product_service: formData.get('product_service'),
-                project_location: formData.get('project_location'),
+                hsn_family_code: formData.get('hsn_family_code'),
+                hsn_family_name: formData.get('hsn_family_name') || null,
+                hsn_code: formData.get('hsn_code'),
+                hsn_description: formData.get('hsn_description'),
+                project_city: formData.get('project_city'),
+                project_state: formData.get('project_state'),
+                project_country: formData.get('project_country') || 'India',
+                project_pin_code: formData.get('project_pin_code') || null,
+                project_location: projectLocation,
+                target_customer: formData.get('target_customer'),
+                project_district: formData.get('project_district'),
+                industrial_area: formData.get('industrial_area') || null,
+                customer_interface: formData.get('customer_interface'),
+                market_orientation: formData.get('market_orientation'),
+                manufacturing_mode: formData.get('manufacturing_mode'),
+                report_intended_use: formData.get('report_intended_use'),
                 business_model: formData.get('business_model'),
-                
-                // Project Sizing
                 sizing_mode: formData.get('sizing_mode'),
+                budget_cap_basis: formData.get('budget_cap_basis') || null,
                 target_capacity: formData.get('target_capacity') || null,
-                total_investment: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
-                
-                // Commercial Assumptions
-                selling_price: parseFloat(formData.get('selling_price')),
+                total_investment: inferredTotalInvestment,
+                equity_cap_amount: equityCapAmountValue,
+                debt_cap_amount: debtCapAmountValue,
+                commercial_input_mode: formData.get('commercial_input_mode'),
+                selling_price: Number.isFinite(sellingPriceValue) ? sellingPriceValue : null,
+                pricing_source: Number.isFinite(sellingPriceValue) ? 'user_provided' : 'estimated_hsn',
                 currency: formData.get('currency'),
                 product_mix: formData.get('product_mix') || null,
+                raw_material_consumption_basis: formData.get('raw_material_consumption_basis') || null,
+                raw_material_pricing_basis: formData.get('raw_material_pricing_basis') || null,
+                utility_tariff_basis: formData.get('utility_tariff_basis') || null,
+                manpower_approach: formData.get('manpower_approach'),
+                repairs_maintenance_pct: parseFloatOrNull((formData.get('repairs_maintenance_pct') || '').toString().trim()),
+                selling_overhead_pct: parseFloatOrNull((formData.get('selling_overhead_pct') || '').toString().trim()),
+                admin_overhead_pct: parseFloatOrNull((formData.get('admin_overhead_pct') || '').toString().trim()),
+                receivables_days: parseIntOrNull((formData.get('receivables_days') || '').toString().trim()),
+                inventory_days: parseIntOrNull((formData.get('inventory_days') || '').toString().trim()),
+                payables_days: parseIntOrNull((formData.get('payables_days') || '').toString().trim()),
                 production_rampup: formData.get('production_rampup'),
                 market_geography: formData.get('market_geography'),
-                
-                // Operating Assumptions
                 operating_days: parseInt(formData.get('operating_days')),
-                shifts_per_day: parseInt(formData.get('shifts_per_day')),
-                hours_per_shift: parseInt(formData.get('hours_per_shift')),
-                utilization_rate: parseFloat(formData.get('utilization_rate')),
-                utilities_consumption: formData.get('utilities_consumption') || null,
-                
-                // Financing Inputs
+                shift_preference: formData.get('shift_preference') || null,
+                shifts_per_day: shiftsPerDayValue,
+                hours_per_shift: hoursPerShiftValue,
+                debt_amount: debtAmountValue,
                 debt_percentage: parseFloat(formData.get('debt_percentage')),
                 equity_percentage: parseFloat(formData.get('equity_percentage')),
                 loan_tenor: parseInt(formData.get('loan_tenor')),
-                interest_rate: parseFloat(formData.get('interest_rate')),
+                interest_rate: Number.isFinite(interestRateValue) ? interestRateValue : null,
                 moratorium_period: formData.get('moratorium_period') ? parseInt(formData.get('moratorium_period')) : null,
-                
-                // Equipment Preferences
+                repayment_frequency: formData.get('repayment_frequency'),
+                upfront_fees: upfrontFeesValue,
+                dsra_required: formData.get('dsra_required') === 'yes',
+                dsra_months: parseIntOrNull((formData.get('dsra_months') || '').toString().trim()),
+                facility_type: formData.get('facility_type'),
+                has_hazardous_materials: formData.get('has_hazardous_materials') === 'yes',
+                has_effluent_generation: formData.get('has_effluent_generation') === 'yes',
+                land_status: formData.get('land_status'),
+                brand_preference_mode: formData.get('brand_preference_mode'),
+                key_equipment_items_count: parseInt(formData.get('key_equipment_items_count')),
                 preferred_manufacturer_geography: formData.get('preferred_manufacturer_geography') || null,
                 brand_preferences: formData.get('brand_preferences') || null,
                 technology_exclusions: formData.get('technology_exclusions') || null,
-                
-                // Legacy/Additional fields
-                promoter_background: formData.get('promoter_background') || null,
+                excluded_brands_countries: formData.get('excluded_brands_countries') || null,
+                certifications: formData.get('certifications') || null,
+                compliance_constraints: formData.get('compliance_constraints') || null,
+                esg_constraints: formData.get('esg_constraints') || null,
+                procurement_constraints: formData.get('procurement_constraints') || null,
+                promoter_background: promoterBackgroundSummary,
                 start_date: formData.get('start_date') || null,
                 target_launch_date: formData.get('target_launch_date') || null,
                 notes: formData.get('notes') || null,
-                
-                // Backward compatibility mapping
                 business_idea: formData.get('product_service'),
-                location_land: formData.get('project_location'),
+                location_land: projectLocation,
                 goals: formData.get('market_geography'),
-                budget: formData.get('total_investment') ? parseFloat(formData.get('total_investment')) : null,
-                target_market: formData.get('market_geography')
+                budget: inferredTotalInvestment,
+                target_market: formData.get('target_customer')
             };
             
             try {
@@ -399,13 +2415,49 @@
                 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.detail || 'Submission failed');
+                    if (response.status === 422 && Array.isArray(error.detail)) {
+                        const fieldLabels = {
+                            business_model: 'Business Model',
+                            selling_price: 'Selling Price per Unit',
+                            interest_rate: 'Interest Rate (% per annum)',
+                            utilization_rate: 'Plant Utilization Rate (%)',
+                            client_name: 'Client / Organisation Name',
+                            project_title: 'Project Title',
+                            product_service: 'Product / Service',
+                            project_location: 'Project Location',
+                            sizing_mode: 'Sizing Mode',
+                            target_capacity: 'Target Capacity',
+                            total_investment: 'Total Investment',
+                            operating_days: 'Operating Days per Year',
+                            shifts_per_day: 'Shifts per Day',
+                            hours_per_shift: 'Hours per Shift',
+                            debt_percentage: 'Debt %',
+                            equity_percentage: 'Equity %',
+                            loan_tenor: 'Loan Tenor (years)',
+                            production_rampup: 'Production Ramp-Up',
+                            market_geography: 'Market Geography',
+                        };
+                        const items = error.detail.map(e => {
+                            const field = e.loc[e.loc.length - 1];
+                            const label = fieldLabels[field] || field;
+                            if (e.type === 'missing') return `<li><strong>${label}</strong> is required — please fill it in</li>`;
+                            if (e.type === 'enum') return `<li><strong>${label}</strong> has an invalid value — please select a valid option</li>`;
+                            return `<li><strong>${label}</strong>: ${e.msg}</li>`;
+                        }).join('');
+                        errorDiv.innerHTML = `<strong>Please complete the following before submitting:</strong><ul style="margin:8px 0 0 16px">${items}</ul>`;
+                        errorDiv.style.display = 'block';
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Generate Report';
+                        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        return;
+                    }
+                    const detail = typeof error.detail === 'string' ? error.detail : null;
+                    throw new Error(detail || 'Submission failed');
                 }
                 
                 const result = await response.json();
                 currentSubmissionId = result.id;
                 
-                // Show validation summary if provided
                 if (result.validation_summary) {
                     let summaryHTML = '<strong>Input Validation Summary:</strong><br>';
                     if (result.validation_summary.critical_missing && result.validation_summary.critical_missing.length > 0) {
@@ -420,21 +2472,44 @@
                             summaryHTML += `<div class="validation-item" style="color: #856404;">- ${field}</div>`;
                         });
                     }
+                    if (result.validation_summary.industry_benchmark_checks && result.validation_summary.industry_benchmark_checks.length > 0) {
+                        summaryHTML += '<div style="color: #0c5460; margin-top: 10px;">📊 Industry benchmark checks:</div>';
+                        result.validation_summary.industry_benchmark_checks.forEach(note => {
+                            summaryHTML += `<div class="validation-item" style="color: #0c5460;">- ${note}</div>`;
+                        });
+                    }
                     validationDiv.innerHTML = summaryHTML;
                     validationDiv.style.display = 'block';
                 }
                 
-                successDiv.textContent = `✓ Submission successful! ID: ${result.id}`;
+                // Each section is researched by Claude with live web search — typical time is ~12 minutes.
+                estimatedReportSeconds = 720;
+                successDiv.innerHTML = `✓ Submission saved (ID: ${result.id}). Estimated report generation time: <strong>~12 minutes</strong> (Claude researches each section with live web search). Click Download Report — the file will arrive when ready.`;
                 successDiv.style.display = 'block';
                 downloadSection.style.display = 'block';
-                
+
+                if (!Number.isFinite(sellingPriceValue)) {
+                    try {
+                        const estimate = await loadPricingEstimate(result.id);
+                        if (estimate && estimate.available !== false) {
+                            pricingConfirmationPending = true;
+                            currentEstimatedPrice = estimate.suggested_price;
+                            pricingEstimateSummary.textContent = `Estimated ${estimate.currency} price range: ${estimate.min_price} to ${estimate.max_price}. Suggested: ${estimate.suggested_price}.`;
+                            pricingEstimateReason.textContent = estimate.reasoning;
+                            manualSellingPriceInput.value = estimate.suggested_price;
+                            pricingConfirmSection.style.display = 'block';
+                            downloadSection.style.display = 'none';
+                        }
+                    } catch {
+                        // Proceed to download; report will use AI defaults for selling price
+                    }
+                }
+
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Generate Report';
-                
-                // Scroll to success message
                 successDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (error) {
-                errorDiv.textContent = `✗ Error: ${error.message}`;
+                errorDiv.textContent = `✗ Something went wrong on our end — please try again. (${error.message})`;
                 errorDiv.style.display = 'block';
                 const submitButton = form.querySelector('button[type="submit"]');
                 submitButton.disabled = false;
@@ -444,24 +2519,74 @@
 
         document.getElementById('downloadButton').addEventListener('click', async () => {
             if (!currentSubmissionId) return;
-            
+            if (pricingConfirmationPending) {
+                alert('Confirm estimated selling price first to finalize revenue assumptions.');
+                return;
+            }
+
             const button = document.getElementById('downloadButton');
             const originalText = button.innerHTML;
-            
+            const progressWrap = document.getElementById('reportProgressWrap');
+            const progressBar = document.getElementById('reportProgressBar');
+            const progressPct = document.getElementById('reportProgressPct');
+            const progressLabel = document.getElementById('reportProgressLabel');
+            const progressTime = document.getElementById('reportProgressTime');
+
+            const startTime = Date.now();
+            const totalMs = estimatedReportSeconds * 1000;
+            progressWrap.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressPct.textContent = '0%';
+            progressLabel.textContent = 'Starting report generation…';
+            progressTime.textContent = '';
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner"></span>Generating…';
+
+            // Ticker only updates the elapsed/remaining time display — bar is driven by real section data
+            const ticker = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, Math.round((totalMs - elapsed) / 1000));
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                progressTime.textContent = remaining > 0
+                    ? `~${mins > 0 ? mins + 'm ' : ''}${secs}s remaining`
+                    : 'Finalising…';
+            }, 1000);
+
             try {
-                // Show progress
-                button.disabled = true;
-                button.innerHTML = '<span class="spinner"></span>Generating Report...';
-                
-                // Fetch the report
-                const response = await fetch(`/api/report/${currentSubmissionId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to generate report');
-                }
-                
-                // Get the blob and trigger download
-                const blob = await response.blob();
+                // Kick off background generation (returns immediately)
+                const startResp = await fetch(`/api/report/${currentSubmissionId}/start`, { method: 'POST' });
+                if (!startResp.ok) throw new Error('Failed to start report generation');
+                progressLabel.textContent = 'Generating report — Claude is researching and writing each section…';
+
+                // Poll status every 6 seconds and drive bar from real section counts
+                await new Promise((resolve, reject) => {
+                    const poll = setInterval(async () => {
+                        try {
+                            const statusResp = await fetch(`/api/report/${currentSubmissionId}/status`);
+                            const { status, error, sections_done, sections_total, current_section } = await statusResp.json();
+
+                            // Drive bar from real section progress when available
+                            if (sections_total > 0) {
+                                const realPct = Math.round((sections_done / sections_total) * 95); // cap at 95 until done
+                                progressBar.style.transition = 'width 2s ease';
+                                progressBar.style.width = realPct + '%';
+                                progressPct.textContent = realPct + '%';
+                                if (current_section) {
+                                    progressLabel.textContent = `Writing: ${current_section} (${sections_done} of ${sections_total} sections)…`;
+                                }
+                            }
+
+                            if (status === 'done') { clearInterval(poll); resolve(); }
+                            else if (status === 'failed') { clearInterval(poll); reject(new Error(error || 'Report generation failed')); }
+                        } catch (e) { clearInterval(poll); reject(e); }
+                    }, 6000);
+                });
+
+                // Download the finished file
+                const dlResp = await fetch(`/api/report/${currentSubmissionId}/download`);
+                if (!dlResp.ok) throw new Error('Download failed');
+                const blob = await dlResp.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -470,16 +2595,74 @@
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                
-                // Reset button
+
+                clearInterval(ticker);
+                progressBar.style.transition = 'width 0.4s ease';
+                progressBar.style.width = '100%';
+                progressPct.textContent = '100%';
+                progressLabel.textContent = '✓ Report downloaded';
+                progressTime.textContent = `Completed in ${Math.round((Date.now() - startTime) / 1000)}s`;
                 button.disabled = false;
                 button.innerHTML = originalText;
             } catch (error) {
+                clearInterval(ticker);
+                progressWrap.style.display = 'none';
                 button.disabled = false;
                 button.innerHTML = originalText;
                 alert('Error downloading report: ' + error.message);
             }
         });
+
+        confirmEstimatedPriceButton.addEventListener('click', async () => {
+            if (!currentSubmissionId) {
+                return;
+            }
+
+            const suggested = parseFloat(currentEstimatedPrice);
+            if (!Number.isFinite(suggested) || suggested <= 0) {
+                alert('Estimated price is unavailable. Please enter a manual value.');
+                return;
+            }
+
+            try {
+                await confirmPricing(currentSubmissionId, suggested, 'estimated_hsn');
+                pricingConfirmationPending = false;
+                pricingConfirmSection.style.display = 'none';
+                downloadSection.style.display = 'block';
+            } catch (error) {
+                alert(`Pricing confirmation failed: ${error.message}`);
+            }
+        });
+
+        confirmManualPriceButton.addEventListener('click', async () => {
+            if (!currentSubmissionId) {
+                return;
+            }
+
+            const manualPrice = parseFloat(manualSellingPriceInput.value);
+            if (!Number.isFinite(manualPrice) || manualPrice <= 0) {
+                alert('Enter a valid manual price greater than 0.');
+                return;
+            }
+
+            try {
+                await confirmPricing(currentSubmissionId, manualPrice, 'user_provided');
+                sellingPriceInput.value = manualPrice;
+                pricingConfirmationPending = false;
+                pricingConfirmSection.style.display = 'none';
+                downloadSection.style.display = 'block';
+            } catch (error) {
+                alert(`Pricing confirmation failed: ${error.message}`);
+            }
+        });
+
+        initializeGooglePlacesAutocomplete();
+        loadMarketInterestRateHint();
+        addMarketGeographyRow('India', '');
+        toggleExportSplitSection();
+        addCertificationRow();
+        addPromoterEntry();
+        updateRampupScenarioHint();
     </script>
 </body>
 </html>

@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, StreamingResponse
 from jinja2 import Environment, FileSystemLoader
 import os
-from io import BytesIO
+import asyncio
 from app.models import SubmissionCreate, SubmissionResponse, SubmissionResponseWithValidation, ValidationSummary
-from app.db import init_db, save_submission, get_submission
+from app.db import init_db, save_submission, get_submission, upsert_report_status, get_report_record
 from app.report_builder import build_doc
 
 app = FastAPI()
@@ -21,7 +21,8 @@ env = Environment(loader=FileSystemLoader(templates_dir))
 @app.get("/", response_class=HTMLResponse)
 async def get_form():
     template = env.get_template("form.html")
-    return template.render()
+    google_maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+    return template.render(google_maps_api_key=google_maps_api_key)
 
 
 def validate_critical_inputs(submission: SubmissionCreate) -> ValidationSummary:
@@ -121,34 +122,86 @@ async def get_submission_by_id(submission_id: int):
     return SubmissionResponse(**submission)
 
 
+async def _run_report_background(submission_id: int, submission_data: dict, force: bool):
+    """Background task: generate report and save bytes to DB."""
+    try:
+        upsert_report_status(submission_id, "generating")
+        doc_bytes = await asyncio.to_thread(build_doc, submission_data, submission_id, force)
+        upsert_report_status(submission_id, "done", doc_bytes=doc_bytes)
+    except Exception as e:
+        upsert_report_status(submission_id, "failed", error_message=str(e))
+
+
+@app.post("/api/report/{submission_id}/start")
+async def start_report(submission_id: int, background_tasks: BackgroundTasks, force: bool = False):
+    """Start background report generation. Returns immediately."""
+    submission = get_submission(submission_id)
+    if submission is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    record = get_report_record(submission_id)
+    if record and record["status"] == "done" and not force:
+        return {"status": "done"}
+    if record and record["status"] == "generating":
+        return {"status": "generating"}
+
+    submission_data = {k: v for k, v in submission.items() if k not in ["id", "created_at"]}
+    background_tasks.add_task(_run_report_background, submission_id, submission_data, force)
+    return {"status": "generating"}
+
+
+@app.get("/api/report/{submission_id}/status")
+async def report_status(submission_id: int):
+    """Poll report generation status."""
+    record = get_report_record(submission_id)
+    if not record:
+        return {"status": "not_started", "sections_done": 0, "sections_total": 0, "current_section": None}
+    return {
+        "status": record["status"],
+        "error": record.get("error_message"),
+        "sections_done": record.get("sections_done", 0),
+        "sections_total": record.get("sections_total", 0),
+        "current_section": record.get("current_section"),
+    }
+
+
+@app.get("/api/report/{submission_id}/download")
+async def download_report(submission_id: int):
+    """Download the completed report."""
+    record = get_report_record(submission_id)
+    if not record or record["status"] != "done" or not record["doc_bytes"]:
+        raise HTTPException(status_code=404, detail="Report not ready yet")
+    return StreamingResponse(
+        iter([record["doc_bytes"]]),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename=report_{submission_id}.docx"},
+    )
+
+
 @app.get("/api/report/{submission_id}")
 @app.post("/api/report/{submission_id}")
 async def generate_report(submission_id: int, force: bool = False):
-    """
-    Generate a Word document report for a submission.
-    
-    Args:
-        submission_id: The ID of the submission
-        force: If True, regenerate all sections even if cached (default: False)
-    """
-    # Retrieve submission from database
+    """Legacy sync endpoint — kept for compatibility."""
     submission = get_submission(submission_id)
-    
     if submission is None:
         raise HTTPException(status_code=404, detail="Submission not found")
-    
-    # Remove 'id' and 'created_at' from submission for report generation
-    submission_data = {k: v for k, v in submission.items() if k not in ['id', 'created_at']}
-    
-    # Generate Word document with AI content and caching
-    doc_bytes = build_doc(submission_data, submission_id, force)
-    
-    # Return as streaming response (downloadable file)
+    submission_data = {k: v for k, v in submission.items() if k not in ["id", "created_at"]}
+    doc_bytes = await asyncio.to_thread(build_doc, submission_data, submission_id, force)
     return StreamingResponse(
         iter([doc_bytes]),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename=report_{submission_id}.docx"}
+        headers={"Content-Disposition": f"attachment; filename=report_{submission_id}.docx"},
     )
+
+
+@app.get("/api/market-interest-rate")
+def market_interest_rate():
+    return {"rate": 10.5, "source": "RBI indicative rate", "note": "Indicative only — confirm with your lender"}
+
+
+@app.get("/api/pricing-estimate/{submission_id}")
+async def pricing_estimate(submission_id: int):
+    return {"available": False}
 
 
 @app.get("/health")

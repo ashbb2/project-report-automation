@@ -31,13 +31,55 @@ class LLMClient:
             import anthropic
 
             client = anthropic.Anthropic(api_key=self.api_key)
-            message = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=max_tokens,
-                system="You are a professional business consultant writing detailed feasibility reports for Indian businesses.",
-                messages=[{"role": "user", "content": prompt}],
+
+            web_search_tool = {
+                "type": "web_search_20250305",
+                "name": "web_search",
+            }
+
+            messages = [{"role": "user", "content": prompt}]
+            system = (
+                "You are a professional business consultant writing detailed feasibility reports "
+                "for Indian businesses. Use web search to look up current market data, regulatory "
+                "requirements, industry statistics, equipment costs, and any other facts needed to "
+                "produce an accurate and up-to-date report. Always ground your output in real, "
+                "searchable information."
             )
-            return message.content[0].text
+
+            # Agentic loop: keep going until Claude stops using tools
+            while True:
+                response = client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=max_tokens,
+                    system=system,
+                    tools=[web_search_tool],
+                    messages=messages,
+                )
+
+                # Collect any text produced so far
+                text_parts = [
+                    block.text for block in response.content
+                    if hasattr(block, "text")
+                ]
+
+                # If Claude is done (no more tool calls), return accumulated text
+                if response.stop_reason != "tool_use":
+                    return "\n".join(text_parts)
+
+                # Append Claude's response turn to the conversation
+                messages.append({"role": "assistant", "content": response.content})
+
+                # Build tool_result blocks for every web_search call in this turn
+                tool_results = []
+                for block in response.content:
+                    if block.type == "tool_use":
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": block.input.get("query", ""),
+                        })
+
+                messages.append({"role": "user", "content": tool_results})
 
         except ImportError:
             raise ImportError("Anthropic library not installed. Run: pip install anthropic")

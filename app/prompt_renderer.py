@@ -1,22 +1,8 @@
 import os
 from typing import Dict, Any
 
-from app.rag import retrieve
 
 
-# Map each report section to the most useful RAG query
-_SECTION_RAG_QUERIES = {
-    "executive_summary": "business feasibility overview India",
-    "introduction": "project introduction business plan India",
-    "regulatory_framework": "Indian regulations licenses permits sector compliance",
-    "market_assessment": "Indian market size growth trends sector",
-    "business_operating_model": "business operating model India production process",
-    "equipment_profiles": "equipment machinery specifications manufacturers India",
-    "financial_feasibility": "financial projections feasibility India investment",
-    "risk_assessment": "business risks India regulatory market financial",
-    "caveats": "report limitations assumptions caveats India",
-    "appendices": "supporting data references appendix India",
-}
 
 
 class SafePromptVariables(dict):
@@ -91,23 +77,11 @@ def render_prompt(template: str, variables: Dict[str, Any]) -> str:
 
 
 def get_section_prompt(section_name: str, submission_data: Dict[str, Any]) -> str:
-    """
-    Load and render a prompt for a specific report section.
-    Injects relevant RAG context from reference reports and Indian regulations.
-    """
+    """Load and render a prompt for a specific report section."""
     template = load_prompt(section_name)
-
-    # Build a targeted query combining the section intent with the business context
-    base_query = _SECTION_RAG_QUERIES.get(section_name, section_name)
-    business_idea = submission_data.get("business_idea", "")
-    sector = submission_data.get("product_service", "")
-    rag_query = f"{base_query} {business_idea} {sector}".strip()
-
-    rag_context = retrieve(rag_query, n_results=4)
-
     prompt_data = {
         **submission_data,
         "output_specification": load_output_specification(),
-        "rag_context": rag_context or "No reference documents available.",
+        "rag_context": "No reference documents available.",
     }
     return render_prompt(template, prompt_data)

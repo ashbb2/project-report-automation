@@ -10,6 +10,48 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v9 - 2026-05-03
+**What We Improved**
+- Upgraded report output quality so generated content now appears with proper document structure and styling instead of raw formatting symbols.
+- Improved generation progress visibility so users can see real section-by-section progress.
+- Updated report timing messaging to reflect longer research-based generation.
+
+**Product Design Updates**
+- Added clearer chapter flow with chapter breaks and a table of contents in the generated report.
+- Improved progress feedback wording so users see which section is currently being generated.
+- Removed dependence on a visible state selector in the form flow and kept location autofill behavior centered on city autocomplete.
+
+**Development Updates (Plain Language)**
+- Added markdown-aware rendering so headings, bullets, and bold text from model output are converted into proper Word formatting.
+- Replaced placeholder financial table rows with computed 3-year projection values derived from input budget assumptions.
+- Added backend progress fields for total sections, completed sections, and current section so progress can be shown from real status updates.
+- Updated report status API responses and front-end progress handling to use real backend progress instead of a purely timer-based progress animation.
+- Updated default generation estimate shown to users to around 12 minutes for research-heavy runs.
+- Added Claude web-search usage flow for richer and more current report content generation.
+
+**Key Decisions and Why**
+- Decision: Use real backend section status for progress updates.
+- Why: This avoids misleading progress behavior and improves trust during long generation runs.
+- Decision: Convert model markdown into document-native formatting.
+- Why: This preserves readability and report professionalism without changing the model prompts.
+- Decision: Move to research-heavy generation defaults.
+- Why: Better quality and grounding requires more generation time and should be communicated clearly.
+
+**Files/Areas Updated**
+- app/report_builder.py
+- app/llm_client.py
+- app/db.py
+- app/main.py
+- app/templates/form.html
+
+**Risks or Follow-ups**
+- Real-time progress currently updates per section, not per paragraph or token.
+- Financial projections are computed from assumptions and should still be validated against final client and lender inputs.
+
+**Next Steps**
+- Add lightweight tests for markdown rendering behavior and section progress API values.
+- Extend progress milestones to include final assembly and file packaging steps.
+
 ### v8 - 2026-04-06
 **What We Improved**
 - Started implementation of the must-have governance controls and reorganized the roadmap into clear Must-have, Later, and Deferred buckets.

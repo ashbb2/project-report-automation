@@ -1,11 +1,27 @@
+import re
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 from typing import Dict, Any, List
 from io import BytesIO
 from app.llm_client import llm_client
 from app.prompt_renderer import get_section_prompt
-from app.db import get_cached_section, save_section
+from app.db import get_cached_section, save_section, upsert_report_status
+
+SECTION_LABELS = {
+    'executive_summary':       'Executive Summary',
+    'introduction':            'Introduction',
+    'regulatory_framework':    'Regulatory Framework',
+    'market_assessment':       'Market Assessment',
+    'business_operating_model':'Business & Operating Model',
+    'equipment_profiles':      'Equipment Profiles',
+    'financial_feasibility':   'Financial Feasibility',
+    'risk_assessment':         'Risk Assessment',
+    'caveats':                 'Caveats',
+    'appendices':              'Appendices',
+}
 
 
 def identify_missing_inputs(submission: Dict[str, Any]) -> List[str]:
@@ -47,6 +63,320 @@ def apply_report_formatting(doc: Document) -> None:
     paragraph_format.line_spacing = 1.0
 
 
+# ---------------------------------------------------------------------------
+# Markdown → Word helpers
+# ---------------------------------------------------------------------------
+
+def _add_para_with_inline_bold(doc: Document, text: str, style: str = None):
+    """Add a paragraph, converting **bold** spans to Word bold runs."""
+    para = doc.add_paragraph(style=style) if style else doc.add_paragraph()
+    parts = re.split(r'\*\*(.+?)\*\*', text)
+    for i, part in enumerate(parts):
+        if part:
+            run = para.add_run(part)
+            if i % 2 == 1:  # inside **...**
+                run.bold = True
+    return para
+
+
+def render_markdown_to_doc(doc: Document, text: str) -> None:
+    """
+    Parse LLM markdown output and write it into the Word document
+    using proper Word styles instead of raw markdown symbols.
+    """
+    if not text:
+        return
+    for line in text.split('\n'):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith('### '):
+            doc.add_heading(stripped[4:], level=3)
+        elif stripped.startswith('## '):
+            doc.add_heading(stripped[3:], level=2)
+        elif stripped.startswith('# '):
+            doc.add_heading(stripped[2:], level=2)
+        elif stripped.startswith('- ') or stripped.startswith('* '):
+            _add_para_with_inline_bold(doc, stripped[2:], style='List Bullet')
+        elif stripped.startswith('**') and stripped.endswith('**') and stripped.count('**') == 2:
+            p = doc.add_paragraph()
+            p.add_run(stripped[2:-2]).bold = True
+        else:
+            _add_para_with_inline_bold(doc, stripped)
+
+
+# ---------------------------------------------------------------------------
+# Table of Contents
+# ---------------------------------------------------------------------------
+
+def _add_toc(doc: Document) -> None:
+    """Insert a TOC field. Word will populate it on first open (Ctrl+A, F9)."""
+    doc.add_heading('Table of Contents', level=1)
+    para = doc.add_paragraph()
+    run = para.add_run()
+    fldChar_begin = OxmlElement('w:fldChar')
+    fldChar_begin.set(qn('w:fldCharType'), 'begin')
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'TOC \\o "1-3" \\h \\z \\u'
+    fldChar_sep = OxmlElement('w:fldChar')
+    fldChar_sep.set(qn('w:fldCharType'), 'separate')
+    placeholder = OxmlElement('w:r')
+    placeholder_t = OxmlElement('w:t')
+    placeholder_t.text = '[Right-click here and select "Update Field" to generate the Table of Contents]'
+    placeholder.append(placeholder_t)
+    fldChar_end = OxmlElement('w:fldChar')
+    fldChar_end.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar_begin)
+    run._r.append(instrText)
+    run._r.append(fldChar_sep)
+    run._r.append(placeholder)
+    run._r.append(fldChar_end)
+    doc.add_page_break()
+
+
+# ---------------------------------------------------------------------------
+# Financial projection helpers
+# ---------------------------------------------------------------------------
+
+def _parse_budget_inr(budget_str: str) -> float:
+    """Parse strings like '50 lakhs', '2 crores', '5000000' to a float in INR."""
+    s = str(budget_str).lower().replace(',', '').strip()
+    for word, mult in [
+        ('crores', 1e7), ('crore', 1e7), ('cr', 1e7),
+        ('lakhs', 1e5), ('lakh', 1e5), ('lacs', 1e5), ('lac', 1e5),
+        ('millions', 1e6), ('million', 1e6), ('mn', 1e6),
+    ]:
+        if word in s:
+            try:
+                num_str = s[:s.index(word)].strip()
+                num = float(re.sub(r'[^\d.]', '', num_str) or '0')
+                if num > 0:
+                    return num * mult
+            except Exception:
+                pass
+    try:
+        cleaned = re.sub(r'[^\d.]', '', s)
+        return float(cleaned) if cleaned else 5_000_000
+    except Exception:
+        return 5_000_000
+
+
+def _fmt(val: float) -> str:
+    """Format a float as a readable INR string."""
+    if val >= 1e7:
+        return f'\u20b9{val / 1e7:.2f} Cr'
+    elif val >= 1e5:
+        return f'\u20b9{val / 1e5:.2f} L'
+    else:
+        return f'\u20b9{val:,.0f}'
+
+
+def _compute_financials(budget: float) -> dict:
+    """Derive a full 3-year financial model from the total project cost."""
+    land         = budget * 0.10
+    building     = budget * 0.20
+    plant        = budget * 0.40
+    misc_fixed   = budget * 0.05
+    preop        = budget * 0.05
+    wc_margin    = budget * 0.20
+    equity       = budget * 0.30
+    term_loan    = budget * 0.50
+    wc_loan      = budget * 0.20
+
+    rev_full = budget * 2.0
+    rev  = {1: rev_full * 0.60, 2: rev_full * 0.75, 3: rev_full * 0.90}
+    rm   = {y: rev[y] * 0.40 for y in [1, 2, 3]}
+    util = {y: rev[y] * 0.05 for y in [1, 2, 3]}
+    labor = {y: rev[y] * 0.12 for y in [1, 2, 3]}
+    admin = {y: rev[y] * 0.05 for y in [1, 2, 3]}
+    depreciation = plant * 0.10 + building * 0.05
+    interest = {1: term_loan * 0.12, 2: term_loan * 0.12 * 0.85, 3: term_loan * 0.12 * 0.70}
+    ebitda = {y: rev[y] - rm[y] - util[y] - labor[y] - admin[y] for y in [1, 2, 3]}
+    ebit   = {y: ebitda[y] - depreciation for y in [1, 2, 3]}
+    pbt    = {y: ebit[y] - interest[y] for y in [1, 2, 3]}
+    tax    = {y: max(0.0, pbt[y] * 0.25) for y in [1, 2, 3]}
+    pat    = {y: pbt[y] - tax[y] for y in [1, 2, 3]}
+
+    return dict(
+        land=land, building=building, plant=plant, misc_fixed=misc_fixed,
+        preop=preop, wc_margin=wc_margin, total=budget,
+        equity=equity, term_loan=term_loan, wc_loan=wc_loan,
+        rev=rev, rm=rm, util=util, labor=labor, admin=admin,
+        depreciation=depreciation, interest=interest,
+        ebitda=ebitda, ebit=ebit, pbt=pbt, tax=tax, pat=pat,
+    )
+
+
+def _build_table_data(index: int, f: dict):
+    """Return (headers, rows) for a financial table by index (1-based)."""
+    fmt = _fmt
+    principal = f['term_loan'] * 0.15
+
+    if index == 1:
+        headers = ['Cost Head', 'Amount', '% of Total']
+        rows = [
+            ['Land & Site Development',     fmt(f['land']),       '10%'],
+            ['Civil Construction & Building', fmt(f['building']),  '20%'],
+            ['Plant & Machinery',            fmt(f['plant']),      '40%'],
+            ['Misc. Fixed Assets',           fmt(f['misc_fixed']), '5%'],
+            ['Pre-operative Expenses',       fmt(f['preop']),      '5%'],
+            ['Working Capital Margin',       fmt(f['wc_margin']),  '20%'],
+            ['Total Project Cost',           fmt(f['total']),      '100%'],
+        ]
+    elif index == 2:
+        headers = ['Source', 'Amount', '% of Total']
+        rows = [
+            ['Promoter Equity',      fmt(f['equity']),     '30%'],
+            ['Term Loan (Bank/FI)',  fmt(f['term_loan']),  '50%'],
+            ['Working Capital Loan', fmt(f['wc_loan']),    '20%'],
+            ['Total',                fmt(f['total']),      '100%'],
+        ]
+    elif index == 3:
+        headers = ['Parameter', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Installed Capacity (%)',         '100%', '100%', '100%'],
+            ['Utilization (%)',                '60%',  '75%',  '90%'],
+            ['Effective Production (% of max)', '60%', '75%',  '90%'],
+        ]
+    elif index == 4:
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Gross Revenue',                fmt(f['rev'][1]),          fmt(f['rev'][2]),          fmt(f['rev'][3])],
+            ['Less: Returns & Discounts (2%)', fmt(f['rev'][1]*0.02),   fmt(f['rev'][2]*0.02),     fmt(f['rev'][3]*0.02)],
+            ['Net Revenue',                  fmt(f['rev'][1]*0.98),     fmt(f['rev'][2]*0.98),     fmt(f['rev'][3]*0.98)],
+        ]
+    elif index == 5:
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Primary Raw Material (70%)',       fmt(f['rm'][1]*0.70), fmt(f['rm'][2]*0.70), fmt(f['rm'][3]*0.70)],
+            ['Secondary Raw Material (20%)',     fmt(f['rm'][1]*0.20), fmt(f['rm'][2]*0.20), fmt(f['rm'][3]*0.20)],
+            ['Packaging & Consumables (10%)',    fmt(f['rm'][1]*0.10), fmt(f['rm'][2]*0.10), fmt(f['rm'][3]*0.10)],
+            ['Total Raw Material Cost',          fmt(f['rm'][1]),      fmt(f['rm'][2]),      fmt(f['rm'][3])],
+        ]
+    elif index == 6:
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Power & Electricity (60%)',     fmt(f['util'][1]*0.60), fmt(f['util'][2]*0.60), fmt(f['util'][3]*0.60)],
+            ['Fuel & Thermal Energy (25%)',   fmt(f['util'][1]*0.25), fmt(f['util'][2]*0.25), fmt(f['util'][3]*0.25)],
+            ['Water & Effluent (10%)',        fmt(f['util'][1]*0.10), fmt(f['util'][2]*0.10), fmt(f['util'][3]*0.10)],
+            ['Other Utilities (5%)',          fmt(f['util'][1]*0.05), fmt(f['util'][2]*0.05), fmt(f['util'][3]*0.05)],
+            ['Total Utility Cost',            fmt(f['util'][1]),      fmt(f['util'][2]),      fmt(f['util'][3])],
+        ]
+    elif index == 7:
+        headers = ['Category', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Production Staff (50%)',    fmt(f['labor'][1]*0.50), fmt(f['labor'][2]*0.50), fmt(f['labor'][3]*0.50)],
+            ['Management & Admin (25%)',  fmt(f['labor'][1]*0.25), fmt(f['labor'][2]*0.25), fmt(f['labor'][3]*0.25)],
+            ['Sales & Marketing (15%)',   fmt(f['labor'][1]*0.15), fmt(f['labor'][2]*0.15), fmt(f['labor'][3]*0.15)],
+            ['Other Staff (10%)',         fmt(f['labor'][1]*0.10), fmt(f['labor'][2]*0.10), fmt(f['labor'][3]*0.10)],
+            ['Admin Overhead',            fmt(f['admin'][1]),       fmt(f['admin'][2]),      fmt(f['admin'][3])],
+            ['Total Employee & Overhead', fmt(f['labor'][1]+f['admin'][1]), fmt(f['labor'][2]+f['admin'][2]), fmt(f['labor'][3]+f['admin'][3])],
+        ]
+    elif index == 8:
+        dep = f['depreciation']
+        headers = ['Line Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Net Revenue',                fmt(f['rev'][1]),                    fmt(f['rev'][2]),                    fmt(f['rev'][3])],
+            ['Less: Raw Material',         fmt(f['rm'][1]),                     fmt(f['rm'][2]),                     fmt(f['rm'][3])],
+            ['Less: Utilities',            fmt(f['util'][1]),                   fmt(f['util'][2]),                   fmt(f['util'][3])],
+            ['Less: Employee & Overhead',  fmt(f['labor'][1]+f['admin'][1]),    fmt(f['labor'][2]+f['admin'][2]),    fmt(f['labor'][3]+f['admin'][3])],
+            ['EBITDA',                     fmt(f['ebitda'][1]),                  fmt(f['ebitda'][2]),                 fmt(f['ebitda'][3])],
+            ['Less: Depreciation',         fmt(dep),                            fmt(dep),                            fmt(dep)],
+            ['EBIT',                       fmt(f['ebit'][1]),                   fmt(f['ebit'][2]),                   fmt(f['ebit'][3])],
+            ['Less: Interest',             fmt(f['interest'][1]),               fmt(f['interest'][2]),               fmt(f['interest'][3])],
+            ['PBT',                        fmt(f['pbt'][1]),                    fmt(f['pbt'][2]),                    fmt(f['pbt'][3])],
+            ['Less: Tax @ 25%',            fmt(f['tax'][1]),                    fmt(f['tax'][2]),                    fmt(f['tax'][3])],
+            ['PAT (Net Profit)',            fmt(f['pat'][1]),                    fmt(f['pat'][2]),                    fmt(f['pat'][3])],
+        ]
+    elif index == 9:
+        dep = f['depreciation']
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Opening Cash Balance',            fmt(f['wc_loan']*0.10), fmt(f['wc_loan']*0.15), fmt(f['wc_loan']*0.20)],
+            ['Cash from Operations (PAT+Dep)',  fmt(f['pat'][1]+dep),   fmt(f['pat'][2]+dep),   fmt(f['pat'][3]+dep)],
+            ['Less: Term Loan Repayment',       fmt(principal),         fmt(principal),         fmt(principal)],
+            ['Less: Capex / Investments',       fmt(f['plant']*0.05),   fmt(f['plant']*0.03),   fmt(f['plant']*0.02)],
+            ['Net Cash Flow',                   fmt(f['pat'][1]+dep-principal-f['plant']*0.05), fmt(f['pat'][2]+dep-principal-f['plant']*0.03), fmt(f['pat'][3]+dep-principal-f['plant']*0.02)],
+        ]
+    elif index == 10:
+        dep = f['depreciation']
+        fa1 = f['plant'] + f['building'] + f['misc_fixed'] - dep
+        fa2 = fa1 - dep
+        fa3 = fa2 - dep
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Fixed Assets (Net Block)',  fmt(fa1),                                       fmt(fa2),                                       fmt(fa3)],
+            ['Current Assets',           fmt(f['wc_margin']+f['wc_loan']),               fmt(f['wc_margin']+f['wc_loan']*0.9),           fmt(f['wc_margin']+f['wc_loan']*0.8)],
+            ['Total Assets',             fmt(fa1+f['wc_margin']+f['wc_loan']),           fmt(fa2+f['wc_margin']+f['wc_loan']*0.9),      fmt(fa3+f['wc_margin']+f['wc_loan']*0.8)],
+            ['Equity + Reserves',        fmt(f['equity']+f['pat'][1]),                   fmt(f['equity']+f['pat'][1]+f['pat'][2]),       fmt(f['equity']+sum(f['pat'][y] for y in [1,2,3]))],
+            ['Term Loan (Outstanding)',  fmt(f['term_loan']*0.85),                       fmt(f['term_loan']*0.70),                       fmt(f['term_loan']*0.55)],
+            ['Working Capital Loan',     fmt(f['wc_loan']),                              fmt(f['wc_loan']*0.9),                          fmt(f['wc_loan']*0.8)],
+        ]
+    elif index == 11:
+        headers = ['Item', 'Year 1', 'Year 2', 'Year 3']
+        dscr = {y: f['ebitda'][y] / (f['interest'][y] + principal) for y in [1, 2, 3]}
+        rows = [
+            ['Opening Loan Balance',    fmt(f['term_loan']),        fmt(f['term_loan']*0.85), fmt(f['term_loan']*0.70)],
+            ['Interest @ 12% p.a.',     fmt(f['interest'][1]),      fmt(f['interest'][2]),    fmt(f['interest'][3])],
+            ['Principal Repayment',     fmt(principal),             fmt(principal),           fmt(principal)],
+            ['Total Debt Service',      fmt(f['interest'][1]+principal), fmt(f['interest'][2]+principal), fmt(f['interest'][3]+principal)],
+            ['DSCR (min. 1.25x)',       f'{dscr[1]:.2f}x',         f'{dscr[2]:.2f}x',        f'{dscr[3]:.2f}x'],
+            ['Closing Loan Balance',    fmt(f['term_loan']*0.85),   fmt(f['term_loan']*0.70), fmt(f['term_loan']*0.55)],
+        ]
+    elif index == 12:
+        fc = f['depreciation'] + f['interest'][2] + f['labor'][2]*0.5 + f['admin'][2]
+        vc_ratio = (f['rm'][2] + f['util'][2] + f['labor'][2]*0.5) / f['rev'][2]
+        cm = 1 - vc_ratio
+        bep = fc / cm if cm > 0 else 0
+        headers = ['Parameter', 'Value', 'Notes', '']
+        rows = [
+            ['Fixed Costs (Annual)',      fmt(fc),                    'Depreciation + Interest + 50% Labour + Admin', ''],
+            ['Variable Cost Ratio',       f'{vc_ratio*100:.1f}%',    'RM + Utilities + 50% Labour / Revenue', ''],
+            ['Contribution Margin (%)',   f'{cm*100:.1f}%',          'Revenue − Variable Costs / Revenue', ''],
+            ['Break-even Revenue',        fmt(bep),                   'Fixed Costs / Contribution Margin', ''],
+            ['Break-even (% Capacity)',   f'{bep/f["rev"][3]*100:.1f}%', 'BEP Revenue / Full-capacity Revenue', ''],
+        ]
+    elif index == 13:
+        d1 = f['rev'][1] / 365
+        d2 = f['rev'][2] / 365
+        headers = ['Item', 'Days', 'Year 1 Amount', 'Year 2 Amount']
+        rows = [
+            ['Raw Material Holding',  '30 days', fmt(d1*30*0.40), fmt(d2*30*0.40)],
+            ['WIP',                   '7 days',  fmt(d1*7*0.55),  fmt(d2*7*0.55)],
+            ['Finished Goods',        '15 days', fmt(d1*15*0.65), fmt(d2*15*0.65)],
+            ['Debtors (Receivables)', '45 days', fmt(d1*45),      fmt(d2*45)],
+            ['Less: Creditors',       '30 days', fmt(d1*30*0.40), fmt(d2*30*0.40)],
+            ['Net Working Capital',   '67 days', fmt(f['wc_margin']), fmt(f['wc_margin']*1.1)],
+        ]
+    elif index == 14:
+        base_dscr = f['ebitda'][2] / (f['interest'][2] + principal)
+        headers = ['Scenario', 'Revenue', 'PAT', 'DSCR']
+        rows = [
+            ['Base Case (75% Util.)',       '100%',  fmt(f['pat'][2]),         f'{base_dscr:.2f}x'],
+            ['Optimistic (+15% Revenue)',   '+15%',  fmt(f['pat'][2]*1.35),    f'{base_dscr*1.20:.2f}x'],
+            ['Pessimistic (−15% Revenue)',  '−15%',  fmt(f['pat'][2]*0.55),    f'{base_dscr*0.75:.2f}x'],
+            ['High Input Cost (+10%)',      'Base',  fmt(f['pat'][2]*0.80),    f'{base_dscr*0.90:.2f}x'],
+            ['Low Capacity (50% Util.)',    '−33%',  fmt(f['pat'][2]*0.35),    f'{base_dscr*0.60:.2f}x'],
+        ]
+    else:  # index == 15 - Financial Ratios
+        gm = {y: (f['rev'][y] - f['rm'][y] - f['util'][y]) / f['rev'][y] for y in [1, 2, 3]}
+        nm = {y: f['pat'][y] / f['rev'][y] for y in [1, 2, 3]}
+        roe = {y: f['pat'][y] / f['equity'] for y in [1, 2, 3]}
+        roc = {y: f['ebit'][y] / f['total'] for y in [1, 2, 3]}
+        dscr = {y: f['ebitda'][y] / (f['interest'][y] + principal) for y in [1, 2, 3]}
+        headers = ['Ratio', 'Year 1', 'Year 2', 'Year 3']
+        rows = [
+            ['Gross Margin (%)',         f'{gm[1]*100:.1f}%',   f'{gm[2]*100:.1f}%',   f'{gm[3]*100:.1f}%'],
+            ['Net Profit Margin (%)',    f'{nm[1]*100:.1f}%',   f'{nm[2]*100:.1f}%',   f'{nm[3]*100:.1f}%'],
+            ['Return on Equity (%)',     f'{roe[1]*100:.1f}%',  f'{roe[2]*100:.1f}%',  f'{roe[3]*100:.1f}%'],
+            ['Return on Capital (%)',    f'{roc[1]*100:.1f}%',  f'{roc[2]*100:.1f}%',  f'{roc[3]*100:.1f}%'],
+            ['DSCR',                    f'{dscr[1]:.2f}x',     f'{dscr[2]:.2f}x',     f'{dscr[3]:.2f}x'],
+            ['Current Ratio',           '1.50x',               '1.80x',               '2.10x'],
+        ]
+    return headers, rows
+
+
 def add_financial_table_pack(doc: Document, submission: Dict[str, Any]) -> None:
     """
     Add a 15-table financial pack inside Chapter 6.
@@ -69,34 +399,41 @@ def add_financial_table_pack(doc: Document, submission: Dict[str, Any]) -> None:
         "Table 6.15 - Financial Ratios and KPIs",
     ]
 
-    budget_text = str(submission.get('budget', submission.get('total_investment', 'N/A')))
-    target_market = str(submission.get('target_market', submission.get('target_customer', 'N/A')))
+    budget_raw = submission.get('budget', submission.get('total_investment', '5000000'))
+    budget_inr = _parse_budget_inr(str(budget_raw))
+    f = _compute_financials(budget_inr)
 
     doc.add_heading('6.1 Financial Tables (Target: 15 Pages)', level=2)
     doc.add_paragraph(
-        "The following financial table pack is included as part of Chapter 6 and is intended "
-        "to satisfy the 15-page financial table coverage requirement."
+        "The following financial table pack presents a 3-year financial projection derived "
+        f"from the total project cost of {_fmt(budget_inr)}. All figures use standard "
+        "industry assumptions and should be validated against actual vendor quotes."
     )
 
     for index, title in enumerate(table_titles, start=1):
         heading_para = doc.add_paragraph(title)
-        heading_para.runs[0].bold = True
+        if heading_para.runs:
+            heading_para.runs[0].bold = True
 
-        table = doc.add_table(rows=9, cols=4)
+        headers, rows = _build_table_data(index, f)
+        num_cols = len(headers)
+        table = doc.add_table(rows=1 + len(rows), cols=num_cols)
         table.style = 'Table Grid'
 
-        headers = ["Line Item", "Year 1", "Year 2", "Year 3"]
+        # Header row
+        hdr_cells = table.rows[0].cells
         for col_index, header in enumerate(headers):
-            table.rows[0].cells[col_index].text = header
+            hdr_cells[col_index].text = header
+            for para in hdr_cells[col_index].paragraphs:
+                for run in para.runs:
+                    run.bold = True
 
-        for row_index in range(1, 9):
-            table.rows[row_index].cells[0].text = f"{title.split('-')[-1].strip()} Item {row_index}"
-            table.rows[row_index].cells[1].text = f"Ref: {budget_text}"
-            table.rows[row_index].cells[2].text = f"Growth case {row_index}"
-            table.rows[row_index].cells[3].text = f"Market: {target_market}"
+        # Data rows
+        for row_index, row_data in enumerate(rows, start=1):
+            for col_index, cell_value in enumerate(row_data):
+                table.rows[row_index].cells[col_index].text = str(cell_value)
 
-        if index < len(table_titles):
-            doc.add_paragraph()
+        doc.add_paragraph()
 
 
 def get_or_generate_section(
@@ -168,14 +505,28 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
         'appendices',
     ]
 
+    total_steps = len(section_names) + 1  # +1 for financial tables step
     section_content: Dict[str, str] = {}
-    for section_name in section_names:
+    for i, section_name in enumerate(section_names):
+        upsert_report_status(
+            submission_id, "generating",
+            sections_done=i,
+            sections_total=total_steps,
+            current_section=SECTION_LABELS.get(section_name, section_name),
+        )
         section_content[section_name] = get_or_generate_section(
             submission_id,
             section_name,
             submission_with_context,
             force,
         )
+    # Mark financial tables as the final generation step
+    upsert_report_status(
+        submission_id, "generating",
+        sections_done=len(section_names),
+        sections_total=total_steps,
+        current_section="Financial Tables",
+    )
 
     doc = Document()
 
@@ -193,34 +544,45 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     subtitle_format.font.italic = True
     
     doc.add_paragraph()  # Spacing
-    
+
+    # Table of Contents (Word will populate on open)
+    _add_toc(doc)
+
     # Chapters 1-8 (target 90 pages in aggregate per output specification)
+    doc.add_page_break()
     doc.add_heading('Chapter 1: Executive Summary (Target: 2 Pages)', level=1)
-    doc.add_paragraph(section_content['executive_summary'])
+    render_markdown_to_doc(doc, section_content['executive_summary'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 2: Introduction (Target: 6 Pages)', level=1)
-    doc.add_paragraph(section_content['introduction'])
+    render_markdown_to_doc(doc, section_content['introduction'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 3: Regulatory Framework (Target: 10 Pages)', level=1)
-    doc.add_paragraph(section_content['regulatory_framework'])
+    render_markdown_to_doc(doc, section_content['regulatory_framework'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 4: Market Assessment (Target: 16 Pages)', level=1)
-    doc.add_paragraph(section_content['market_assessment'])
+    render_markdown_to_doc(doc, section_content['market_assessment'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 5: Business and Operating Model (Target: 23 Pages)', level=1)
-    doc.add_paragraph(section_content['business_operating_model'])
+    render_markdown_to_doc(doc, section_content['business_operating_model'])
     doc.add_heading('5.1 Illustrated Key Equipment Profiles (Target: 5-6 Pages)', level=2)
-    doc.add_paragraph(section_content['equipment_profiles'])
+    render_markdown_to_doc(doc, section_content['equipment_profiles'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 6: Financial Feasibility (Target: 24 Pages)', level=1)
-    doc.add_paragraph(section_content['financial_feasibility'])
+    render_markdown_to_doc(doc, section_content['financial_feasibility'])
     add_financial_table_pack(doc, submission)
 
+    doc.add_page_break()
     doc.add_heading('Chapter 7: Risk Assessment & Mitigation (Target: 6 Pages)', level=1)
-    doc.add_paragraph(section_content['risk_assessment'])
+    render_markdown_to_doc(doc, section_content['risk_assessment'])
 
+    doc.add_page_break()
     doc.add_heading('Chapter 8: Caveats (Target: 3 Pages)', level=1)
-    doc.add_paragraph(section_content['caveats'])
+    render_markdown_to_doc(doc, section_content['caveats'])
 
     # Additional chapterized context sections
     doc.add_heading('Project Timeline', level=1)
@@ -236,8 +598,9 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
     budget_para.add_run(f"{submission.get('budget', 'N/A')} currency units")
 
     # Appendices are generated but treated outside the 90-page chapter count.
+    doc.add_page_break()
     doc.add_heading('Appendices', level=1)
-    doc.add_paragraph(section_content['appendices'])
+    render_markdown_to_doc(doc, section_content['appendices'])
     
     # Footer
     doc.add_paragraph()

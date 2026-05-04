@@ -9,6 +9,9 @@ class BusinessModel(str, Enum):
     B2C = "B2C"
     B2G = "B2G"
     HYBRID = "Hybrid"
+    MANUFACTURING = "Manufacturing"
+    TRADING_WHOLESALE = "Trading (Wholesale)"
+    TRADING_RETAIL = "Trading (Retail)"
 
 
 class SizingMode(str, Enum):
@@ -30,7 +33,7 @@ class SubmissionCreate(BaseModel):
     total_investment: Optional[float] = Field(None, ge=0, description="Total investment budget (for budget-driven)")
     
     # Commercial Assumptions (Critical)
-    selling_price: float = Field(..., gt=0, description="Selling price per unit")
+    selling_price: Optional[float] = Field(None, description="Selling price per unit")
     currency: str = Field(default="INR", description="Currency code")
     product_mix: Optional[str] = Field(None, description="Product mix and revenue contribution")
     production_rampup: str = Field(..., min_length=1, description="Production ramp-up plan")
@@ -40,14 +43,14 @@ class SubmissionCreate(BaseModel):
     operating_days: int = Field(..., ge=1, le=365, description="Operating days per year")
     shifts_per_day: int = Field(..., ge=1, le=3, description="Number of shifts per day")
     hours_per_shift: int = Field(..., ge=1, le=12, description="Hours per shift")
-    utilization_rate: float = Field(..., ge=0, le=100, description="Plant utilization rate percentage")
+    utilization_rate: Optional[float] = Field(None, ge=0, le=100, description="Plant utilization rate percentage")
     utilities_consumption: Optional[str] = Field(None, description="Utilities consumption estimates")
     
     # Financing Inputs (Critical)
     debt_percentage: float = Field(..., ge=0, le=100, description="Debt percentage")
     equity_percentage: float = Field(..., ge=0, le=100, description="Equity percentage")
     loan_tenor: int = Field(..., ge=1, le=30, description="Loan tenor in years")
-    interest_rate: float = Field(..., ge=0, le=30, description="Interest rate per annum")
+    interest_rate: Optional[float] = Field(None, ge=0, le=30, description="Interest rate per annum")
     moratorium_period: Optional[int] = Field(None, ge=0, le=36, description="Moratorium period in months")
     
     # Equipment Preferences (Optional)
@@ -126,7 +129,7 @@ class SubmissionResponse(BaseModel):
     sizing_mode: str
     target_capacity: Optional[str] = None
     total_investment: Optional[float] = None
-    selling_price: float
+    selling_price: Optional[float] = None
     currency: str
     product_mix: Optional[str] = None
     production_rampup: str
@@ -134,12 +137,12 @@ class SubmissionResponse(BaseModel):
     operating_days: int
     shifts_per_day: int
     hours_per_shift: int
-    utilization_rate: float
+    utilization_rate: Optional[float] = None
     utilities_consumption: Optional[str] = None
     debt_percentage: float
     equity_percentage: float
     loan_tenor: int
-    interest_rate: float
+    interest_rate: Optional[float] = None
     moratorium_period: Optional[int] = None
     preferred_manufacturer_geography: Optional[str] = None
     brand_preferences: Optional[str] = None

@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from app.location_seed import INDIA_LOCATION_SEED
 
-# Database path
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.db")
+# Database path — can be overridden via DATABASE_PATH env var (used in Modal)
+DB_PATH = os.environ.get("DATABASE_PATH") or os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.db")
 
 
 def init_db():
@@ -94,12 +94,34 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS generated_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            submission_id INTEGER NOT NULL UNIQUE,
+            status TEXT NOT NULL DEFAULT 'pending',
+            doc_bytes BLOB,
+            error_message TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY (submission_id) REFERENCES submissions(id)
+        )
+    """)
+
     cursor.execute("PRAGMA table_info(submissions)")
     submission_columns = [row[1] for row in cursor.fetchall()]
     if "execution_mode" not in submission_columns:
         cursor.execute("ALTER TABLE submissions ADD COLUMN execution_mode TEXT")
     if "last_failed_stage" not in submission_columns:
         cursor.execute("ALTER TABLE submissions ADD COLUMN last_failed_stage TEXT")
+
+    cursor.execute("PRAGMA table_info(generated_reports)")
+    report_columns = [row[1] for row in cursor.fetchall()]
+    if "sections_done" not in report_columns:
+        cursor.execute("ALTER TABLE generated_reports ADD COLUMN sections_done INTEGER DEFAULT 0")
+    if "sections_total" not in report_columns:
+        cursor.execute("ALTER TABLE generated_reports ADD COLUMN sections_total INTEGER DEFAULT 0")
+    if "current_section" not in report_columns:
+        cursor.execute("ALTER TABLE generated_reports ADD COLUMN current_section TEXT")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS locations (
@@ -582,4 +604,57 @@ def get_assumptions_review(submission_id: int) -> Optional[Dict[str, Any]]:
         "approved_at": row[7],
         "created_at": row[8],
         "updated_at": row[9],
+    }
+
+
+def upsert_report_status(
+    submission_id: int,
+    status: str,
+    doc_bytes: Optional[bytes] = None,
+    error_message: Optional[str] = None,
+    sections_done: Optional[int] = None,
+    sections_total: Optional[int] = None,
+    current_section: Optional[str] = None,
+) -> None:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    now = datetime.utcnow().isoformat()
+    cursor.execute(
+        """
+        INSERT INTO generated_reports
+            (submission_id, status, doc_bytes, error_message, sections_done, sections_total, current_section, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(submission_id) DO UPDATE SET
+            status = excluded.status,
+            doc_bytes = COALESCE(excluded.doc_bytes, generated_reports.doc_bytes),
+            error_message = excluded.error_message,
+            sections_done = COALESCE(excluded.sections_done, generated_reports.sections_done),
+            sections_total = COALESCE(excluded.sections_total, generated_reports.sections_total),
+            current_section = COALESCE(excluded.current_section, generated_reports.current_section),
+            updated_at = excluded.updated_at
+        """,
+        (submission_id, status, doc_bytes, error_message, sections_done, sections_total, current_section, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_report_record(submission_id: int) -> Optional[Dict[str, Any]]:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT status, doc_bytes, error_message, sections_done, sections_total, current_section FROM generated_reports WHERE submission_id = ?",
+        (submission_id,),
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return {
+        "status": row[0],
+        "doc_bytes": row[1],
+        "error_message": row[2],
+        "sections_done": row[3] or 0,
+        "sections_total": row[4] or 0,
+        "current_section": row[5],
     }

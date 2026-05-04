@@ -1,26 +1,24 @@
 """
-Modal deployment for the async report generation pipeline.
-
-The FastAPI web server stays on Railway. When a report is requested,
-it enqueues a Modal job instead of running the pipeline synchronously.
-The job writes the finished .docx back to the database so the web server
-can serve it on demand.
+Modal deployment — serves the full FastAPI web app AND runs async report jobs.
 
 Setup:
     pip install modal
-    modal setup          # authenticates your account
+    modal setup                                    # authenticate
+    modal secret create anthropic-secret ANTHROPIC_API_KEY=sk-ant-...
+    modal secret create google-maps-secret GOOGLE_MAPS_API_KEY=...  # optional
     modal deploy modal_pipeline.py
 
-Environment variables needed in Modal (set via `modal secret create`):
-    ANTHROPIC_API_KEY
-    DATABASE_URL  (or leave blank to use SQLite path via volume)
+The web app is served at the URL printed after deploy.
+Report generation runs as a background function on the same app.
 """
 
 import modal
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Image — mirrors requirements.txt so the worker has the same deps
+# Image — includes pip deps + local source files baked in
 # ---------------------------------------------------------------------------
+_root = Path(__file__).parent
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
@@ -36,6 +34,8 @@ image = (
         "docx2txt",
         "sentence-transformers",
     )
+    .add_local_dir(_root / "app", remote_path="/root/app")
+    .add_local_dir(_root / "docs", remote_path="/root/docs")
 )
 
 # ---------------------------------------------------------------------------
@@ -52,9 +52,16 @@ app = modal.App(
 )
 
 # ---------------------------------------------------------------------------
-# Secrets — add ANTHROPIC_API_KEY via `modal secret create anthropic-secret`
+# Secrets
 # ---------------------------------------------------------------------------
 secrets = [modal.Secret.from_name("anthropic-secret")]
+# Add Google Maps secret if you've created it:
+#   modal secret create google-maps-secret GOOGLE_MAPS_API_KEY=...
+try:
+    _gmaps = modal.Secret.from_name("google-maps-secret")
+    secrets = [modal.Secret.from_name("anthropic-secret"), _gmaps]
+except Exception:
+    pass
 
 
 @app.function(
@@ -100,7 +107,34 @@ def generate_report_job(submission_id: int, force: bool = False) -> bytes:
 
 
 # ---------------------------------------------------------------------------
-# Optional: expose a Modal web endpoint so Railway can trigger via HTTP
+# ASGI web server — serves the full FastAPI app on Modal
+# ---------------------------------------------------------------------------
+@app.function(
+    volumes={
+        "/data/db": sqlite_vol,
+        "/data/chroma": chroma_vol,
+    },
+    secrets=secrets,
+    min_containers=1,
+    timeout=900,  # 15 min — report generation runs synchronously inside the web request
+)
+@modal.asgi_app()
+def web():
+    import os
+    import sys
+
+    os.environ["DATABASE_PATH"] = "/data/db/submissions.db"
+    os.environ.setdefault("CHROMA_DB_PATH", "/data/chroma")
+    os.environ["LLM_PROVIDER"] = "claude"
+
+    sys.path.insert(0, "/root")
+
+    from app.main import app as fastapi_app
+    return fastapi_app
+
+
+# ---------------------------------------------------------------------------
+# Trigger endpoint — POST to kick off a report job (called from the web app)
 # ---------------------------------------------------------------------------
 @app.function(
     volumes={
@@ -110,13 +144,16 @@ def generate_report_job(submission_id: int, force: bool = False) -> bytes:
     secrets=secrets,
     timeout=600,
 )
-@modal.web_endpoint(method="POST")
+@modal.fastapi_endpoint(method="POST")
 def trigger_report(submission_id: int, force: bool = False):
-    """
-    HTTP endpoint alternative — POST /trigger_report?submission_id=42
-    Returns the .docx file directly.
-    """
+    """POST /trigger_report?submission_id=42 — runs report job and returns .docx"""
+    import os, sys
     from fastapi.responses import Response
+
+    os.environ["DATABASE_PATH"] = "/data/db/submissions.db"
+    os.environ.setdefault("CHROMA_DB_PATH", "/data/chroma")
+    os.environ["LLM_PROVIDER"] = "claude"
+    sys.path.insert(0, "/root")
 
     doc_bytes = generate_report_job.local(submission_id, force)
     return Response(
