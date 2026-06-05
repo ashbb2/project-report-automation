@@ -10,6 +10,56 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v19 - 2026-06-05
+**What We Changed**
+- Overhauled the client input form with smarter fields, better structure, and less manual work for users.
+
+**Product Design Updates**
+- Renamed "City" to "Proposed Project Site Location" with an improved autocomplete that suppresses browser address suggestions.
+- Added real-time pin code validation — India uses postalpincode.in, all other countries use zippopotam.us. The system checks whether the pin code actually exists and matches the selected location, not just the format.
+- Renamed "Target Customer" to "Target Customer Segment" with example-based placeholder text.
+- Added 7 service-type options to the Business Model dropdown (Professional Services, Engineering Services, Education, Hospitals, Hospitality & Recreation, Government Services, R&D).
+- Split the single "Target Production Capacity" text field into three structured fields — amount, unit (e.g. MT, Liters, kW), and time period (per Day, Month, Year). All three are validated and required together.
+- Added a currency selector inside the budget section so users can set currency while entering budget amounts, synced with the main currency field across the form.
+- Replaced the Product Mix open text field with a dynamic product list. Each product has a name, category (Base or By-Product), and ratio. By-product ratios auto-fill to reach 100% when base ratios are entered, and can be manually adjusted.
+- Added a structured Material Yield / Conversion Ratio field — captures input material, quantity, and unit on one side, and output product, quantity, and unit on the other (e.g. 100 kg sugarcane → 30 L ethanol).
+- Replaced the Raw Material Pricing Basis text field with a structured per-unit cost list (material name, cost, and unit per row).
+- Removed Raw Material Consumption Norms, Utility Tariff Basis, Facility Type, Hazardous Materials, and Effluent Generation fields — these will be identified by AI during report generation.
+- Added Allotted, Under Procurement, and Yet to be Identified options to the Land Status dropdown.
+- Removed Manpower Approach, Repairs & Maintenance, Selling Overheads, Admin Overheads, Receivables Days, Inventory Days, and Payables Days fields.
+- Reworked the Production Ramp-Up field — users select a preset (Conservative, Normal, Aggressive) which auto-fills Year 1, 2, 3 capacity percentages. Each year is editable, and Year 3 must reach 100%.
+- Added validation for Operating Days (max 366), Shifts per Day (1–4), and Hours per Shift (1–24) with inline error messages.
+- Renamed Loan Tenor to Loan Tenure. Renamed Upfront Fees to Upfront Loan Processing Charges.
+- Added currency dropdowns to the Loan Amount and Upfront Charges fields, synced with the main currency selector.
+- Equity percentage now auto-fills as 100% minus the Debt percentage when debt is entered.
+- Removed Number of Key Equipment Items from the form — value is fixed at 14 for the backend and not shown to users.
+- Removed Technology Exclusions and Preferred Manufacturer Geography.
+- Added an equipment exclusion field with a dedicated toggle for "Exclude equipment sourced from China" and a free-text field for other exclusions.
+- Removed the entire Non-Negotiables section (certifications, compliance constraints, ESG constraints, procurement constraints) — AI will identify these from the project context during generation.
+- Promoter form redesigned: salutation and name now appear on the same row. Nature of Experience renamed to Industry of Experience with a 100-word description prompt. Loans Taken Earlier renamed to "Any loans taken earlier for any project?". "Have they been paid?" renamed to "Is any loan outstanding today?". "Any defaults?" renamed to "Any defaults so far?".
+- Credit Score field now has a score type selector (CIBIL, FICO, Experian, Equifax, VantageScore) with range validation specific to each type and country.
+- Phone number field now includes a country code dropdown with validation rules per country (e.g. India: 10 digits, Singapore: 8 digits).
+- "Any Other Sources of Information" renamed to "Any Other Sources of Information about the Promoter" and replaced with a dynamic list — each entry is either a description or a validated URL link.
+- Removed the "About the Promoter" open text field.
+- Saved a product-service form split plan to docs/ for future implementation.
+
+**Why**
+- The form was collecting too many fields that users either don't know or that AI can determine automatically from the project context. The changes reduce friction, improve data quality through structured inputs, and make the form faster to complete.
+- Pin code validation adds a layer of data accuracy that prevents location mismatches in the report.
+- Structured fields for capacity, product mix, yield ratios, and raw material costs give the AI cleaner and more precise inputs, leading to better report quality.
+- The promoter section was using confusing terminology that has now been made plain and unambiguous.
+
+**Files/Areas Updated**
+- `app/templates/form.html`
+- `app/models.py`
+- `docs/product-service-form-split-plan.md`
+
+**Next Steps**
+- Implement the product vs. service form split as documented in the plan (landing page → two separate forms).
+- Review prompts and backend logic to take advantage of the new structured inputs (yield ratios, per-unit costs, ramp-up percentages).
+
+---
+
 ### v18 - 2026-05-04
 **What We Changed**
 - Re-enabled live web research for sections marked as web.
