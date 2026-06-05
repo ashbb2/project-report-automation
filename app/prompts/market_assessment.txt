@@ -16,6 +16,8 @@ PROJECT DATA:
 - Procurement Constraints: {procurement_constraints}
 - Missing Inputs: {missing_inputs}
 
+{rag_context}
+
 Write the following subsections (target: 16 pages total):
 
 ## 4. Market Assessment Introduction

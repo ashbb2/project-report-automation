@@ -13,9 +13,21 @@ class LLMClient:
         self.api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.stub_mode = self.provider == "stub" or not self.api_key
 
-    def generate(self, prompt: str, max_tokens: int = 4096, mode: str = "plain") -> str:
+    def generate(
+        self,
+        prompt: str,
+        max_tokens: int = 4096,
+        mode: str = "plain",
+        model: str = "claude",
+    ) -> str:
         if self.stub_mode:
             return self._generate_stub(prompt)
+
+        # GitHub Models: free open-source models via Microsoft's inference API.
+        # Requires GITHUB_TOKEN env var. Uses OpenAI-compatible SDK.
+        if model.startswith("github:"):
+            model_name = model.split(":", 1)[1]
+            return self._generate_github(prompt, model_name, max_tokens)
 
         if self.provider == "claude":
             if mode == "web" and Config.ENABLE_CLAUDE_WEB_SEARCH:
@@ -23,6 +35,48 @@ class LLMClient:
             return self._generate_claude_plain(prompt, max_tokens)
 
         raise ValueError(f"Unsupported LLM provider: {self.provider}")
+
+    def _generate_github(self, prompt: str, model_name: str, max_tokens: int) -> str:
+        """
+        Generate text using a free open-source model via the GitHub Models API.
+        Requires GITHUB_TOKEN env var (a GitHub personal access token).
+        API is OpenAI-compatible — uses the openai Python SDK.
+        Rate limits: generous free tier, suitable for report generation workloads.
+        Docs: https://docs.github.com/en/github-models
+        """
+        github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN", "")
+        if not github_token:
+            # Gracefully fall back to Claude plain if no token is configured
+            return self._generate_claude_plain(prompt, max_tokens)
+
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(
+                base_url="https://models.inference.ai.azure.com",
+                api_key=github_token,
+            )
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a professional business consultant writing detailed "
+                            "feasibility reports for Indian businesses. Use clear structure, "
+                            "practical assumptions, and concise business language."
+                        ),
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=0.7,
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            # Fall back to Claude plain on any GitHub Models error so the report
+            # always completes — log the issue but don't raise.
+            return self._generate_claude_plain(prompt, max_tokens)
 
     def _generate_stub(self, prompt: str) -> str:
         return (

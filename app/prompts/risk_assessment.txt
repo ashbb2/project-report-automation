@@ -18,6 +18,8 @@ PROJECT DATA:
 - Has Effluent Generation: {has_effluent_generation}
 - Missing Inputs: {missing_inputs}
 
+{rag_context}
+
 Create a comprehensive risk register covering ALL of the following categories (target: 6 pages):
 
 For each risk provide:

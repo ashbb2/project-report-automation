@@ -1,5 +1,7 @@
 import re
 import time
+import threading
+import concurrent.futures
 from urllib.parse import urlparse
 from docx import Document
 from docx.shared import Pt, RGBColor
@@ -13,6 +15,7 @@ from app.llm_client import llm_client
 from app.config import Config
 from app.prompt_renderer import get_section_prompt
 from app.db import get_cached_section, save_section, upsert_report_status
+from app.data_fetchers import fetch_context_for_section
 
 SECTION_LABELS = {
     'executive_summary':       'Executive Summary',
@@ -610,39 +613,23 @@ def add_financial_table_pack(doc: Document, submission: Dict[str, Any]) -> None:
 
 
 def get_or_generate_section(
-    submission_id: int, 
-    section_name: str, 
+    submission_id: int,
+    section_name: str,
     submission_data: Dict[str, Any],
     force: bool = False,
     generation_mode: str = "plain",
     max_tokens: int = 1600,
     extra_context: Dict[str, Any] = None,
+    model: str = "claude",
 ) -> str:
-    """
-    Get cached section or generate new one using LLM.
-    
-    Args:
-        submission_id: The submission ID
-        section_name: Name of the section to generate
-        submission_data: Dictionary containing submission data
-        force: If True, regenerate even if cached
-        
-    Returns:
-        Generated or cached section content
-    """
-    # Check cache unless force is True
     if not force:
         cached = get_cached_section(submission_id, section_name)
         if cached:
             return cached
-    
-    # Generate new content
+
     rendered_prompt = get_section_prompt(section_name, submission_data, extra_context)
-    content = llm_client.generate(rendered_prompt, max_tokens=max_tokens, mode=generation_mode)
-    
-    # Cache the result
+    content = llm_client.generate(rendered_prompt, max_tokens=max_tokens, mode=generation_mode, model=model)
     save_section(submission_id, section_name, content)
-    
     return content
 
 
@@ -680,40 +667,51 @@ def build_doc(submission: Dict[str, Any], submission_id: int, force: bool = Fals
         'appendices',
     ]
 
-    # Split into two rounds to stay within Anthropic TPM limits.
-    # Round 1: chapters 2-4 (introduction → market_assessment)
-    # Round 2: chapters 5-8 + appendices (business_operating_model → appendices)
-    # Executive Summary is generated LAST so it can reference all other sections.
-    round_1 = section_names[:3]
-    round_2 = section_names[3:]
-
-    total_calls = len(section_names) + 1  # +1 for executive_summary call
+    # Executive Summary is generated LAST so it can pull context from every other section.
+    # All other sections are independent of each other and can run in parallel.
+    total_calls = len(section_names) + 1  # +1 for executive_summary
     section_content: Dict[str, str] = {}
 
-    def _generate_sections(batch, offset):
-        for i, section_name in enumerate(batch):
-            generation_mode = Config.resolve_section_mode(section_name)
-            section_max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
-            upsert_report_status(
-                submission_id, "generating",
-                sections_done=offset + i + 1,
-                sections_total=total_calls,
-                current_section=f"{SECTION_LABELS.get(section_name, section_name)} ({generation_mode})",
-            )
-            section_content[section_name] = get_or_generate_section(
-                submission_id,
-                section_name,
-                submission_with_context,
-                force,
-                generation_mode,
-                section_max_tokens,
-            )
+    # Thread-safe counter so the progress bar stays accurate even when sections
+    # finish in a different order than they were started.
+    _done_count = 0
+    _done_lock = threading.Lock()
 
-    # Round 1
-    _generate_sections(round_1, offset=0)
+    def _generate_one_section(section_name: str):
+        """Worker function: generates one section and returns (name, text)."""
+        nonlocal _done_count
+        generation_mode = Config.resolve_section_mode(section_name)
+        model = Config.resolve_section_model(section_name)
+        max_tokens = Config.WEB_SECTION_MAX_TOKENS if generation_mode == "web" else Config.PLAIN_SECTION_MAX_TOKENS
+        rag_context = fetch_context_for_section(section_name, submission_with_context)
+        extra_ctx = {"rag_context": rag_context} if rag_context else None
+        content = get_or_generate_section(
+            submission_id, section_name, submission_with_context,
+            force, generation_mode, max_tokens,
+            extra_context=extra_ctx,
+            model=model,
+        )
+        with _done_lock:
+            _done_count += 1
+            done = _done_count
+        upsert_report_status(
+            submission_id, "generating",
+            sections_done=done,
+            sections_total=total_calls,
+            current_section=f"{SECTION_LABELS.get(section_name, section_name)} — done ({done}/{total_calls - 1} sections)",
+        )
+        return section_name, content
 
-    # Round 2 (no cooldown — web search is disabled so TPM pressure is minimal)
-    _generate_sections(round_2, offset=len(round_1))
+    # Run all sections except executive_summary in parallel.
+    # max_workers is capped at PARALLEL_SECTION_WORKERS (default 3) to avoid
+    # spiking Anthropic token-per-minute limits.
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=Config.PARALLEL_SECTION_WORKERS
+    ) as executor:
+        futures = {executor.submit(_generate_one_section, name): name for name in section_names}
+        for future in concurrent.futures.as_completed(futures):
+            name, content = future.result()
+            section_content[name] = content
 
     # Build financial highlights for executive summary context
     budget_raw = submission.get('budget', submission.get('total_investment', '5000000'))

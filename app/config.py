@@ -21,6 +21,34 @@ class Config:
     CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC = float(os.getenv("CLAUDE_RATE_LIMIT_BASE_SLEEP_SEC", "2.0"))
     GENERATION_ROUND_COOLDOWN_SEC = float(os.getenv("GENERATION_ROUND_COOLDOWN_SEC", "20.0"))
     REPORT_LOCK_STALE_SECONDS = int(os.getenv("REPORT_LOCK_STALE_SECONDS", "1200"))
+    # How many report sections to generate at the same time.
+    # 3 is the safe default — enough to be ~3x faster than sequential without
+    # hammering the Anthropic TPM (tokens-per-minute) limit.
+    # Raise to 4-5 only if you have a higher-tier API plan.
+    PARALLEL_SECTION_WORKERS = int(os.getenv("PARALLEL_SECTION_WORKERS", "3"))
+
+    # Maps section names to the model that should generate them.
+    # Format: "provider:model-name"  — "claude" means use the default Claude model.
+    # GitHub Models are free (within rate limits) and require a GITHUB_TOKEN env var.
+    # Override any entry via env var: e.g. MODEL_caveats=claude to force Claude for caveats.
+    # GitHub Models API docs: https://docs.github.com/en/github-models
+    _DEFAULT_SECTION_MODEL_MAP = {
+        "caveats":           "github:Phi-4",
+        "appendices":        "github:Phi-4",
+        "equipment_profiles":"github:Meta-Llama-3.3-70B-Instruct",
+        # All other sections default to Claude (highest quality where it matters most)
+    }
+
+    # Allow per-section env var overrides: MODEL_<section_name>=<provider:model>
+    _SECTION_MODEL_MAP: dict = {}
+    for _sec in list(_DEFAULT_SECTION_MODEL_MAP.keys()):
+        _env_val = os.getenv(f"MODEL_{_sec}", "").strip()
+        _SECTION_MODEL_MAP[_sec] = _env_val if _env_val else _DEFAULT_SECTION_MODEL_MAP[_sec]
+
+    @classmethod
+    def resolve_section_model(cls, section_name: str) -> str:
+        """Return 'claude' or 'github:ModelName' for the given section."""
+        return cls._SECTION_MODEL_MAP.get(section_name, "claude")
 
     _DEFAULT_SECTION_POLICY = {
         "market_assessment": "web",

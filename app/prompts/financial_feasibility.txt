@@ -27,6 +27,8 @@ PROJECT DATA:
 - Currency: {currency}
 - Missing Inputs: {missing_inputs}
 
+{rag_context}
+
 Write the following subsections (target: 24 pages narrative, plus 15 pages of tables which are inserted separately):
 
 ## 6.1 Key Project Assumptions

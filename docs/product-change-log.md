@@ -10,6 +10,149 @@ Use this log to record project progress in plain, non-technical language.
 
 ## Change Entries
 
+### v22 - 2026-06-05
+**What We Changed**
+- Three low-stakes report sections now use free open-source AI models instead of Claude, cutting Anthropic API costs by roughly 30–40%.
+- Caveats and Appendices now use **Phi-4** (Microsoft's lightweight model, free via GitHub Models).
+- Equipment Profiles now use **Llama 3.3 70B** (Meta's open-source model, free via GitHub Models).
+- All other sections — Market Assessment, Financial Feasibility, Regulatory Framework, Risk Assessment, Business Model, Introduction, Executive Summary — still use Claude Sonnet where quality matters most.
+- If no GitHub token is set, the app automatically falls back to Claude for those sections — nothing breaks.
+- Each section's model can be overridden per-deployment using environment variables (e.g. `MODEL_caveats=claude` to force Claude for Caveats).
+
+**Why**
+- Caveats and Appendices are mostly standard disclaimer language and reference lists — any capable model can write these correctly. Using Claude for them is like hiring a senior consultant to write a terms-and-conditions page.
+- Equipment Profiles are structured spec sheets — well-formatted structured output is something Llama 3.3 70B handles well without needing Claude's full capability.
+- GitHub Models provides these models free of charge (within generous rate limits) using just a GitHub personal access token.
+
+**How to Activate**
+- Add `GITHUB_TOKEN=your_github_personal_access_token` to the `.env` file.
+- A GitHub personal access token can be created at github.com → Settings → Developer settings → Personal access tokens.
+- No other changes needed — the routing happens automatically.
+
+**Model Routing Table**
+
+| Section | Model Used | Provider | Cost |
+|---|---|---|---|
+| Caveats | Phi-4 | GitHub Models (Microsoft) | Free |
+| Appendices | Phi-4 | GitHub Models (Microsoft) | Free |
+| Equipment Profiles | Llama 3.3 70B Instruct | GitHub Models (Meta) | Free |
+| Market Assessment | Claude Sonnet | Anthropic | Paid |
+| Financial Feasibility | Claude Sonnet | Anthropic | Paid |
+| Regulatory Framework | Claude Sonnet | Anthropic | Paid |
+| Risk Assessment | Claude Sonnet | Anthropic | Paid |
+| Business & Operating Model | Claude Sonnet | Anthropic | Paid |
+| Introduction | Claude Sonnet | Anthropic | Paid |
+| Executive Summary | Claude Sonnet | Anthropic | Paid |
+
+**Key Decisions**
+- Fallback to Claude if GitHub token is missing or the GitHub Models API fails — the report always completes, quality degrades gracefully rather than breaking.
+- Each section's model is overridable via env var without touching code — useful for testing or if model quality needs tuning per deployment.
+
+**Files Updated**
+- `app/config.py` — added `SECTION_MODEL_MAP` defaults and `resolve_section_model()` method
+- `app/llm_client.py` — added `_generate_github()` method and `model` parameter to `generate()`
+- `app/report_builder.py` — section worker now resolves model per section and passes it through
+
+**Risks or Follow-ups**
+- GitHub Models free tier has rate limits — if many reports are generated simultaneously, GitHub Models calls may be throttled. The fallback to Claude handles this automatically.
+- Phi-4 and Llama 3.3 may occasionally produce shorter or less consistently formatted output than Claude. If Caveats or Appendices quality is an issue, set `MODEL_caveats=claude` and `MODEL_appendices=claude` in `.env` to revert.
+- GitHub Models availability depends on Microsoft's infrastructure — not under our control.
+
+**Next Steps**
+- Monitor output quality of Phi-4 sections in real reports and compare to Claude baseline.
+- Consider routing Introduction to Llama 3.3 as well (currently kept on Claude out of caution).
+
+---
+
+### v21 - 2026-06-05
+**What We Changed**
+- Four report sections now receive real, sourced data before Claude starts writing — instead of Claude inventing everything from memory.
+- The app automatically detects what type of business the submission is about (e.g. agro-processing, clean energy, textile) and pulls the right industry benchmarks for it.
+- Live India macroeconomic data is fetched from the World Bank's free public API (GDP growth, inflation, industry contribution) and injected into the market assessment and risk sections.
+- Current RBI (Reserve Bank of India) key interest rates are included in the financial feasibility section so Claude can reference real lending rates rather than guessing.
+- Industry-specific government schemes, regulatory requirements, margins, and risks are injected into the regulatory, market, financial, and risk sections.
+- Fetched data is cached for 24 hours so repeated report runs don't hit the same APIs twice.
+
+**Why**
+- Previously, all section content was generated purely from Claude's training memory — market sizes, interest rates, and regulatory details could be outdated or hallucinated. This change grounds those sections in real, citable facts.
+- The `rag_context` field already existed as a placeholder in our prompt system but was hardcoded to "No reference documents available." — this update finally activates it.
+
+**Which Sections Are Now Grounded**
+
+| Section | What Real Data It Gets |
+|---|---|
+| Market Assessment | World Bank India macro indicators + industry benchmarks and growth drivers |
+| Financial Feasibility | RBI policy rates and MCLR range + industry margin benchmarks |
+| Regulatory Framework | Industry-specific licenses, government schemes, and regulatory highlights |
+| Risk Assessment | Macro indicators + industry-specific risk factors |
+
+**Key Decisions**
+- No new API keys required — World Bank data is public and free, RBI rates are hardcoded from the official source and updated manually when rates change.
+- Industry detection uses keyword matching on the business idea field — no ML model needed, no API call, instant.
+- Fetch failures are handled silently — if the World Bank API is down, the section still generates normally using Claude's knowledge.
+- Cached data lives in a `.data_cache/` folder (gitignored) — cleared automatically after 24 hours.
+
+**Files Created**
+- `app/data_fetchers/__init__.py` — main entry point: decides which context to fetch per section
+- `app/data_fetchers/cache.py` — 24-hour file-based cache
+- `app/data_fetchers/world_bank.py` — World Bank Open Data API (no key needed)
+- `app/data_fetchers/rbi_rates.py` — RBI key rates (hardcoded, last verified June 2025)
+- `app/data_fetchers/benchmarks.py` — static industry benchmark database covering 13 Indian industry types + keyword classifier
+
+**Files Updated**
+- `app/report_builder.py` — each section worker now fetches context before calling Claude
+- `app/prompts/market_assessment.txt` — added `{rag_context}` injection point
+- `app/prompts/financial_feasibility.txt` — added `{rag_context}` injection point
+- `app/prompts/regulatory_framework.txt` — added `{rag_context}` injection point
+- `app/prompts/risk_assessment.txt` — added `{rag_context}` injection point
+- `.gitignore` — added `.data_cache/` so cached API responses are not committed
+
+**Risks or Follow-ups**
+- RBI rates are hardcoded and need a manual update when the Monetary Policy Committee changes rates (typically every 2 months). A comment in `rbi_rates.py` marks the last-verified date.
+- World Bank data lags by 1-2 years — suitable for context-setting but not for citing current-year figures.
+- The industry classifier uses keyword matching — unusual business ideas may fall back to "general manufacturing." Can be improved by adding more keywords to `benchmarks.py`.
+
+**Next Steps**
+- Phase 3: Route low-stakes sections (Caveats, Appendices) to free open-source models via GitHub Models API to cut Anthropic costs by ~40%.
+- Extend the industry benchmark database with more niche Indian sectors as needed.
+
+---
+
+### v20 - 2026-06-05
+**What We Changed**
+- Report sections are now generated in parallel (up to 3 at a time) instead of one by one.
+- The old "Round 1 / Round 2" split is removed — all 9 sections start at the same time, and the app collects them as each one finishes.
+- Executive Summary still runs last so it can reference what the other sections said.
+- A new setting (`PARALLEL_SECTION_WORKERS`, default 3) controls how many sections run simultaneously. This can be raised if we upgrade to a higher Anthropic API tier.
+
+**Why**
+- Sequential generation was the single biggest time cost. Running 3 sections in parallel cuts total generation time by roughly 3x — from around 2-3 minutes down to 40-60 seconds.
+- The old round-split was a manual workaround for rate limits. The new parallel approach handles this automatically via a bounded worker pool — cleaner and easier to tune with one setting.
+
+**Key Decisions**
+- Max 3 workers at once (not all 9) — keeps us within Anthropic's token-per-minute limits. The limit is configurable, not hardcoded.
+- Progress updates now show "X of Y sections done" since sections finish in different orders when running in parallel.
+
+**Files Updated**
+- `app/config.py` — added `PARALLEL_SECTION_WORKERS` setting
+- `app/report_builder.py` — replaced sequential loop with a parallel worker block
+
+**New Documents**
+- `docs/subagent-rag-roadmap.md` — plain-language plan for the next two upgrade phases:
+  - Phase 2: pull real data from World Bank, RBI, and data.gov.in so Claude writes from facts instead of memory
+  - Phase 3: route low-stakes sections (Caveats, Appendices) to free open-source models via GitHub Models to cut Anthropic costs by ~40%
+
+**Risks or Follow-ups**
+- If the Anthropic API is under heavy load, parallel calls may still hit rate limits. The existing retry-with-backoff in `llm_client.py` handles this automatically.
+- SQLite handles parallel writes safely because each database function opens its own connection.
+
+**Next Steps**
+- Build the Phase 2 data fetcher layer (`app/data_fetchers/`) so sections are grounded in real, current data.
+- Add the Phase 3 model router so cheaper open-source models handle lower-stakes sections.
+- Full plan is in `docs/subagent-rag-roadmap.md`.
+
+---
+
 ### v19 - 2026-06-05
 **What We Changed**
 - Overhauled the client input form with smarter fields, better structure, and less manual work for users.

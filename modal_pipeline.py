@@ -29,6 +29,7 @@ image = (
         "python-dotenv",
         "pydantic",
         "anthropic",
+        "openai",           # GitHub Models routing (OpenAI-compatible SDK)
         "chromadb",
         "PyPDF2",
         "docx2txt",
@@ -59,7 +60,14 @@ secrets = [modal.Secret.from_name("anthropic-secret")]
 #   modal secret create google-maps-secret GOOGLE_MAPS_API_KEY=...
 try:
     _gmaps = modal.Secret.from_name("google-maps-secret")
-    secrets = [modal.Secret.from_name("anthropic-secret"), _gmaps]
+    secrets.append(_gmaps)
+except Exception:
+    pass
+# Add GitHub secret for GitHub Models (free open-source model routing).
+# Create once with: modal secret create github-secret GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
+try:
+    _github = modal.Secret.from_name("github-secret")
+    secrets.append(_github)
 except Exception:
     pass
 
