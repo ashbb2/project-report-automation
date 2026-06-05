@@ -62,13 +62,53 @@
         .city-autocomplete-host {
             margin-bottom: 8px;
         }
-        .city-autocomplete-host gmp-place-autocomplete {
+        .city-autocomplete-host {
+            position: relative;
+        }
+        .city-autocomplete-host input[type="text"] {
             width: 100%;
-            display: block;
-            color-scheme: light;
-            --gmpx-color-surface: #ffffff;
-            --gmpx-color-on-surface: #333333;
-            --gmpx-color-primary: #007bff;
+            padding: 10px 14px;
+            border: 1px solid #d7dee7;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+            color: #333;
+            background: #fff;
+        }
+        .city-autocomplete-host input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.15);
+        }
+        .city-autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #d7dee7;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            z-index: 1000;
+            max-height: 240px;
+            overflow-y: auto;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .city-autocomplete-option {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .city-autocomplete-option:last-child { border-bottom: none; }
+        .city-autocomplete-option:hover, .city-autocomplete-option.active {
+            background: #f0f7ff;
+            color: #007bff;
         }
         .hsn-selector {
             border: 1px solid #d7dee7;
@@ -76,6 +116,27 @@
             border-radius: 8px;
             padding: 14px;
         }
+        .yield-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f8f9fa; border: 1px solid #e5e9f0; border-radius: 6px; margin-bottom: 6px; }
+        .yield-row input[type="number"] { width: 72px; flex-shrink: 0; padding: 7px 8px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 14px; text-align: right; }
+        .yield-row input[type="text"] { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        .yield-row select { width: 90px; flex-shrink: 0; padding: 7px 6px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 13px; background: #fff; }
+        .yield-arrow { flex-shrink: 0; color: #888; font-size: 1.1em; padding: 0 2px; }
+        .yield-remove { flex-shrink: 0; background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+        .yield-remove:hover { color: #dc3545; background: #fff0f0; }
+        #addYieldRow { margin-top: 6px; background: none; border: 1px dashed #6c757d; color: #6c757d; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.875em; }
+        #addYieldRow:hover { background: #f8f9fa; }
+        #addRmCostRow { margin-top: 6px; background: none; border: 1px dashed #6c757d; color: #6c757d; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.875em; }
+        #addRmCostRow:hover { background: #f8f9fa; }
+        .product-mix-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f8f9fa; border: 1px solid #e5e9f0; border-radius: 6px; margin-bottom: 6px; }
+        .pmix-name { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        .pmix-cat { width: 130px; flex-shrink: 0; padding: 7px 10px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; }
+        .pmix-ratio { width: 72px; flex-shrink: 0; padding: 7px 8px; border: 1px solid #d7dee7; border-radius: 6px; font-size: 14px; font-family: inherit; text-align: right; }
+        .pmix-ratio.autofilled { background: #eef6ff; border-color: #b3d4f5; }
+        .pmix-remove { flex-shrink: 0; background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+        .pmix-remove:hover { color: #dc3545; background: #fff0f0; }
+        #addProductMixRow { margin-top: 6px; background: none; border: 1px dashed #007bff; color: #007bff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.875em; }
+        #addProductMixRow:hover { background: #f0f7ff; }
+        #productMixTotal { margin-top: 6px; font-size: 0.875em; font-weight: 600; }
         .hsn-step {
             border: 1px solid #e5e9f0;
             border-radius: 8px;
@@ -499,7 +560,7 @@
             <input type="hidden" name="project_country" id="project_country" value="">
 
             <div class="form-group">
-                <label class="critical">City</label>
+                <label class="critical">Proposed Project Site Location</label>
                 <div id="cityAutocompleteHost" class="city-autocomplete-host"></div>
                 <input type="hidden" name="project_city" id="project_city">
                 <input type="hidden" name="project_state" id="project_state">
@@ -512,23 +573,14 @@
             <div class="form-group">
                 <label for="project_pin_code" class="optional">Pin Code</label>
                 <input type="text" name="project_pin_code" id="project_pin_code" class="critical-field" placeholder="Enter 6-digit pin code" inputmode="numeric" maxlength="12" title="Enter a valid pin code">
-                <div class="field-hint">For India, pin code must be exactly 6 digits if provided.</div>
+                <div id="pinCodeError" class="field-hint" style="color:#dc3545;display:none;"></div>
+                <div id="pinCodeSuccess" class="field-hint" style="color:#28a745;display:none;"></div>
+                <div id="pinCodeLoading" class="loading-inline hidden"><span class="spinner-inline"></span><span>Verifying pin code...</span></div>
             </div>
 
             <div class="form-group">
-                <label for="target_customer" class="critical">Target Customer</label>
-                <textarea name="target_customer" id="target_customer" class="critical-field" placeholder="Describe the target customer segment" rows="2" required></textarea>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="project_district" class="critical">District</label>
-                    <input type="text" name="project_district" id="project_district" class="critical-field" placeholder="Enter district" required>
-                </div>
-                <div class="form-group">
-                    <label for="industrial_area" class="optional">City/Industrial Area (if known)</label>
-                    <input type="text" name="industrial_area" id="industrial_area" placeholder="e.g., Sanand GIDC, Bhiwandi Industrial Area">
-                </div>
+                <label for="target_customer" class="critical">Target Customer Segment</label>
+                <textarea name="target_customer" id="target_customer" class="critical-field" placeholder="e.g., E-commerce brands, FMCG manufacturers, retail chains, institutional buyers, solar installers" rows="2" required></textarea>
             </div>
 
             <div class="form-row">
@@ -581,6 +633,13 @@
                     <option value="Manufacturing">Manufacturing</option>
                     <option value="Trading (Wholesale)">Trading (Wholesale)</option>
                     <option value="Trading (Retail)">Trading (Retail)</option>
+                    <option value="Professional Services">Professional Services</option>
+                    <option value="Engineering Services">Engineering Services</option>
+                    <option value="Education">Education</option>
+                    <option value="Hospitals">Hospitals</option>
+                    <option value="Hospitality and Recreation">Hospitality and Recreation</option>
+                    <option value="Government Services">Government Services</option>
+                    <option value="R&amp;D">R&amp;D</option>
                 </select>
             </div>
         </div>
@@ -595,14 +654,56 @@
             </div>
             
             <div class="form-group conditional-section" id="capacity_section">
-                <label for="target_capacity" class="critical">Target Production Capacity</label>
-                <input type="text" name="target_capacity" id="target_capacity" placeholder="e.g., 10,000 units/month, 5000 MT/year">
+                <label class="critical">Target Production Capacity</label>
+                <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
+                    <div class="form-group" style="margin-bottom:0">
+                        <input type="number" name="target_capacity_amount" id="target_capacity_amount" class="critical-field" placeholder="e.g., 10000" min="0.01" step="any">
+                        <div id="capacityAmountError" class="field-hint" style="color:#dc3545;display:none;"></div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <select name="target_capacity_unit" id="target_capacity_unit" class="critical-field">
+                            <option value="">Unit</option>
+                            <option value="Units">Units</option>
+                            <option value="kg">kg</option>
+                            <option value="MT">MT</option>
+                            <option value="Liters">Liters</option>
+                            <option value="kL">kL</option>
+                            <option value="MW">MW</option>
+                            <option value="kW">kW</option>
+                            <option value="sq ft">sq ft</option>
+                            <option value="sq m">sq m</option>
+                            <option value="Barrels">Barrels</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <select name="target_capacity_period" id="target_capacity_period" class="critical-field">
+                            <option value="">Per</option>
+                            <option value="Day">Per Day</option>
+                            <option value="Month">Per Month</option>
+                            <option value="Year">Per Year</option>
+                            <option value="Hour">Per Hour</option>
+                            <option value="Shift">Per Shift</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group conditional-section" id="budget_section">
                 <label class="critical">Budget Basis</label>
                 <label class="inline-radio"><input type="radio" name="budget_cap_basis" value="total_project_cost"> Total Project Cost Cap</label>
                 <label class="inline-radio"><input type="radio" name="budget_cap_basis" value="equity_debt_cap"> Equity + Debt Cap</label>
+                <div class="form-row" style="margin-top:12px;">
+                    <div class="form-group" style="margin-bottom:0">
+                        <label for="budget_currency_mirror" class="critical">Currency</label>
+                        <select id="budget_currency_mirror" class="critical-field">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR" selected>INR (₹)</option>
+                            <option value="AED">AED (د.إ)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group conditional-section" id="budget_total_section">
@@ -636,7 +737,6 @@
                 <div class="form-group">
                     <label for="selling_price" class="optional">Selling Price per Unit</label>
                     <input type="number" name="selling_price" id="selling_price" placeholder="Leave blank if unknown" step="0.01" min="0.01">
-                    <div class="field-hint">If unknown, we estimate this from HSN/SAC context after submission and ask you to confirm before finalizing revenue assumptions.</div>
                 </div>
                 
                 <div class="form-group">
@@ -652,82 +752,55 @@
             </div>
             
             <div class="form-group">
-                <label for="product_mix" class="optional">Product Mix</label>
-                <textarea name="product_mix" id="product_mix" placeholder="Describe product variants and revenue contribution (e.g., Product A: 60%, Product B: 40%)" rows="2"></textarea>
+                <label class="optional">Product Mix</label>
+                <textarea name="product_mix" id="product_mix" style="display:none"></textarea>
+                <div id="productMixRows"></div>
+                <button type="button" id="addProductMixRow">+ Add Product</button>
+                <div id="productMixTotal"></div>
             </div>
 
             <div class="form-group">
-                <label for="raw_material_consumption_basis" class="critical">Raw Material Consumption Norms / Basis</label>
-                <textarea name="raw_material_consumption_basis" id="raw_material_consumption_basis" class="critical-field" rows="2" placeholder="Enter consumption norms or method to derive them" required></textarea>
+                <label class="optional">Material Yield / Conversion Ratio</label>
+                <textarea name="material_yield_ratio" id="material_yield_ratio" style="display:none"></textarea>
+                <div id="yieldRows"></div>
+                <button type="button" id="addYieldRow">+ Add Raw Material</button>
+                <div class="field-hint" style="margin-top:6px;">Specify how much input material yields how much output product. Helps estimate consumption norms and cost per unit.</div>
             </div>
 
             <div class="form-group">
-                <label for="raw_material_pricing_basis" class="critical">Raw Material Pricing Basis</label>
-                <textarea name="raw_material_pricing_basis" id="raw_material_pricing_basis" class="critical-field" rows="2" placeholder="Enter pricing basis (recent quotations, index, benchmark source, etc.)" required></textarea>
+                <label class="optional">Raw Material Cost (Per Unit)</label>
+                <textarea name="raw_material_pricing_basis" id="raw_material_pricing_basis" style="display:none"></textarea>
+                <div id="rmCostRows"></div>
+                <button type="button" id="addRmCostRow">+ Add Raw Material</button>
+                <div class="field-hint" style="margin-top:6px;">Enter the cost per unit for each raw material used in production.</div>
             </div>
 
-            <div class="form-group">
-                <label for="utility_tariff_basis" class="critical">Utility Tariff Basis (Power/Water/Fuel)</label>
-                <textarea name="utility_tariff_basis" id="utility_tariff_basis" class="critical-field" rows="2" placeholder="Provide state/region tariff assumptions and source basis" required></textarea>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="critical">Manpower Approach</label>
-                    <label class="inline-radio"><input type="radio" name="manpower_approach" value="lean" required> Lean</label>
-                    <label class="inline-radio"><input type="radio" name="manpower_approach" value="standard"> Standard</label>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="repairs_maintenance_pct" class="critical">Repairs & Maintenance (%)</label>
-                    <input type="number" name="repairs_maintenance_pct" id="repairs_maintenance_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 2.5" required>
-                </div>
-                <div class="form-group">
-                    <label for="selling_overhead_pct" class="critical">Selling Overheads (%)</label>
-                    <input type="number" name="selling_overhead_pct" id="selling_overhead_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 1.5" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="admin_overhead_pct" class="critical">Administrative Overheads (%)</label>
-                    <input type="number" name="admin_overhead_pct" id="admin_overhead_pct" class="critical-field" min="0" step="0.01" placeholder="e.g., 2.0" required>
-                </div>
-                <div class="form-group"></div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="receivables_days" class="critical">Receivables Days</label>
-                    <input type="number" name="receivables_days" id="receivables_days" class="critical-field" min="0" max="365" placeholder="e.g., 45" required>
-                </div>
-                <div class="form-group">
-                    <label for="inventory_days" class="critical">Inventory Days</label>
-                    <input type="number" name="inventory_days" id="inventory_days" class="critical-field" min="0" max="365" placeholder="e.g., 30" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="payables_days" class="critical">Payables Days</label>
-                    <input type="number" name="payables_days" id="payables_days" class="critical-field" min="0" max="365" placeholder="e.g., 30" required>
-                </div>
-                <div class="form-group"></div>
-            </div>
             
             <div class="form-group">
-                <label for="production_rampup" class="critical">Production Ramp-Up Plan</label>
-                <select name="production_rampup" id="production_rampup" class="critical-field" required>
-                    <option value="">-- Select Ramp-Up Scenario --</option>
-                    <option value="conservative">Conservative (Y1: 35%, Y2: 55%, Y3: 75%)</option>
+                <label class="critical">Production Ramp-Up Plan</label>
+                <input type="hidden" name="production_rampup" id="production_rampup">
+                <select id="rampupPreset" class="critical-field" style="margin-bottom:10px;">
+                    <option value="">-- Select a preset --</option>
+                    <option value="conservative">Conservative (Y1: 35%, Y2: 55%, Y3: 100%)</option>
                     <option value="normal">Normal (Y1: 50%, Y2: 75%, Y3: 100%)</option>
-                    <option value="aggressive">Aggressive (Y1: 65%, Y2: 90%, Y3: 110%)</option>
+                    <option value="aggressive">Aggressive (Y1: 65%, Y2: 90%, Y3: 100%)</option>
                 </select>
-                <div class="field-hint">Pick the scenario closest to your expected startup risk and demand confidence.</div>
-                <div class="field-hint"><strong>How to choose:</strong> Conservative if approvals/sales may be delayed; Normal for standard execution; Aggressive only if you already have strong order visibility or channel commitments.</div>
-                <div id="rampupScenarioHint" class="field-hint" style="display: none;"></div>
+                <div style="display:flex;gap:10px;align-items:flex-start;" id="rampupYearFields">
+                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                        <label style="font-size:0.85em;color:#555;margin-bottom:4px;display:block;">Year 1 (%)</label>
+                        <input type="number" id="rampup_y1" class="critical-field" min="0" max="150" step="1" placeholder="e.g. 50">
+                    </div>
+                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                        <label style="font-size:0.85em;color:#555;margin-bottom:4px;display:block;">Year 2 (%)</label>
+                        <input type="number" id="rampup_y2" class="critical-field" min="0" max="150" step="1" placeholder="e.g. 75">
+                    </div>
+                    <div class="form-group" style="flex:1;margin-bottom:0;">
+                        <label style="font-size:0.85em;color:#555;margin-bottom:4px;display:block;">Year 3 (%)</label>
+                        <input type="number" id="rampup_y3" class="critical-field" min="0" max="150" step="1" placeholder="e.g. 100">
+                    </div>
+                </div>
+                <div id="rampupError" style="color:#dc3545;font-size:0.875em;margin-top:6px;display:none;"></div>
             </div>
             
             <div class="form-group">
@@ -766,29 +839,22 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="operating_days" class="critical">Operating Days per Year</label>
-                    <input type="number" name="operating_days" id="operating_days" class="critical-field" placeholder="e.g., 300" min="1" max="365" required>
+                    <input type="number" name="operating_days" id="operating_days" class="critical-field" placeholder="e.g., 300" min="1" max="366" required>
+                    <div id="operatingDaysError" class="field-hint" style="color:#dc3545;display:none;"></div>
                 </div>
-                
                 <div class="form-group">
-                    <label for="shift_preference" class="optional">Shift Preference (optional but recommended)</label>
-                    <select name="shift_preference" id="shift_preference">
-                        <option value="">-- Select --</option>
-                        <option value="single_shift">Single Shift</option>
-                        <option value="double_shift">Double Shift</option>
-                        <option value="triple_shift">Triple Shift</option>
-                    </select>
+                    <label for="shifts_per_day" class="critical">Shifts per Day</label>
+                    <input type="number" name="shifts_per_day" id="shifts_per_day" class="critical-field" placeholder="1–4" min="1" max="4" required>
+                    <div id="shiftsError" class="field-hint" style="color:#dc3545;display:none;"></div>
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
-                    <label for="shifts_per_day" class="optional">Shifts per Day (override)</label>
-                    <input type="number" name="shifts_per_day" id="shifts_per_day" placeholder="Default 2" min="1" max="3">
+                    <label for="hours_per_shift" class="critical">Hours per Shift</label>
+                    <input type="number" name="hours_per_shift" id="hours_per_shift" class="critical-field" placeholder="1–24" min="1" max="24" required>
+                    <div id="hoursError" class="field-hint" style="color:#dc3545;display:none;"></div>
                 </div>
-                <div class="form-group">
-                    <label for="hours_per_shift" class="optional">Hours per Shift (override)</label>
-                    <input type="number" name="hours_per_shift" id="hours_per_shift" placeholder="Default 8" min="1" max="12">
-                </div>
+                <div class="form-group"></div>
             </div>
         </div>
 
@@ -797,8 +863,17 @@
             <h2>Financing Inputs</h2>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="debt_amount" class="optional">Debt Amount</label>
-                    <input type="number" name="debt_amount" id="debt_amount" step="0.01" min="0" placeholder="Enter debt amount if known">
+                    <label for="debt_amount" class="optional">Project Finance – Loan Amount</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <select id="debt_amount_currency_mirror" style="width:110px;flex-shrink:0;padding:10px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR" selected>INR (₹)</option>
+                            <option value="AED">AED (د.إ)</option>
+                        </select>
+                        <input type="number" name="debt_amount" id="debt_amount" step="0.01" min="0" placeholder="Loan amount if known" style="flex:1;">
+                    </div>
                 </div>
                 <div class="form-group"></div>
             </div>
@@ -808,26 +883,24 @@
                     <label for="debt_percentage" class="critical">Debt (%)</label>
                     <input type="number" name="debt_percentage" id="debt_percentage" class="critical-field" placeholder="e.g., 70" min="0" max="100" required>
                 </div>
-                
                 <div class="form-group">
                     <label for="equity_percentage" class="critical">Equity (%)</label>
-                    <input type="number" name="equity_percentage" id="equity_percentage" class="critical-field" placeholder="e.g., 30" min="0" max="100" required>
+                    <input type="number" name="equity_percentage" id="equity_percentage" class="critical-field" placeholder="Auto-filled from Debt %" min="0" max="100" required>
                 </div>
             </div>
-            
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="loan_tenor" class="critical">Loan Tenor (years)</label>
+                    <label for="loan_tenor" class="critical">Loan Tenure (years)</label>
                     <input type="number" name="loan_tenor" id="loan_tenor" class="critical-field" placeholder="e.g., 10" min="1" max="30" required>
                 </div>
-                
                 <div class="form-group">
                     <label for="interest_rate" class="optional">Interest Rate (% per annum)</label>
                     <input type="number" name="interest_rate" id="interest_rate" placeholder="Leave blank if unknown" step="0.01" min="0" max="30">
                     <div id="interestRateMarketHint" class="field-hint">Fetching indicative market lending rate...</div>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label for="moratorium_period" class="optional">Moratorium Period (months)</label>
                 <input type="number" name="moratorium_period" id="moratorium_period" placeholder="e.g., 12" min="0" max="36">
@@ -840,8 +913,17 @@
                     <label class="inline-radio"><input type="radio" name="repayment_frequency" value="quarterly"> Quarterly</label>
                 </div>
                 <div class="form-group">
-                    <label for="upfront_fees" class="optional">Upfront Fees</label>
-                    <input type="number" name="upfront_fees" id="upfront_fees" step="0.01" min="0" placeholder="Processing/upfront fees if applicable">
+                    <label for="upfront_fees" class="optional">Upfront Loan Processing Charges</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <select id="upfront_fees_currency_mirror" style="width:110px;flex-shrink:0;padding:10px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR" selected>INR (₹)</option>
+                            <option value="AED">AED (د.إ)</option>
+                        </select>
+                        <input type="number" name="upfront_fees" id="upfront_fees" step="0.01" min="0" placeholder="Processing charges if applicable" style="flex:1;">
+                    </div>
                 </div>
             </div>
 
@@ -863,36 +945,18 @@
             <h2>Compliance and Regulatory Flags</h2>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="facility_type" class="critical">Facility Type</label>
-                    <select name="facility_type" id="facility_type" class="critical-field" required>
-                        <option value="">-- Select --</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="service">Service</option>
-                        <option value="warehouse">Warehouse</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="land_status" class="critical">Land Status</label>
                     <select name="land_status" id="land_status" class="critical-field" required>
                         <option value="">-- Select --</option>
                         <option value="owned">Owned</option>
                         <option value="leased">Leased</option>
                         <option value="identified">Identified</option>
+                        <option value="alloted">Allotted</option>
+                        <option value="under_procurement">Under Procurement</option>
+                        <option value="yet_to_be_identified">Yet to be Identified</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="critical">Hazardous Chemicals/Storage/Boilers/Pressure Vessels</label>
-                    <label class="inline-radio"><input type="radio" name="has_hazardous_materials" value="yes" required> Yes</label>
-                    <label class="inline-radio"><input type="radio" name="has_hazardous_materials" value="no"> No</label>
-                </div>
-                <div class="form-group">
-                    <label class="critical">Effluent Generation</label>
-                    <label class="inline-radio"><input type="radio" name="has_effluent_generation" value="yes" required> Yes</label>
-                    <label class="inline-radio"><input type="radio" name="has_effluent_generation" value="no"> No</label>
-                </div>
+                <div class="form-group"></div>
             </div>
         </div>
 
@@ -909,61 +973,30 @@
                         <option value="mix">Mix</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="key_equipment_items_count" class="critical">Number of Key Equipment Items</label>
-                    <input type="number" name="key_equipment_items_count" id="key_equipment_items_count" class="critical-field" min="12" max="18" value="14" required>
-                    <div class="field-hint">Use 12-18 items for a 5-6 page equipment section.</div>
-                </div>
+                <div class="form-group"></div>
             </div>
 
-            <div class="form-group">
-                <label for="preferred_manufacturer_geography" class="optional">Preferred Manufacturer Geography</label>
-                <input type="text" name="preferred_manufacturer_geography" id="preferred_manufacturer_geography" placeholder="e.g., European, Asian, North American">
-            </div>
-            
+            <input type="hidden" name="key_equipment_items_count" id="key_equipment_items_count" value="14">
+
             <div class="form-group">
                 <label for="brand_preferences" class="optional">Brand Preferences</label>
                 <textarea name="brand_preferences" id="brand_preferences" placeholder="Preferred equipment brands or manufacturers (if any)" rows="2"></textarea>
             </div>
-            
-            <div class="form-group">
-                <label for="technology_exclusions" class="optional">Technology Exclusions</label>
-                <textarea name="technology_exclusions" id="technology_exclusions" placeholder="Technologies or equipment types to exclude" rows="2"></textarea>
-            </div>
 
             <div class="form-group">
-                <label for="excluded_brands_countries" class="optional">Excluded Brands/Countries</label>
-                <textarea name="excluded_brands_countries" id="excluded_brands_countries" placeholder="Mention excluded equipment brands or source countries, if any" rows="2"></textarea>
-            </div>
-        </div>
-
-        <!-- Non-Negotiables Section -->
-        <div class="form-section">
-            <h2>Non-Negotiables</h2>
-
-            <div class="form-group">
-                <label>Certifications</label>
-                <div id="certificationRows"></div>
-                <button type="button" id="addCertificationRow" class="secondary">+ Add Certification</button>
-                <div class="field-hint">Add required certifications your project must have (for example, ISO 9001, CE, BIS, FSSAI).</div>
-                <input type="hidden" name="certifications" id="certifications">
-            </div>
-
-            <div class="form-group">
-                <label for="compliance_constraints">Compliance Constraints</label>
-                <textarea name="compliance_constraints" id="compliance_constraints" rows="2" placeholder="e.g., Must comply with CPCB norms, factory license rules, and applicable sector regulations"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="esg_constraints">ESG Constraints</label>
-                <textarea name="esg_constraints" id="esg_constraints" rows="2" placeholder="e.g., No child labor, wastewater treatment mandatory, target renewable energy share"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="procurement_constraints">Procurement Constraints</label>
-                <textarea name="procurement_constraints" id="procurement_constraints" rows="2" placeholder="e.g., Approved vendor list only, domestic sourcing minimum, lead time caps"></textarea>
+                <label class="optional">Excluded Brands / Countries</label>
+                <input type="hidden" name="excluded_brands_countries" id="excluded_brands_countries">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px 14px;background:#f8f9fa;border:1px solid #e5e9f0;border-radius:6px;">
+                    <span style="font-size:0.9em;color:#333;flex:1;">Exclude equipment sourced from China</span>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal;">
+                        <input type="checkbox" id="exclude_china_toggle" name="exclude_china" value="yes" style="width:16px;height:16px;cursor:pointer;">
+                        <span id="excludeChinaLabel" style="font-size:0.875em;color:#6c757d;">Not excluded</span>
+                    </label>
+                </div>
+                <input type="text" id="excluded_brands_text" placeholder="Other excluded brands or countries (comma-separated)" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:4px;font-family:inherit;box-sizing:border-box;">
             </div>
         </div>
+
 
         <!-- Promoter Details -->
         <div class="form-section">
@@ -1052,9 +1085,6 @@
         const exportSplitSection = document.getElementById('exportSplitSection');
         const exportShareInput = document.getElementById('export_share');
         const localShareInput = document.getElementById('local_share');
-        const certificationRows = document.getElementById('certificationRows');
-        const addCertificationRowButton = document.getElementById('addCertificationRow');
-        const certificationsInput = document.getElementById('certifications');
         const addPromoterButton = document.getElementById('addPromoterButton');
         const promotersContainer = document.getElementById('promotersContainer');
         const autofillExampleButton = document.getElementById('autofillExampleButton');
@@ -1068,7 +1098,6 @@
         const dsraRequiredRadios = document.querySelectorAll('input[name="dsra_required"]');
         const dsraMonthsField = document.getElementById('dsra_months');
         const dsraMonthsGroup = document.getElementById('dsra_months_group');
-        const shiftPreferenceField = document.getElementById('shift_preference');
 
         const EXAMPLE_FORM_INPUTS = [
             // Example 1: Compostable Packaging
@@ -1088,7 +1117,7 @@
             report_intended_use: 'lender_submission',
             business_model: 'Manufacturing',
             sizing_mode: 'capacity_driven',
-            target_capacity: '12,000 units/day',
+            target_capacity_amount: '12000', target_capacity_unit: 'Units', target_capacity_period: 'Day',
             budget_cap_basis: '',
             equity_cap_amount: null,
             debt_cap_amount: null,
@@ -1097,16 +1126,7 @@
             selling_price: null,
             currency: 'INR',
             product_mix: 'Mailers: 50%, Pouches: 30%, Protective film rolls: 20%',
-            raw_material_consumption_basis: 'Polymer and additive consumption based on pilot batch records and supplier datasheets.',
-            raw_material_pricing_basis: 'Average of last 3 supplier quotes adjusted for freight and GST.',
-            utility_tariff_basis: 'Gujarat HT power tariff schedule, local water board industrial slab, and PNG industrial tariff.',
-            manpower_approach: 'standard',
-            repairs_maintenance_pct: 2.5,
-            selling_overhead_pct: 1.8,
-            admin_overhead_pct: 2.2,
-            receivables_days: 45,
-            inventory_days: 30,
-            payables_days: 25,
+            raw_material_pricing_basis: null,
             production_rampup: 'normal',
             market_geographies: [
                 { country: 'India', state: 'Gujarat' },
@@ -1116,7 +1136,6 @@
             export_share: 25,
             local_share: 75,
             operating_days: 300,
-            shift_preference: 'double_shift',
             shifts_per_day: 2,
             hours_per_shift: 8,
             debt_amount: null,
@@ -1129,35 +1148,10 @@
             upfront_fees: 250000,
             dsra_required: 'yes',
             dsra_months: 3,
-            facility_type: 'manufacturing',
-            has_hazardous_materials: 'no',
-            has_effluent_generation: 'yes',
             land_status: 'leased',
             brand_preference_mode: 'mix',
             key_equipment_items_count: 14,
-            preferred_manufacturer_geography: 'India and Europe',
             brand_preferences: 'W&H, Reifenhauser, Rajoo Engineers',
-            technology_exclusions: 'No solvent-based coating lines',
-            excluded_brands_countries: 'No procurement from sanctioned jurisdictions',
-            certifications: [
-                {
-                    certification_name: 'ISO 9001:2015',
-                    issuing_authority: 'TUV Rheinland',
-                    status: 'active',
-                    expiry_date: '2026-12-31',
-                    notes: 'Quality management certification'
-                },
-                {
-                    certification_name: 'ISO 14001:2015',
-                    issuing_authority: 'Bureau Veritas',
-                    status: 'in_progress',
-                    expiry_date: '',
-                    notes: 'Environmental management implementation underway'
-                }
-            ],
-            compliance_constraints: 'Must comply with CPCB and state pollution board standards for packaging units.',
-            esg_constraints: 'No child labor, minimum 25% renewable energy usage in first year, zero untreated discharge.',
-            procurement_constraints: 'Prefer India/Europe suppliers, approved vendor policy mandatory, no solvent-based coating line vendors.',
             promoters: [
                 {
                     full_names: 'Rahul Mehta',
@@ -1200,7 +1194,7 @@
             project_state: 'Punjab',
             project_city: 'Ludhiana',
             product_service: 'Pasteurized milk and dairy products',
-            target_capacity: '50,000 liters/day',
+            target_capacity_amount: '50000', target_capacity_unit: 'Liters', target_capacity_period: 'Day',
             target_customer: 'Modern retail chains and institutional buyers',
             project_pin_code: '141010',
             project_district: 'Ludhiana',
@@ -1227,7 +1221,7 @@
             project_state: 'Rajasthan',
             project_city: 'Jodhpur',
             product_service: 'Solar panel assembly and testing',
-            target_capacity: '100MW/annum',
+            target_capacity_amount: '100', target_capacity_unit: 'MW', target_capacity_period: 'Year',
             target_customer: 'Solar installers and EPC contractors',
             project_pin_code: '342001',
             project_district: 'Jodhpur',
@@ -1254,7 +1248,7 @@
             project_state: 'Maharashtra',
             project_city: 'Pune',
             product_service: 'Packaged snacks manufacturing',
-            target_capacity: '25,000 units/day',
+            target_capacity_amount: '25000', target_capacity_unit: 'Units', target_capacity_period: 'Day',
             target_customer: 'Retail chains and e-commerce platforms',
             project_pin_code: '411001',
             project_district: 'Pune',
@@ -1378,191 +1372,277 @@
             placeLoadingIndicator.classList.toggle('hidden', !isLoading);
         }
 
-        function handleGooglePlacesFailure(message) {
-            googlePlacesAvailable = false;
-            placeAutocompleteElement = null;
-            setPlacesLoading(false);
-            setPlacesStatus(message);
-            cityHiddenInput.value = '';
-            stateHiddenInput.value = '';
+        function initCityAutocomplete() {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Search for a city...';
+            input.setAttribute('autocomplete', 'new-password');
+
+            const dropdown = document.createElement('ul');
+            dropdown.className = 'city-autocomplete-dropdown';
+            dropdown.style.display = 'none';
+
             cityAutocompleteHost.innerHTML = '';
-            document.querySelectorAll('.pac-container').forEach((element) => element.remove());
-        }
+            cityAutocompleteHost.appendChild(input);
+            cityAutocompleteHost.appendChild(dropdown);
 
-        function getAddressComponent(components, type) {
-            const match = components.find((component) => component.types.includes(type));
-            if (!match) {
-                return '';
+            let debounceTimer = null;
+            let activeAbort = null;
+            let activeIndex = -1;
+
+            function hideDropdown() {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+                activeIndex = -1;
             }
-            return match.long_name || match.longText || match.short_name || match.shortText || '';
-        }
 
-        function updateLocationFieldsFromPlace(place) {
-            const components = place.address_components || [];
-            const locality = getAddressComponent(components, 'locality')
-                || getAddressComponent(components, 'postal_town')
-                || getAddressComponent(components, 'administrative_area_level_2');
-            const state = getAddressComponent(components, 'administrative_area_level_1');
-            const postalCode = getAddressComponent(components, 'postal_code');
-            const country = getAddressComponent(components, 'country');
-
-            if (locality) {
-                cityHiddenInput.value = locality;
-            }
-            if (state) {
+            function fillLocation(city, state, district, country, postcode) {
+                input.value = city;
+                cityHiddenInput.value = city;
                 stateHiddenInput.value = state;
-            }
-            if (country) {
-                countryInput.value = country;
-            }
-            pinCodeInput.value = postalCode || '';
-            validatePinCode();
-        }
-
-        function loadGoogleMapsPlacesScript() {
-            if (window.google && window.google.maps && window.google.maps.places) {
-                return Promise.resolve(window.google.maps);
+                if (country) countryInput.value = country;
+                if (postcode) { pinCodeInput.value = postcode; validatePinCode(); }
+                hideDropdown();
+                fetchCityPinCodes(city);
             }
 
-            if (window.__googleMapsPlacesLoader) {
-                return window.__googleMapsPlacesLoader;
+            function showSuggestions(results) {
+                dropdown.innerHTML = '';
+                activeIndex = -1;
+                if (!results.length) { dropdown.style.display = 'none'; return; }
+
+                results.forEach((r) => {
+                    const addr = r.address || {};
+                    const city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || r.display_name.split(',')[0].trim();
+                    const state = addr.state || '';
+                    const district = addr.state_district || addr.county || addr.district || '';
+                    const country = addr.country || '';
+                    const postcode = addr.postcode || '';
+
+                    const li = document.createElement('li');
+                    li.className = 'city-autocomplete-option';
+                    li.textContent = [city, state, country].filter(Boolean).join(', ');
+                    li.addEventListener('mousedown', (e) => { e.preventDefault(); fillLocation(city, state, district, country, postcode); });
+                    dropdown.appendChild(li);
+                });
+                dropdown.style.display = 'block';
             }
 
-            window.__googleMapsPlacesLoader = new Promise((resolve, reject) => {
-                const existingScript = document.getElementById('google-maps-places-script');
-                if (existingScript) {
-                    existingScript.addEventListener('load', () => resolve(window.google.maps), { once: true });
-                    existingScript.addEventListener('error', () => reject(new Error('Failed to load Google Maps script')), { once: true });
-                    return;
+            function updateActiveItem() {
+                [...dropdown.querySelectorAll('.city-autocomplete-option')].forEach((el, i) => {
+                    el.classList.toggle('active', i === activeIndex);
+                });
+            }
+
+            async function fetchSuggestions(query) {
+                if (activeAbort) activeAbort.abort();
+                activeAbort = new AbortController();
+                try {
+                    const params = new URLSearchParams({ q: query, format: 'json', addressdetails: '1', limit: '7' });
+                    const resp = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+                        signal: activeAbort.signal,
+                        headers: { 'Accept-Language': 'en' }
+                    });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    const places = data.filter((r) => { const a = r.address || {}; return a.city || a.town || a.village || a.municipality; });
+                    showSuggestions(places);
+                } catch (e) {
+                    if (e.name !== 'AbortError') hideDropdown();
                 }
+            }
 
-                const script = document.createElement('script');
-                script.id = 'google-maps-places-script';
-                script.async = true;
-                script.defer = true;
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&v=weekly&loading=async`;
-                script.onload = () => resolve(window.google.maps);
-                script.onerror = () => reject(new Error('Failed to load Google Maps script'));
-                document.head.appendChild(script);
+            input.addEventListener('input', () => {
+                cityHiddenInput.value = input.value.trim();
+                stateHiddenInput.value = '';
+                clearTimeout(debounceTimer);
+                const q = input.value.trim();
+                if (q.length < 2) { hideDropdown(); return; }
+                debounceTimer = setTimeout(() => fetchSuggestions(q), 200);
             });
 
-            return window.__googleMapsPlacesLoader;
+            input.addEventListener('keydown', (e) => {
+                const items = dropdown.querySelectorAll('.city-autocomplete-option');
+                if (!items.length) return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, items.length - 1); updateActiveItem(); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); updateActiveItem(); }
+                else if (e.key === 'Enter' && activeIndex >= 0) { e.preventDefault(); items[activeIndex].dispatchEvent(new MouseEvent('mousedown')); }
+                else if (e.key === 'Escape') hideDropdown();
+            });
+
+            input.addEventListener('blur', () => setTimeout(hideDropdown, 150));
+
+            googlePlacesAvailable = true;
         }
 
-        async function waitForPlaceAutocompleteElement(timeoutMs = 5000) {
-            const startedAt = Date.now();
-            while (Date.now() - startedAt < timeoutMs) {
-                if (window.google && window.google.maps && window.google.maps.places && window.google.maps.places.PlaceAutocompleteElement) {
-                    return window.google.maps;
-                }
-                await new Promise((resolve) => window.setTimeout(resolve, 120));
-            }
-            throw new Error('PlaceAutocompleteElement is unavailable');
-        }
+        // Country name (as returned by Nominatim) → ISO 3166-1 alpha-2 code for zippopotam.us
+        const COUNTRY_ISO = {
+            'afghanistan':'AF','albania':'AL','algeria':'DZ','argentina':'AR','armenia':'AM',
+            'australia':'AU','austria':'AT','azerbaijan':'AZ','bangladesh':'BD','belarus':'BY',
+            'belgium':'BE','brazil':'BR','bulgaria':'BG','canada':'CA','chile':'CL',
+            'china':'CN','colombia':'CO','croatia':'HR','czech republic':'CZ','czechia':'CZ',
+            'denmark':'DK','ecuador':'EC','egypt':'EG','estonia':'EE','finland':'FI',
+            'france':'FR','georgia':'GE','germany':'DE','ghana':'GH','greece':'GR',
+            'hungary':'HU','indonesia':'ID','iran':'IR','iraq':'IQ','ireland':'IE',
+            'israel':'IL','italy':'IT','japan':'JP','jordan':'JO','kazakhstan':'KZ',
+            'kenya':'KE','kyrgyzstan':'KG','latvia':'LV','lithuania':'LT','luxembourg':'LU',
+            'malaysia':'MY','mexico':'MX','moldova':'MD','morocco':'MA','myanmar':'MM',
+            'netherlands':'NL','new zealand':'NZ','nigeria':'NG','norway':'NO','pakistan':'PK',
+            'peru':'PE','philippines':'PH','poland':'PL','portugal':'PT','romania':'RO',
+            'russia':'RU','saudi arabia':'SA','serbia':'RS','singapore':'SG','slovakia':'SK',
+            'slovenia':'SI','south africa':'ZA','south korea':'KR','spain':'ES','sri lanka':'LK',
+            'sweden':'SE','switzerland':'CH','taiwan':'TW','tajikistan':'TJ','thailand':'TH',
+            'turkey':'TR','turkmenistan':'TM','ukraine':'UA','united arab emirates':'AE',
+            'united kingdom':'GB','united states':'US','united states of america':'US',
+            'uzbekistan':'UZ','venezuela':'VE','vietnam':'VN','zimbabwe':'ZW',
+        };
 
-        async function initializeGooglePlacesAutocomplete() {
-            if (!GOOGLE_MAPS_API_KEY) {
-                setPlacesStatus('Google Places is not configured. Enter city, state, pin code, and country manually.');
-                return;
-            }
+        // Pin codes fetched for the selected city (India only) — populated when user picks a city.
+        let validCityPinCodes = null;
 
-            window.gm_authFailure = () => {
-                handleGooglePlacesFailure('Google Places authentication failed. Enter city, state, pin code, and country manually.');
-            };
-
+        async function fetchCityPinCodes(cityName) {
+            validCityPinCodes = null;
+            if (!cityName || countryInput.value.trim().toLowerCase() !== 'india') return;
             try {
-                await loadGoogleMapsPlacesScript();
-                const maps = await waitForPlaceAutocompleteElement();
-                if (!maps.places || !maps.places.PlaceAutocompleteElement) {
-                    throw new Error('PlaceAutocompleteElement is unavailable');
+                const resp = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(cityName)}`);
+                const data = await resp.json();
+                if (data && data[0] && data[0].Status === 'Success') {
+                    validCityPinCodes = new Set(data[0].PostOffice.map((p) => p.Pincode));
                 }
-
-                placeAutocompleteElement = new maps.places.PlaceAutocompleteElement();
-
-                if ('includedPrimaryTypes' in placeAutocompleteElement) {
-                    placeAutocompleteElement.includedPrimaryTypes = ['(cities)'];
-                }
-
-                if (GOOGLE_AUTOCOMPLETE_REGION_CODES.length) {
-                    // India-specific region restriction lives here so global expansion is one-line.
-                    placeAutocompleteElement.includedRegionCodes = GOOGLE_AUTOCOMPLETE_REGION_CODES;
-                }
-
-                cityAutocompleteHost.innerHTML = '';
-                cityAutocompleteHost.appendChild(placeAutocompleteElement);
-                googlePlacesAvailable = true;
-
-                const handlePlaceSelect = async (event) => {
-                    const prediction = event.placePrediction || event.detail?.placePrediction || event.detail?.prediction;
-                    if (!prediction || typeof prediction.toPlace !== 'function') {
-                        return;
-                    }
-
-                    setPlacesLoading(true);
-                    try {
-                        const place = prediction.toPlace();
-                        await place.fetchFields({ fields: ['displayName', 'addressComponents'] });
-
-                        const details = {
-                            address_components: (place.addressComponents || []).map((component) => ({
-                                long_name: component.longText || component.shortText || '',
-                                short_name: component.shortText || component.longText || '',
-                                types: component.types || []
-                            }))
-                        };
-
-                        updateLocationFieldsFromPlace(details);
-                        if (place.displayName) {
-                            cityHiddenInput.value = place.displayName;
-                        }
-                        setPlacesStatus('Location details loaded from Google Places. You can still edit them manually.');
-                    } catch (error) {
-                        handleGooglePlacesFailure('Google Places could not fill the location details. Enter city, state, pin code, and country manually.');
-                    } finally {
-                        setPlacesLoading(false);
-                    }
-                };
-
-                placeAutocompleteElement.addEventListener('gmp-select', handlePlaceSelect);
-                placeAutocompleteElement.addEventListener('gmp-placeselect', handlePlaceSelect);
-
-                setPlacesStatus('Google Places autocomplete is active for Indian cities.');
-            } catch (error) {
-                const reason = error && error.message ? ` (${error.message})` : '';
-                handleGooglePlacesFailure(`Google Places is unavailable right now${reason}. Enter city, state, pin code, and country manually.`);
-            }
+            } catch { /* network error — fall back to API check */ }
         }
 
+        function showPinError(msg) {
+            pinCodeInput.setCustomValidity(msg);
+            const el = document.getElementById('pinCodeError');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('pinCodeSuccess').style.display = 'none';
+        }
+
+        function clearPinFeedback() {
+            pinCodeInput.setCustomValidity('');
+            document.getElementById('pinCodeError').style.display = 'none';
+            document.getElementById('pinCodeSuccess').style.display = 'none';
+        }
+
+        // Synchronous format-only check — called on every keystroke.
         function validatePinCode() {
             const country = countryInput.value.trim().toLowerCase();
             const rawValue = pinCodeInput.value.trim();
 
-            if (!rawValue) {
-                pinCodeInput.setCustomValidity('');
-                return true;
-            }
+            if (!rawValue) { clearPinFeedback(); return true; }
 
-            // India-specific pin code validation lives here so future country rules are easy to find.
             if (country === 'india') {
                 const sanitizedValue = rawValue.replace(/\D/g, '').slice(0, 6);
                 pinCodeInput.value = sanitizedValue;
                 if (!/^\d{6}$/.test(sanitizedValue)) {
-                    pinCodeInput.setCustomValidity('Enter a valid 6-digit Indian pin code');
+                    showPinError('Enter a valid 6-digit Indian pin code');
                     return false;
                 }
             }
 
-            pinCodeInput.setCustomValidity('');
+            clearPinFeedback();
             return true;
         }
 
+        // Full async validation — called immediately on 6-digit entry (India) or on blur (all countries).
+        async function validatePinCodeAPI() {
+            if (!validatePinCode()) return false;
+
+            const countryName = countryInput.value.trim();
+            const countryKey = countryName.toLowerCase();
+            const pinCode = pinCodeInput.value.trim();
+            if (!pinCode) return true;
+
+            const pinCodeLoading = document.getElementById('pinCodeLoading');
+            const pinCodeSuccess = document.getElementById('pinCodeSuccess');
+
+            pinCodeLoading.classList.remove('hidden');
+            clearPinFeedback();
+
+            try {
+                if (countryKey === 'india') {
+                    // Fast path: check pre-fetched city pin codes first.
+                    if (validCityPinCodes !== null && !validCityPinCodes.has(pinCode)) {
+                        pinCodeLoading.classList.add('hidden');
+                        showPinError(`Pin code ${pinCode} is not valid for ${cityHiddenInput.value || 'the selected city'}.`);
+                        return false;
+                    }
+
+                    const resp = await fetch(`https://api.postalpincode.in/pincode/${pinCode}`);
+                    const data = await resp.json();
+                    pinCodeLoading.classList.add('hidden');
+
+                    if (!data || !data[0] || data[0].Status !== 'Success') {
+                        showPinError('Pin code does not exist. Please enter a valid Indian pin code.');
+                        return false;
+                    }
+
+                    const selectedState = stateHiddenInput.value.trim().toLowerCase();
+                    const apiState = (data[0].PostOffice[0].State || '').trim().toLowerCase();
+                    if (selectedState && apiState && apiState !== selectedState) {
+                        showPinError(`This pin code belongs to ${data[0].PostOffice[0].State}, not ${stateHiddenInput.value}.`);
+                        return false;
+                    }
+
+                    const po = data[0].PostOffice[0];
+                    pinCodeInput.setCustomValidity('');
+                    pinCodeSuccess.textContent = `✓ ${po.Name}, ${po.District}, ${po.State}`;
+                    pinCodeSuccess.style.display = 'block';
+                    return true;
+
+                } else {
+                    const isoCode = COUNTRY_ISO[countryKey];
+                    if (!isoCode) {
+                        pinCodeLoading.classList.add('hidden');
+                        return true; // unknown country — skip API validation
+                    }
+
+                    const normalizedPin = pinCode.replace(/\s+/g, '').toUpperCase();
+                    let resp = await fetch(`https://api.zippopotam.us/${isoCode}/${encodeURIComponent(normalizedPin)}`);
+                    // Some countries (e.g. Canada) only support partial codes (FSA = first 3 chars).
+                    if (!resp.ok && normalizedPin.length > 3) {
+                        resp = await fetch(`https://api.zippopotam.us/${isoCode}/${encodeURIComponent(normalizedPin.slice(0, 3))}`);
+                    }
+                    pinCodeLoading.classList.add('hidden');
+
+                    if (!resp.ok) {
+                        showPinError(`Pin code does not exist for ${countryName}.`);
+                        return false;
+                    }
+
+                    const data = await resp.json();
+                    const places = data.places || [];
+                    pinCodeInput.setCustomValidity('');
+                    const place = places[0] || {};
+                    pinCodeSuccess.textContent = `✓ ${place['place name'] || ''}, ${place.state || ''}, ${data.country || countryName}`.replace(/^,\s*|,\s*$/g, '');
+                    pinCodeSuccess.style.display = 'block';
+                    return true;
+                }
+            } catch {
+                pinCodeLoading.classList.add('hidden');
+                return true; // network error — don't block
+            }
+        }
+
         function validateDebtEquity() {
-            const debt = parseFloat(document.getElementById('debt_percentage').value) || 0;
-            const equity = parseFloat(document.getElementById('equity_percentage').value) || 0;
+            const debtEl = document.getElementById('debt_percentage');
+            const equityEl = document.getElementById('equity_percentage');
             const warningDiv = document.getElementById('warningMessage');
-            
-            if (debt + equity !== 100 && debt > 0 && equity > 0) {
-                warningDiv.textContent = `⚠ Warning: Debt (${debt}%) + Equity (${equity}%) should equal 100%`;
+            const debt = parseFloat(debtEl.value) || 0;
+
+            // Auto-fill equity when debt is entered
+            if (debtEl.value.trim() !== '') {
+                const autoEquity = parseFloat((100 - debt).toFixed(2));
+                if (autoEquity >= 0 && autoEquity <= 100) {
+                    equityEl.value = autoEquity;
+                }
+            }
+
+            const equity = parseFloat(equityEl.value) || 0;
+            if (debt > 0 && equity > 0 && Math.abs(debt + equity - 100) > 0.01) {
+                warningDiv.textContent = `⚠ Debt (${debt}%) + Equity (${equity}%) must equal 100%`;
                 warningDiv.style.display = 'block';
                 return false;
             }
@@ -1596,93 +1676,6 @@
             marketGeographyRows.appendChild(row);
         }
 
-        function addCertificationRow(certification = {}) {
-            const rowWrapper = document.createElement('div');
-            rowWrapper.className = 'certification-row-wrapper';
-            rowWrapper.innerHTML = `
-                <div class="certification-row">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Certification Name</label>
-                        <input type="text" class="certification-name" placeholder="e.g., ISO 9001:2015" value="${certification.certification_name || ''}">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Issuing Authority</label>
-                        <input type="text" class="certification-authority" placeholder="e.g., TUV Rheinland" value="${certification.issuing_authority || ''}">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Status</label>
-                        <select class="certification-status">
-                            <option value="">-- Select --</option>
-                            <option value="active" ${certification.status === 'active' ? 'selected' : ''}>Active</option>
-                            <option value="in_progress" ${certification.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-                            <option value="planned" ${certification.status === 'planned' ? 'selected' : ''}>Planned</option>
-                            <option value="not_required" ${certification.status === 'not_required' ? 'selected' : ''}>Not Required</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>Expiry Date</label>
-                        <input type="date" class="certification-expiry" value="${certification.expiry_date || ''}">
-                    </div>
-                    <button type="button" class="market-geo-remove certification-remove" title="Remove certification">-</button>
-                </div>
-                <div class="form-group certification-row-secondary">
-                    <label>Notes</label>
-                    <input type="text" class="certification-notes" placeholder="e.g., Mandatory for customer onboarding" value="${certification.notes || ''}">
-                </div>
-            `;
-
-            const removeButton = rowWrapper.querySelector('.certification-remove');
-            removeButton.addEventListener('click', () => {
-                if (certificationRows.children.length <= 1) {
-                    return;
-                }
-                rowWrapper.remove();
-            });
-
-            certificationRows.appendChild(rowWrapper);
-        }
-
-        function serializeCertifications() {
-            const rows = Array.from(certificationRows.querySelectorAll('.certification-row-wrapper'));
-            const entries = [];
-
-            for (const rowWrapper of rows) {
-                const name = rowWrapper.querySelector('.certification-name').value.trim();
-                const authority = rowWrapper.querySelector('.certification-authority').value.trim();
-                const status = rowWrapper.querySelector('.certification-status').value;
-                const expiry = rowWrapper.querySelector('.certification-expiry').value;
-                const notes = rowWrapper.querySelector('.certification-notes').value.trim();
-
-                const hasAnyValue = Boolean(name || authority || status || expiry || notes);
-                if (!hasAnyValue) {
-                    continue;
-                }
-
-                if (!name || !authority || !status) {
-                    return { ok: false, message: 'For each certification, provide Name, Issuing Authority, and Status.' };
-                }
-
-                if (status === 'active' && !expiry) {
-                    return { ok: false, message: `Add expiry date for active certification: ${name}.` };
-                }
-
-                let summary = `${name} (Authority: ${authority}; Status: ${status.replace('_', ' ')}`;
-                if (expiry) {
-                    summary += `; Expiry: ${expiry}`;
-                }
-                if (notes) {
-                    summary += `; Notes: ${notes}`;
-                }
-                summary += ')';
-                entries.push(summary);
-            }
-
-            if (entries.length === 0) {
-                return { ok: true, value: null };
-            }
-
-            return { ok: true, value: entries.join(' | ') };
-        }
 
         function toggleExportSplitSection() {
             const hasExports = document.querySelector('input[name="has_exports"]:checked')?.value === 'yes';
@@ -1757,26 +1750,33 @@
             return { ok: true, value: geographyEntries.join(' | ') };
         }
 
+        const CREDIT_SCORE_TYPES = {
+            cibil:       { label: 'CIBIL (India)',      min: 300, max: 900 },
+            fico:        { label: 'FICO (USA/Canada)',  min: 300, max: 850 },
+            experian_uk: { label: 'Experian (UK)',      min: 0,   max: 999 },
+            equifax_au:  { label: 'Equifax (AU/NZ)',    min: 0,   max: 1200 },
+            vantage:     { label: 'VantageScore',       min: 300, max: 850 },
+        };
+
         function createPromoterEntry(index) {
             const wrapper = document.createElement('div');
             wrapper.className = 'promoter-card';
             wrapper.dataset.promoterIndex = String(index);
+
+            const scoreTypeOptions = Object.entries(CREDIT_SCORE_TYPES)
+                .map(([v, s]) => `<option value="${v}">${s.label}</option>`).join('');
+
             wrapper.innerHTML = `
                 <div class="promoter-card-head">
                     <strong>Promoter ${index + 1}</strong>
                     <button type="button" class="promoter-remove" style="display: ${index === 0 ? 'none' : 'inline-block'};">Remove</button>
                 </div>
 
-                <div class="form-group">
-                    <label class="critical">Full Name(s)</label>
-                    <textarea class="promoter-full-names critical-field" placeholder="Enter promoter full name(s)" rows="2" required></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="optional">Mr/Ms</label>
+                <div class="form-row" style="align-items:flex-end;">
+                    <div class="form-group" style="flex:0 0 120px;">
+                        <label class="optional">Salutation</label>
                         <select class="promoter-title">
-                            <option value="">-- Select --</option>
+                            <option value="">--</option>
                             <option value="Mr">Mr</option>
                             <option value="Ms">Ms</option>
                             <option value="Mrs">Mrs</option>
@@ -1784,8 +1784,36 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label class="critical">Full Name</label>
+                        <input type="text" class="promoter-full-names critical-field" placeholder="Enter promoter full name" required>
+                    </div>
+                    <div class="form-group" style="flex:0 0 260px;">
                         <label class="optional">Phone Number</label>
-                        <input type="tel" class="promoter-phone" placeholder="e.g., +91 9876543210">
+                        <div style="display:flex;gap:6px;">
+                            <select class="promoter-phone-code" style="width:100px;flex-shrink:0;padding:10px 6px;border:1px solid #ccc;border-radius:4px;font-family:inherit;font-size:13px;">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+65">🇸🇬 +65</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+81">🇯🇵 +81</option>
+                                <option value="+86">🇨🇳 +86</option>
+                                <option value="+55">🇧🇷 +55</option>
+                                <option value="+27">🇿🇦 +27</option>
+                                <option value="+234">🇳🇬 +234</option>
+                                <option value="+92">🇵🇰 +92</option>
+                                <option value="+880">🇧🇩 +880</option>
+                                <option value="+94">🇱🇰 +94</option>
+                                <option value="+60">🇲🇾 +60</option>
+                                <option value="+64">🇳🇿 +64</option>
+                                <option value="+1-CA">🇨🇦 +1</option>
+                            </select>
+                            <input type="tel" class="promoter-phone" placeholder="9876543210" style="flex:1;">
+                        </div>
+                        <div class="promoter-phone-error field-hint" style="color:#dc3545;display:none;"></div>
                     </div>
                 </div>
 
@@ -1796,12 +1824,13 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="optional">No. of Experience (years)</label>
+                        <label class="optional">Years of Experience</label>
                         <input type="number" class="promoter-experience-years" min="0" max="60" step="0.5" placeholder="e.g., 12">
                     </div>
                     <div class="form-group">
-                        <label class="optional">Nature of Experience</label>
-                        <input type="text" class="promoter-nature-experience" placeholder="e.g., Manufacturing operations, sales">
+                        <label class="optional">Industry of Experience</label>
+                        <input type="text" class="promoter-nature-experience" placeholder="e.g., Manufacturing, FMCG, Finance">
+                        <div class="field-hint">Describe in ~100 words based on the proposed project</div>
                     </div>
                 </div>
 
@@ -1815,7 +1844,7 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="optional">LinkedIn Profiles</label>
                         <textarea class="promoter-linkedin-profiles" placeholder="Enter one URL per line, e.g., https://www.linkedin.com/in/username" rows="3"></textarea>
-                        <div class="field-hint">Providing this would help capture better results. URL format required for each entered profile.</div>
+                        <div class="field-hint">URL format required for each entered profile.</div>
                         <div class="field-error linkedin-validation-error"></div>
                     </div>
                 </div>
@@ -1824,31 +1853,35 @@
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="critical">Upload CV</label>
                         <input type="file" class="promoter-cv" accept=".pdf,.doc,.docx">
-                        <div class="field-hint">Upload PDF or DOC/DOCX. (Current flow stores CV file name for reference.)</div>
+                        <div class="field-hint">Upload PDF or DOC/DOCX.</div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="optional">Loans Taken Earlier</label>
+                        <label class="optional">Any loans taken earlier for any project?</label>
                         <label class="inline-radio"><input type="radio" class="promoter-loans-taken" name="loans_taken_earlier_${index}" value="no" checked> No</label>
                         <label class="inline-radio"><input type="radio" class="promoter-loans-taken" name="loans_taken_earlier_${index}" value="yes"> Yes</label>
                     </div>
                     <div class="form-group">
-                        <label class="critical">CIBIL Score</label>
-                        <input type="number" class="promoter-cibil-score critical-field" min="300" max="900" placeholder="300-900" required>
+                        <label class="critical">Credit Score / CIBIL Score</label>
+                        <div style="display:flex;gap:8px;">
+                            <select class="promoter-score-type" style="width:175px;flex-shrink:0;padding:10px 8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;">${scoreTypeOptions}</select>
+                            <input type="number" class="promoter-cibil-score critical-field" style="flex:1;" placeholder="300–900" required>
+                        </div>
+                        <div class="promoter-score-error field-hint" style="color:#dc3545;display:none;"></div>
                     </div>
                 </div>
 
                 <div class="promoter-subsection loan-repayment-section hidden">
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="optional">Have they been paid?</label>
+                            <label class="optional">Is any loan outstanding today?</label>
                             <label class="inline-radio"><input type="radio" class="promoter-loans-paid" name="loans_paid_${index}" value="yes"> Yes</label>
                             <label class="inline-radio"><input type="radio" class="promoter-loans-paid" name="loans_paid_${index}" value="no"> No</label>
                         </div>
                         <div class="form-group">
-                            <label class="optional">Any defaults?</label>
+                            <label class="optional">Any defaults so far?</label>
                             <label class="inline-radio"><input type="radio" class="promoter-loan-defaults" name="loan_defaults_${index}" value="no"> No</label>
                             <label class="inline-radio"><input type="radio" class="promoter-loan-defaults" name="loan_defaults_${index}" value="yes"> Yes</label>
                         </div>
@@ -1856,12 +1889,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="optional">Any Other Sources of Information</label>
-                    <textarea class="promoter-other-sources" placeholder="Website, media links, profile links, references, etc." rows="2"></textarea>
+                    <label class="optional">Any Other Sources of Information about the Promoter</label>
+                    <div class="promoter-sources-list"></div>
+                    <button type="button" class="add-promoter-source-btn" style="margin-top:6px;background:none;border:1px dashed #6c757d;color:#6c757d;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.875em;">+ Add Source</button>
                 </div>
             `;
             return wrapper;
         }
+
 
         function togglePromoterProfileSource(entry) {
             const selected = entry.querySelector('.promoter-source:checked')?.value || 'linkedin';
@@ -2017,6 +2052,89 @@
                 reindexPromoterEntries();
             });
 
+            // Credit score range validation
+            const scoreTypeEl = entry.querySelector('.promoter-score-type');
+            const scoreInput = entry.querySelector('.promoter-cibil-score');
+            const scoreError = entry.querySelector('.promoter-score-error');
+            function validateCreditScore() {
+                const type = CREDIT_SCORE_TYPES[scoreTypeEl.value];
+                if (!type || !scoreInput.value) { scoreError.style.display = 'none'; return; }
+                const val = parseFloat(scoreInput.value);
+                scoreInput.min = type.min; scoreInput.max = type.max;
+                scoreInput.placeholder = `${type.min}–${type.max}`;
+                if (val < type.min || val > type.max) {
+                    scoreError.textContent = `${type.label} score must be between ${type.min} and ${type.max}.`;
+                    scoreError.style.display = 'block';
+                } else { scoreError.style.display = 'none'; }
+            }
+            scoreTypeEl.addEventListener('change', validateCreditScore);
+            scoreInput.addEventListener('input', validateCreditScore);
+            scoreInput.addEventListener('keydown', (e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+
+            // Phone number validation
+            const phoneInput = entry.querySelector('.promoter-phone');
+            const phoneCodeEl = entry.querySelector('.promoter-phone-code');
+            const phoneError = entry.querySelector('.promoter-phone-error');
+            const PHONE_LENGTHS = {
+                '+91': { min: 10, max: 10 }, '+1': { min: 10, max: 10 }, '+1-CA': { min: 10, max: 10 },
+                '+44': { min: 10, max: 11 }, '+61': { min: 9, max: 9 }, '+971': { min: 9, max: 9 },
+                '+65': { min: 8, max: 8 },   '+49': { min: 10, max: 11 }, '+33': { min: 9, max: 9 },
+                '+81': { min: 10, max: 11 }, '+86': { min: 11, max: 11 }, '+55': { min: 10, max: 11 },
+                '+27': { min: 9, max: 9 },   '+234': { min: 10, max: 11 }, '+92': { min: 10, max: 10 },
+                '+880': { min: 10, max: 10 }, '+94': { min: 9, max: 9 }, '+60': { min: 9, max: 10 },
+                '+64': { min: 8, max: 10 },
+            };
+            function validatePhone() {
+                const digits = phoneInput.value.replace(/\D/g, '');
+                if (!digits) { phoneError.style.display = 'none'; return; }
+                const code = phoneCodeEl.value;
+                const rule = PHONE_LENGTHS[code] || { min: 7, max: 12 };
+                if (digits.length < rule.min || digits.length > rule.max) {
+                    phoneError.textContent = `Phone number must be ${rule.min === rule.max ? rule.min : rule.min + '–' + rule.max} digits for selected country code.`;
+                    phoneError.style.display = 'block';
+                } else { phoneError.style.display = 'none'; }
+            }
+            phoneInput.addEventListener('input', validatePhone);
+            phoneCodeEl.addEventListener('change', validatePhone);
+
+            // Dynamic sources list (description or link)
+            function addPromoterSourceRow(list, type = 'description', value = '') {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;';
+                const isLink = type === 'link';
+                row.innerHTML = `
+                    <select class="ps-type" style="width:140px;flex-shrink:0;padding:8px;border:1px solid #ccc;border-radius:4px;font-family:inherit;">
+                        <option value="description"${!isLink ? ' selected' : ''}>Description</option>
+                        <option value="link"${isLink ? ' selected' : ''}>Link / URL</option>
+                    </select>
+                    <input type="text" class="ps-desc" placeholder="Brief description or reference" style="flex:1;${isLink ? 'display:none;' : ''}" value="${!isLink ? value : ''}">
+                    <input type="url" class="ps-link" placeholder="https://..." style="flex:1;${isLink ? '' : 'display:none;'}" value="${isLink ? value : ''}">
+                    <div class="ps-err field-hint" style="color:#dc3545;display:none;font-size:0.8em;"></div>
+                    <button type="button" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;flex-shrink:0;" title="Remove">✕</button>
+                `;
+                row.querySelector('.ps-type').addEventListener('change', (e) => {
+                    const link = e.target.value === 'link';
+                    row.querySelector('.ps-desc').style.display = link ? 'none' : '';
+                    row.querySelector('.ps-link').style.display = link ? '' : 'none';
+                    row.querySelector('.ps-err').style.display = 'none';
+                });
+                row.querySelector('.ps-link').addEventListener('blur', () => {
+                    const val = row.querySelector('.ps-link').value.trim();
+                    const err = row.querySelector('.ps-err');
+                    if (!val) { err.style.display = 'none'; return; }
+                    try { new URL(val); err.style.display = 'none'; }
+                    catch { err.textContent = 'Enter a valid URL'; err.style.display = 'block'; }
+                });
+                row.querySelector('button').addEventListener('click', () => row.remove());
+                list.appendChild(row);
+            }
+
+            const sourcesList = entry.querySelector('.promoter-sources-list');
+            addPromoterSourceRow(sourcesList); // start with one row
+            entry.querySelector('.add-promoter-source-btn').addEventListener('click', () => {
+                addPromoterSourceRow(sourcesList);
+            });
+
             togglePromoterProfileSource(entry);
             toggleLoanRepaymentSection(entry);
         }
@@ -2104,8 +2222,6 @@
             document.getElementById('project_city').value = data.project_city;
             document.getElementById('project_pin_code').value = data.project_pin_code;
             document.getElementById('target_customer').value = data.target_customer;
-            document.getElementById('project_district').value = data.project_district || '';
-            document.getElementById('industrial_area').value = data.industrial_area || '';
             document.getElementById('customer_interface').value = data.customer_interface || '';
             document.getElementById('market_orientation').value = data.market_orientation || '';
             document.getElementById('manufacturing_mode').value = data.manufacturing_mode || '';
@@ -2116,7 +2232,9 @@
             if (data.budget_cap_basis) {
                 setRadioValue('budget_cap_basis', data.budget_cap_basis, true);
             }
-            document.getElementById('target_capacity').value = data.target_capacity || '';
+            document.getElementById('target_capacity_amount').value = data.target_capacity_amount || '';
+            document.getElementById('target_capacity_unit').value = data.target_capacity_unit || '';
+            document.getElementById('target_capacity_period').value = data.target_capacity_period || '';
             document.getElementById('total_investment').value = data.total_investment ?? '';
             document.getElementById('equity_cap_amount').value = data.equity_cap_amount ?? '';
             document.getElementById('debt_cap_amount').value = data.debt_cap_amount ?? '';
@@ -2124,21 +2242,13 @@
             setRadioValue('commercial_input_mode', data.commercial_input_mode || 'ai_defaults_with_override');
             document.getElementById('selling_price').value = data.selling_price ?? '';
             document.getElementById('currency').value = data.currency;
-            document.getElementById('product_mix').value = data.product_mix || '';
-            document.getElementById('raw_material_consumption_basis').value = data.raw_material_consumption_basis || '';
-            document.getElementById('raw_material_pricing_basis').value = data.raw_material_pricing_basis || '';
-            document.getElementById('utility_tariff_basis').value = data.utility_tariff_basis || '';
-            if (data.manpower_approach) {
-                setRadioValue('manpower_approach', data.manpower_approach);
+            allCurrencyMirrors.forEach((m) => { m.value = data.currency; });
+            loadProductMix(data.product_mix || '');
+
+            if (data.production_rampup && RAMPUP_PRESETS[data.production_rampup]) {
+                document.getElementById('rampupPreset').value = data.production_rampup;
+                updateRampupScenarioHint();
             }
-            document.getElementById('repairs_maintenance_pct').value = data.repairs_maintenance_pct ?? '';
-            document.getElementById('selling_overhead_pct').value = data.selling_overhead_pct ?? '';
-            document.getElementById('admin_overhead_pct').value = data.admin_overhead_pct ?? '';
-            document.getElementById('receivables_days').value = data.receivables_days ?? '';
-            document.getElementById('inventory_days').value = data.inventory_days ?? '';
-            document.getElementById('payables_days').value = data.payables_days ?? '';
-            document.getElementById('production_rampup').value = data.production_rampup;
-            document.getElementById('production_rampup').dispatchEvent(new Event('change'));
 
             marketGeographyRows.innerHTML = '';
             (data.market_geographies || []).forEach((geo) => addMarketGeographyRow(geo.country, geo.state));
@@ -2151,7 +2261,6 @@
             localShareInput.value = data.local_share ?? '';
 
             document.getElementById('operating_days').value = data.operating_days;
-            document.getElementById('shift_preference').value = data.shift_preference || '';
             document.getElementById('shifts_per_day').value = data.shifts_per_day;
             document.getElementById('hours_per_shift').value = data.hours_per_shift;
 
@@ -2169,26 +2278,10 @@
             setRadioValue('dsra_required', data.dsra_required || 'no', true);
             document.getElementById('dsra_months').value = data.dsra_months ?? '';
 
-            document.getElementById('facility_type').value = data.facility_type || '';
-            setRadioValue('has_hazardous_materials', data.has_hazardous_materials || 'no');
-            setRadioValue('has_effluent_generation', data.has_effluent_generation || 'no');
             document.getElementById('land_status').value = data.land_status || '';
 
             document.getElementById('brand_preference_mode').value = data.brand_preference_mode || '';
-            document.getElementById('key_equipment_items_count').value = data.key_equipment_items_count ?? 14;
-            document.getElementById('preferred_manufacturer_geography').value = data.preferred_manufacturer_geography || '';
             document.getElementById('brand_preferences').value = data.brand_preferences || '';
-            document.getElementById('technology_exclusions').value = data.technology_exclusions || '';
-            document.getElementById('excluded_brands_countries').value = data.excluded_brands_countries || '';
-            certificationRows.innerHTML = '';
-            if (Array.isArray(data.certifications) && data.certifications.length > 0) {
-                data.certifications.forEach((certification) => addCertificationRow(certification));
-            } else {
-                addCertificationRow();
-            }
-            document.getElementById('compliance_constraints').value = data.compliance_constraints || '';
-            document.getElementById('esg_constraints').value = data.esg_constraints || '';
-            document.getElementById('procurement_constraints').value = data.procurement_constraints || '';
             document.getElementById('notes').value = data.notes || '';
 
             promotersContainer.innerHTML = '';
@@ -2200,31 +2293,47 @@
             reindexPromoterEntries();
         }
 
-        function updateRampupScenarioHint() {
-            const rampupField = document.getElementById('production_rampup');
-            const hint = document.getElementById('rampupScenarioHint');
-            if (!rampupField || !hint) {
-                return;
-            }
+        const RAMPUP_PRESETS = {
+            conservative: [35, 55, 100],
+            normal: [50, 75, 100],
+            aggressive: [65, 90, 100],
+        };
 
-            const scenario = rampupField.value;
-            if (!scenario) {
-                hint.style.display = 'none';
-                hint.textContent = '';
-                return;
-            }
+        function validateRampup() {
+            const y1 = parseFloat(document.getElementById('rampup_y1').value) || 0;
+            const y2 = parseFloat(document.getElementById('rampup_y2').value) || 0;
+            const y3 = parseFloat(document.getElementById('rampup_y3').value) || 0;
+            const err = document.getElementById('rampupError');
+            const hidden = document.getElementById('production_rampup');
 
-            if (scenario === 'conservative') {
-                hint.textContent = 'Selected: Conservative - Good when execution uncertainty is high and you want cautious revenue assumptions.';
-            } else if (scenario === 'normal') {
-                hint.textContent = 'Selected: Normal - Recommended default for most projects with moderate risk and typical ramp-up behavior.';
-            } else if (scenario === 'aggressive') {
-                hint.textContent = 'Selected: Aggressive - Use only when demand confidence is high and operations can stabilize quickly.';
+            const msgs = [];
+            if (y1 > y2 && y2 > 0) msgs.push('Year 1 should not exceed Year 2.');
+            if (y2 > y3 && y3 > 0) msgs.push('Year 2 should not exceed Year 3.');
+            if (y3 > 0 && y3 !== 100) msgs.push('Year 3 must reach 100% (full capacity).');
+
+            if (msgs.length) {
+                err.textContent = msgs.join(' ');
+                err.style.display = 'block';
             } else {
-                hint.textContent = `Selected: ${scenario}`;
+                err.style.display = 'none';
             }
 
-            hint.style.display = 'block';
+            if (y1 || y2 || y3) {
+                hidden.value = `Y1: ${y1}%, Y2: ${y2}%, Y3: ${y3}%`;
+            }
+        }
+
+        function updateRampupScenarioHint() {
+            const preset = document.getElementById('rampupPreset').value;
+            if (preset && RAMPUP_PRESETS[preset]) {
+                const [y1, y2, y3] = RAMPUP_PRESETS[preset];
+                document.getElementById('rampup_y1').value = y1;
+                document.getElementById('rampup_y2').value = y2;
+                document.getElementById('rampup_y3').value = y3;
+                validateRampup();
+            }
+            const hint = document.getElementById('rampupScenarioHint');
+            if (hint) hint.style.display = 'none';
         }
 
         function toggleBudgetSections() {
@@ -2264,54 +2373,320 @@
         function handleSizingModeChange() {
             const capacitySection = document.getElementById('capacity_section');
             const budgetSection = document.getElementById('budget_section');
-            const capacityField = document.getElementById('target_capacity');
+            const capacityAmount = document.getElementById('target_capacity_amount');
+            const capacityUnit = document.getElementById('target_capacity_unit');
+            const capacityPeriod = document.getElementById('target_capacity_period');
             const currentSizingMode = getRadioValue('sizing_mode');
-            
+
+            function setCapacityRequired(required) {
+                [capacityAmount, capacityUnit, capacityPeriod].forEach((el) => { el.required = required; });
+            }
+
             if (currentSizingMode === 'capacity_driven') {
                 capacitySection.classList.add('active');
                 budgetSection.classList.remove('active');
-                capacityField.required = true;
+                setCapacityRequired(true);
             } else if (currentSizingMode === 'budget_driven') {
                 budgetSection.classList.add('active');
                 capacitySection.classList.remove('active');
-                capacityField.required = false;
+                setCapacityRequired(false);
             } else {
                 capacitySection.classList.remove('active');
                 budgetSection.classList.remove('active');
-                capacityField.required = false;
+                setCapacityRequired(false);
             }
 
             toggleBudgetSections();
         }
 
+        function validateCapacityFields() {
+            const amountEl = document.getElementById('target_capacity_amount');
+            const unitEl = document.getElementById('target_capacity_unit');
+            const periodEl = document.getElementById('target_capacity_period');
+            const err = document.getElementById('capacityAmountError');
+            const val = parseFloat(amountEl.value);
+
+            if (amountEl.value.trim() === '') { err.style.display = 'none'; return; }
+
+            if (isNaN(val) || val <= 0) {
+                err.textContent = 'Enter a valid positive number';
+                err.style.display = 'block';
+                return;
+            }
+            if (!unitEl.value) {
+                err.textContent = 'Please select a unit';
+                err.style.display = 'block';
+                return;
+            }
+            if (!periodEl.value) {
+                err.textContent = 'Please select a time period';
+                err.style.display = 'block';
+                return;
+            }
+            err.style.display = 'none';
+        }
+
+        function buildProductMixString() {
+            const parts = [];
+            document.querySelectorAll('.product-mix-row').forEach((row) => {
+                const name = row.querySelector('.pmix-name').value.trim();
+                const cat = row.querySelector('.pmix-cat').value;
+                const ratio = row.querySelector('.pmix-ratio').value;
+                if (name && ratio) parts.push(`${name} [${cat}]: ${ratio}%`);
+            });
+            document.getElementById('product_mix').value = parts.join(', ');
+        }
+
+        function updateTotalDisplay() {
+            const rows = [...document.querySelectorAll('.product-mix-row')];
+            const total = rows.reduce((sum, r) => sum + (parseFloat(r.querySelector('.pmix-ratio').value) || 0), 0);
+            const totalEl = document.getElementById('productMixTotal');
+            if (!rows.length) { totalEl.textContent = ''; return; }
+            const diff = parseFloat((100 - total).toFixed(2));
+            if (Math.abs(diff) < 0.01) {
+                totalEl.textContent = 'Total: 100% ✓';
+                totalEl.style.color = '#28a745';
+            } else {
+                totalEl.textContent = `Total: ${total.toFixed(1)}% — ${diff > 0 ? diff + '% remaining' : Math.abs(diff) + '% over'}`;
+                totalEl.style.color = '#dc3545';
+            }
+            buildProductMixString();
+        }
+
+        // When base ratios change, auto-fill by-product ratios equally as a starting point.
+        function autoFillByProducts() {
+            const rows = [...document.querySelectorAll('.product-mix-row')];
+            const baseTotal = rows
+                .filter((r) => r.querySelector('.pmix-cat').value === 'Base')
+                .reduce((sum, r) => sum + (parseFloat(r.querySelector('.pmix-ratio').value) || 0), 0);
+            const byProductRows = rows.filter((r) => r.querySelector('.pmix-cat').value === 'By-Product');
+            if (!byProductRows.length) { updateTotalDisplay(); return; }
+            const remaining = Math.max(0, parseFloat((100 - baseTotal).toFixed(2)));
+            const each = parseFloat((remaining / byProductRows.length).toFixed(2));
+            byProductRows.forEach((r) => {
+                const input = r.querySelector('.pmix-ratio');
+                input.value = each;
+                input.classList.add('autofilled');
+            });
+            updateTotalDisplay();
+        }
+
+        function addProductMixRow(name = '', category = 'Base', ratio = '') {
+            const row = document.createElement('div');
+            row.className = 'product-mix-row';
+            const isByProduct = category === 'By-Product';
+            row.innerHTML = `
+                <input type="text" class="pmix-name" placeholder="Product name" value="${name}">
+                <select class="pmix-cat">
+                    <option value="Base"${!isByProduct ? ' selected' : ''}>Base</option>
+                    <option value="By-Product"${isByProduct ? ' selected' : ''}>By-Product</option>
+                </select>
+                <input type="number" class="pmix-ratio${isByProduct ? ' autofilled' : ''}" placeholder="%" min="0" max="100" step="0.01" value="${ratio}">
+                <button type="button" class="pmix-remove" title="Remove">✕</button>
+            `;
+            row.querySelector('.pmix-name').addEventListener('input', buildProductMixString);
+            row.querySelector('.pmix-ratio').addEventListener('keydown', (e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+            });
+            row.querySelector('.pmix-ratio').addEventListener('input', (e) => {
+                e.target.classList.remove('autofilled');
+                updateTotalDisplay();
+            });
+            row.querySelector('.pmix-cat').addEventListener('change', () => autoFillByProducts());
+            row.querySelector('.pmix-remove').addEventListener('click', () => { row.remove(); autoFillByProducts(); });
+            document.getElementById('productMixRows').appendChild(row);
+            autoFillByProducts();
+        }
+
+        function loadProductMix(mixStr) {
+            document.getElementById('productMixRows').innerHTML = '';
+            if (!mixStr) { addProductMixRow(); return; }
+            mixStr.split(',').map((s) => s.trim()).forEach((part) => {
+                const m = part.match(/^(.+?)\s*(?:\[(Base|By-Product)\])?\s*:\s*([\d.]+)%?$/);
+                if (m) addProductMixRow(m[1].trim(), m[2] || 'Base', m[3]);
+            });
+            if (!document.querySelectorAll('.product-mix-row').length) addProductMixRow();
+        }
+
+        // When base ratio changes, auto-fill by-products.
+        document.getElementById('productMixRows').addEventListener('input', (e) => {
+            if (e.target.classList.contains('pmix-ratio')) {
+                const row = e.target.closest('.product-mix-row');
+                if (row && row.querySelector('.pmix-cat').value === 'Base') autoFillByProducts();
+            }
+        });
+
+        document.getElementById('addProductMixRow').addEventListener('click', () => addProductMixRow());
+        addProductMixRow();
+
+        const YIELD_UNITS = ['kg', 'g', 'MT', 'L', 'mL', 'kL', 'units', 'pieces', 'tonnes', 'barrels', 'bags', 'm³', 'kWh', 'MW'];
+
+        function buildYieldUnitOptions(selected = '') {
+            return YIELD_UNITS.map((u) => `<option value="${u}"${u === selected ? ' selected' : ''}>${u}</option>`).join('');
+        }
+
+        function buildYieldString() {
+            const parts = [];
+            document.querySelectorAll('.yield-row').forEach((row) => {
+                const inQty = row.querySelector('.yr-in-qty').value.trim();
+                const inUnit = row.querySelector('.yr-in-unit').value;
+                const inMat = row.querySelector('.yr-in-mat').value.trim();
+                const outQty = row.querySelector('.yr-out-qty').value.trim();
+                const outUnit = row.querySelector('.yr-out-unit').value;
+                const outProd = row.querySelector('.yr-out-prod').value.trim();
+                if (inQty && inMat && outQty) parts.push(`${inQty} ${inUnit} ${inMat} → ${outQty} ${outUnit}${outProd ? ' ' + outProd : ''}`);
+            });
+            document.getElementById('material_yield_ratio').value = parts.join('; ');
+        }
+
+        function addYieldRow(inQty = '', inUnit = 'kg', inMat = '', outQty = '', outUnit = 'L', outProd = '') {
+            const row = document.createElement('div');
+            row.className = 'yield-row';
+            row.innerHTML = `
+                <input type="number" class="yr-in-qty" placeholder="Qty" min="0" step="any" value="${inQty}">
+                <select class="yr-in-unit">${buildYieldUnitOptions(inUnit)}</select>
+                <input type="text" class="yr-in-mat" placeholder="Raw material name" value="${inMat}">
+                <span class="yield-arrow">→</span>
+                <input type="number" class="yr-out-qty" placeholder="Qty" min="0" step="any" value="${outQty}">
+                <select class="yr-out-unit">${buildYieldUnitOptions(outUnit)}</select>
+                <input type="text" class="yr-out-prod" placeholder="Output product name" value="${outProd}">
+                <button type="button" class="yield-remove" title="Remove">✕</button>
+            `;
+            row.querySelectorAll('input, select').forEach((el) => el.addEventListener('input', buildYieldString));
+            row.querySelector('.yield-remove').addEventListener('click', () => { row.remove(); buildYieldString(); });
+            row.querySelectorAll('input[type="number"]').forEach((el) => {
+                el.addEventListener('keydown', (e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+            });
+            document.getElementById('yieldRows').appendChild(row);
+        }
+
+        function buildExcludedBrandsString() {
+            const chinaExcluded = document.getElementById('exclude_china_toggle').checked;
+            const otherText = document.getElementById('excluded_brands_text').value.trim();
+            const parts = [];
+            if (chinaExcluded) parts.push('China');
+            if (otherText) parts.push(otherText);
+            document.getElementById('excluded_brands_countries').value = parts.join('; ');
+        }
+
+        const chinaToggle = document.getElementById('exclude_china_toggle');
+        const chinaLabel = document.getElementById('excludeChinaLabel');
+        chinaToggle.addEventListener('change', () => {
+            chinaLabel.textContent = chinaToggle.checked ? 'Excluded' : 'Not excluded';
+            chinaLabel.style.color = chinaToggle.checked ? '#dc3545' : '#6c757d';
+            buildExcludedBrandsString();
+        });
+        document.getElementById('excluded_brands_text').addEventListener('input', buildExcludedBrandsString);
+
+        document.getElementById('addYieldRow').addEventListener('click', () => addYieldRow());
+
+        function buildRmCostString() {
+            const parts = [];
+            document.querySelectorAll('.rm-cost-row').forEach((row) => {
+                const mat = row.querySelector('.rmc-mat').value.trim();
+                const cost = row.querySelector('.rmc-cost').value.trim();
+                const unit = row.querySelector('.rmc-unit').value;
+                if (mat && cost) parts.push(`${mat}: ${cost} per ${unit}`);
+            });
+            document.getElementById('raw_material_pricing_basis').value = parts.join('; ');
+        }
+
+        function addRmCostRow(mat = '', cost = '', unit = 'kg') {
+            const row = document.createElement('div');
+            row.className = 'yield-row rm-cost-row';
+            row.innerHTML = `
+                <input type="text" class="rmc-mat" placeholder="Raw material name" value="${mat}" style="flex:1;min-width:0;padding:7px 10px;border:1px solid #d7dee7;border-radius:6px;font-size:14px;font-family:inherit;">
+                <input type="number" class="rmc-cost" placeholder="Cost" min="0" step="any" value="${cost}" style="width:100px;flex-shrink:0;padding:7px 8px;border:1px solid #d7dee7;border-radius:6px;font-size:14px;text-align:right;">
+                <span style="flex-shrink:0;color:#888;font-size:0.85em;">per</span>
+                <select class="rmc-unit" style="width:90px;flex-shrink:0;padding:7px 6px;border:1px solid #d7dee7;border-radius:6px;font-size:13px;background:#fff;">${buildYieldUnitOptions(unit)}</select>
+                <button type="button" class="yield-remove" title="Remove">✕</button>
+            `;
+            row.querySelectorAll('input, select').forEach((el) => el.addEventListener('input', buildRmCostString));
+            row.querySelector('.rmc-cost').addEventListener('keydown', (e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+            row.querySelector('.yield-remove').addEventListener('click', () => { row.remove(); buildRmCostString(); });
+            document.getElementById('rmCostRows').appendChild(row);
+        }
+
+        document.getElementById('addRmCostRow').addEventListener('click', () => addRmCostRow());
+
+        document.getElementById('selling_price').addEventListener('keydown', (e) => {
+            if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+        });
+        const currencyMain = document.getElementById('currency');
+        const allCurrencyMirrors = [
+            document.getElementById('budget_currency_mirror'),
+            document.getElementById('debt_amount_currency_mirror'),
+            document.getElementById('upfront_fees_currency_mirror'),
+        ];
+        allCurrencyMirrors.forEach((mirror) => {
+            mirror.addEventListener('change', () => {
+                currencyMain.value = mirror.value;
+                allCurrencyMirrors.forEach((m) => { if (m !== mirror) m.value = mirror.value; });
+            });
+        });
+        currencyMain.addEventListener('change', () => {
+            allCurrencyMirrors.forEach((m) => { m.value = currencyMain.value; });
+        });
+
+        document.getElementById('target_capacity_amount').addEventListener('keydown', (e) => {
+            if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+        });
+        document.getElementById('target_capacity_amount').addEventListener('input', validateCapacityFields);
+        document.getElementById('target_capacity_amount').addEventListener('blur', validateCapacityFields);
+        document.getElementById('target_capacity_unit').addEventListener('change', validateCapacityFields);
+        document.getElementById('target_capacity_period').addEventListener('change', validateCapacityFields);
         document.getElementById('debt_percentage').addEventListener('input', validateDebtEquity);
         document.getElementById('equity_percentage').addEventListener('input', validateDebtEquity);
-        document.getElementById('production_rampup').addEventListener('change', updateRampupScenarioHint);
+        document.getElementById('rampupPreset').addEventListener('change', updateRampupScenarioHint);
+        ['rampup_y1', 'rampup_y2', 'rampup_y3'].forEach((id) => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', validateRampup);
+            el.addEventListener('keydown', (e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+        });
         sizingModeRadios.forEach((radio) => radio.addEventListener('change', handleSizingModeChange));
         budgetCapBasisRadios.forEach((radio) => radio.addEventListener('change', toggleBudgetSections));
         dsraRequiredRadios.forEach((radio) => radio.addEventListener('change', toggleDsraMonths));
-        shiftPreferenceField.addEventListener('change', () => {
-            if (shiftPreferenceField.value === 'single_shift' && !document.getElementById('shifts_per_day').value) {
-                document.getElementById('shifts_per_day').value = '1';
-            }
-            if (shiftPreferenceField.value === 'double_shift' && !document.getElementById('shifts_per_day').value) {
-                document.getElementById('shifts_per_day').value = '2';
-            }
-            if (shiftPreferenceField.value === 'triple_shift' && !document.getElementById('shifts_per_day').value) {
-                document.getElementById('shifts_per_day').value = '3';
-            }
-        });
+        function validateOperatingField(inputEl, errorEl, min, max, label) {
+            inputEl.addEventListener('keydown', (e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); });
+            inputEl.addEventListener('input', () => {
+                const val = parseFloat(inputEl.value);
+                if (!inputEl.value) { errorEl.style.display = 'none'; return; }
+                if (isNaN(val) || val < min || val > max) {
+                    errorEl.textContent = `${label} must be between ${min} and ${max}.`;
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            });
+        }
+
+        validateOperatingField(
+            document.getElementById('operating_days'),
+            document.getElementById('operatingDaysError'),
+            1, 366, 'Operating days'
+        );
+        validateOperatingField(
+            document.getElementById('shifts_per_day'),
+            document.getElementById('shiftsError'),
+            1, 4, 'Shifts per day'
+        );
+        validateOperatingField(
+            document.getElementById('hours_per_shift'),
+            document.getElementById('hoursError'),
+            1, 24, 'Hours per shift'
+        );
         addMarketGeographyRowButton.addEventListener('click', () => addMarketGeographyRow());
         document.querySelectorAll('input[name="has_exports"]').forEach((el) => {
             el.addEventListener('change', toggleExportSplitSection);
         });
         exportShareInput.addEventListener('input', validateExportSplit);
         localShareInput.addEventListener('input', validateExportSplit);
-        addCertificationRowButton.addEventListener('click', () => addCertificationRow());
         addPromoterButton.addEventListener('click', addPromoterEntry);
         autofillExampleButton.addEventListener('click', autofillExampleData);
-        pinCodeInput.addEventListener('input', validatePinCode);
-        pinCodeInput.addEventListener('blur', validatePinCode);
+        pinCodeInput.addEventListener('input', () => {
+            if (validatePinCode() && pinCodeInput.value.trim().length === 6) validatePinCodeAPI();
+        });
+        pinCodeInput.addEventListener('blur', validatePinCodeAPI);
         countryInput.addEventListener('input', () => {
             validatePinCode();
         });
@@ -2348,15 +2723,15 @@
             hsnFamilyNameInput.value = hsnFamilyNameInput.value.trim() || 'Not classified in form';
             hsnDescriptionInput.value = hsnDescriptionInput.value.trim() || 'HSN/SAC will be identified during report generation';
 
-            if (!validatePinCode()) {
-                errorDiv.textContent = '✗ Enter a valid pin code for the selected country';
+            if (document.getElementById('pinCodeError').style.display !== 'none') {
+                errorDiv.textContent = '✗ Enter a valid pin code for the selected location';
                 errorDiv.style.display = 'block';
-                pinCodeInput.reportValidity();
+                pinCodeInput.focus();
                 return;
             }
 
             if (!cityHiddenInput.value || !stateHiddenInput.value) {
-                errorDiv.textContent = '✗ Select a city from Google autocomplete to fill City and State';
+                errorDiv.textContent = '✗ Search and select a city from the dropdown to fill City and State';
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -2369,13 +2744,6 @@
             }
             marketGeographyInput.value = marketGeographySerialized.value;
 
-            const certificationsSerialized = serializeCertifications();
-            if (!certificationsSerialized.ok) {
-                errorDiv.textContent = `✗ ${certificationsSerialized.message}`;
-                errorDiv.style.display = 'block';
-                return;
-            }
-            certificationsInput.value = certificationsSerialized.value || '';
 
             const promoterEntries = Array.from(promotersContainer.querySelectorAll('.promoter-card'));
             for (let i = 0; i < promoterEntries.length; i += 1) {
@@ -2429,7 +2797,12 @@
                 business_model: formData.get('business_model'),
                 sizing_mode: formData.get('sizing_mode'),
                 budget_cap_basis: formData.get('budget_cap_basis') || null,
-                target_capacity: formData.get('target_capacity') || null,
+                target_capacity: (() => {
+                    const amt = formData.get('target_capacity_amount');
+                    const unit = formData.get('target_capacity_unit');
+                    const period = formData.get('target_capacity_period');
+                    return (amt && unit && period) ? `${Number(amt).toLocaleString()} ${unit}/${period}` : null;
+                })(),
                 total_investment: inferredTotalInvestment,
                 equity_cap_amount: equityCapAmountValue,
                 debt_cap_amount: debtCapAmountValue,
@@ -2438,20 +2811,12 @@
                 pricing_source: Number.isFinite(sellingPriceValue) ? 'user_provided' : 'estimated_hsn',
                 currency: formData.get('currency'),
                 product_mix: formData.get('product_mix') || null,
-                raw_material_consumption_basis: formData.get('raw_material_consumption_basis') || null,
+
+                material_yield_ratio: formData.get('material_yield_ratio') || null,
                 raw_material_pricing_basis: formData.get('raw_material_pricing_basis') || null,
-                utility_tariff_basis: formData.get('utility_tariff_basis') || null,
-                manpower_approach: formData.get('manpower_approach'),
-                repairs_maintenance_pct: parseFloatOrNull((formData.get('repairs_maintenance_pct') || '').toString().trim()),
-                selling_overhead_pct: parseFloatOrNull((formData.get('selling_overhead_pct') || '').toString().trim()),
-                admin_overhead_pct: parseFloatOrNull((formData.get('admin_overhead_pct') || '').toString().trim()),
-                receivables_days: parseIntOrNull((formData.get('receivables_days') || '').toString().trim()),
-                inventory_days: parseIntOrNull((formData.get('inventory_days') || '').toString().trim()),
-                payables_days: parseIntOrNull((formData.get('payables_days') || '').toString().trim()),
                 production_rampup: formData.get('production_rampup'),
                 market_geography: formData.get('market_geography'),
                 operating_days: parseInt(formData.get('operating_days')),
-                shift_preference: formData.get('shift_preference') || null,
                 shifts_per_day: shiftsPerDayValue,
                 hours_per_shift: hoursPerShiftValue,
                 debt_amount: debtAmountValue,
@@ -2464,20 +2829,11 @@
                 upfront_fees: upfrontFeesValue,
                 dsra_required: formData.get('dsra_required') === 'yes',
                 dsra_months: parseIntOrNull((formData.get('dsra_months') || '').toString().trim()),
-                facility_type: formData.get('facility_type'),
-                has_hazardous_materials: formData.get('has_hazardous_materials') === 'yes',
-                has_effluent_generation: formData.get('has_effluent_generation') === 'yes',
                 land_status: formData.get('land_status'),
                 brand_preference_mode: formData.get('brand_preference_mode'),
                 key_equipment_items_count: parseInt(formData.get('key_equipment_items_count')),
-                preferred_manufacturer_geography: formData.get('preferred_manufacturer_geography') || null,
                 brand_preferences: formData.get('brand_preferences') || null,
-                technology_exclusions: formData.get('technology_exclusions') || null,
                 excluded_brands_countries: formData.get('excluded_brands_countries') || null,
-                certifications: formData.get('certifications') || null,
-                compliance_constraints: formData.get('compliance_constraints') || null,
-                esg_constraints: formData.get('esg_constraints') || null,
-                procurement_constraints: formData.get('procurement_constraints') || null,
                 promoter_background: promoterBackgroundSummary,
                 start_date: formData.get('start_date') || null,
                 target_launch_date: formData.get('target_launch_date') || null,
@@ -2762,11 +3118,10 @@
             }
         });
 
-        initializeGooglePlacesAutocomplete();
+        initCityAutocomplete();
         loadMarketInterestRateHint();
         addMarketGeographyRow('India', '');
         toggleExportSplitSection();
-        addCertificationRow();
         addPromoterEntry();
         updateRampupScenarioHint();
     </script>

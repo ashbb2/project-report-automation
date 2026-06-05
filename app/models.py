@@ -36,6 +36,7 @@ class SubmissionCreate(BaseModel):
     selling_price: Optional[float] = Field(None, description="Selling price per unit")
     currency: str = Field(default="INR", description="Currency code")
     product_mix: Optional[str] = Field(None, description="Product mix and revenue contribution")
+    material_yield_ratio: Optional[str] = Field(None, description="Input/output conversion ratio e.g. 100 kg sugarcane → 30 L ethanol")
     production_rampup: str = Field(..., min_length=1, description="Production ramp-up plan")
     market_geography: str = Field(..., min_length=1, description="Target market geography")
     
